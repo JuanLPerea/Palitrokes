@@ -17,18 +17,19 @@
         android:text="Buscar Rival"
         android:textSize="24sp" />
 
-    <ImageView
-        android:id="@+id/rivalImageIV"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:background="@color/common_google_signin_btn_text_light_default" />
-
     <TextView
         android:id="@+id/rivalNickET"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
         android:text="Rival" />
+
+    <ImageView
+        android:id="@+id/rivalImageIV"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginBottom="20dp"
+        android:background="@color/common_google_signin_btn_text_light_default" />
 
     <LinearLayout
         android:layout_width="match_parent"

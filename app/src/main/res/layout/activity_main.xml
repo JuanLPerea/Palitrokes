@@ -38,13 +38,26 @@
         android:paddingLeft="20dp"
         android:paddingRight="20dp">
 
-        <EditText
-            android:id="@+id/editText"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ems="10"
-            android:hint="Nickname"
-            android:inputType="textPersonName" />
+            android:gravity="center_horizontal|center_vertical"
+            android:orientation="horizontal">
+
+            <EditText
+                android:id="@+id/editText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="Nickname"
+                android:inputType="textPersonName" />
+
+            <ImageView
+                android:id="@+id/imageView3"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                app:srcCompat="@color/verde" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -66,8 +79,10 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_margin="20dp"
+                android:alpha="1"
                 android:onClick="jugarOnline"
-                android:text="Jugar Online" />
+                android:text="Jugar Online"
+                android:visibility="invisible" />
         </LinearLayout>
 
         <TextView

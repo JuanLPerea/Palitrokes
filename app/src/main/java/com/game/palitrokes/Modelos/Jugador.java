@@ -10,7 +10,6 @@ public class Jugador {
     private int derrotas;
     private boolean online;
     private boolean turno;
-    private boolean esperandoPartida;
     private boolean empezarPartida;
     private String actualizado;
     private int numeroJugador;
@@ -23,7 +22,6 @@ public class Jugador {
         this.derrotas = 0;
         this.online = true;
         this.turno = false;
-        this.esperandoPartida = false;
         this.empezarPartida = false;
         this.actualizado = System.currentTimeMillis() + "*";
         this.numeroJugador = 0;
@@ -56,13 +54,6 @@ public class Jugador {
         this.rivalId = rivalId;
     }
 
-    public boolean isEsperandoPartida() {
-        return esperandoPartida;
-    }
-
-    public void setEsperandoPartida(boolean esperandoPartida) {
-        this.esperandoPartida = esperandoPartida;
-    }
 
     public String getJugadorId() {
         return jugadorId;

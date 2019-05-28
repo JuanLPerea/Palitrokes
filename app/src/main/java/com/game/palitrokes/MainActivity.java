@@ -1,10 +1,8 @@
 package com.game.palitrokes;
 
 import android.app.Dialog;
-import android.content.Intent;
-import android.provider.ContactsContract;
+import android.content.DialogInterface;
 import android.support.annotation.NonNull;
-import android.support.constraint.solver.widgets.Snapshot;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -44,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference jugadoresRef;
     private EditText nickET;
     private TextView onlineTV;
+    private Button botonOnline;
     private Jugador jugador;
     private RecyclerView recordsRecycler;
     private RecyclerView.Adapter adapter;
@@ -51,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private List<Jugador> jugadores;
     private ValueEventListener jugadoresListener;
     private ValueEventListener partidasListener;
+    private ValueEventListener salaListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
         recordsRecycler = findViewById(R.id.recordsRecycler);
         layoutManager = new LinearLayoutManager(this);
         recordsRecycler.setLayoutManager(layoutManager);
+        botonOnline = findViewById(R.id.jugaronlineBTN);
 
         //Lista de jugadores online
         jugadores = new ArrayList<>();
@@ -73,6 +74,8 @@ public class MainActivity extends AppCompatActivity {
         recordsRecycler.setAdapter(adapter);
 
         // Nos autenticamos de forma anónima en Firebase
+        // TODO Controlar que no se pueda jugar online
+        //  hasta que nos hayamos autenticado (Si no casca)
         mAuth = FirebaseAuth.getInstance();
         mAuth.signInAnonymously()
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -146,6 +149,9 @@ public class MainActivity extends AppCompatActivity {
                 }
                 onlineTV.setText("Online: " + jugadores.size());
 
+                botonOnline.setVisibility(View.VISIBLE);
+
+
             }
 
             @Override
@@ -181,6 +187,27 @@ public class MainActivity extends AppCompatActivity {
         jugarOnline.setTitle("Jugar Online");
         jugarOnline.show();
 
+        String partidaID = "";
+
+        //  Controlar si el usuario pulsa back en el dispositivo y cancelar los listener, cerrar el dialog y
+        //  volver a poner el listener de Usuarios/Jugadores
+        jugarOnline.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                Log.d(TAG, "Cancelado Dialog");
+
+                // Quitar los listener
+                mDatabase.removeEventListener(salaListener);
+                mDatabase.removeEventListener(partidasListener);
+
+                borrarJugadorSalaFirebase();
+
+                mDatabase.child("USUARIOS").addValueEventListener(jugadoresListener);
+                jugarOnline.dismiss();
+            }
+        });
+
+
         final TextView rivalReady = jugarOnline.findViewById(R.id.estadoRivalTV);
         final TextView jugadorReady = jugarOnline.findViewById(R.id.estadoJugadorTV);
         final ImageView readyJugadorIMG = jugarOnline.findViewById(R.id.imageReadyJugadorTV);
@@ -190,48 +217,46 @@ public class MainActivity extends AppCompatActivity {
         jugadorReady.setText(jugador.getNickname());
         mensajeEstado.setText("Buscando Rival...");
 
-        // Creamos una objeto partida para guardar los datos y luego pasarlos a Firebase
-        final Partida newPartida = new Partida();
 
-        // También una lista con las partidas actuales en Firebase (Para buscar una sala vacía)
-        final List<Partida> salas = new ArrayList<>();
-
-        // Ponemos un Listener en las partidas
-        // Aquí llenamos nuestra lista de salas
+        // Ponemos un Listener en las partidas (Salas)
         // Si encontramos una sala en la que haya un hueco, lo usamos
         partidasListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 Log.d(TAG, "Buscando Partida");
-                salas.removeAll(salas);
 
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Partida partidaTMP = snapshot.getValue(Partida.class);
+                    final Partida partidaTMP = snapshot.getValue(Partida.class);
+                    // Creamos una objeto partida para guardar los datos y luego pasarlos a Firebase
+
                     // Mirar si en esta sala hay hueco libre
-                    if (partidaTMP.getJugador1ID() == "") {
+
+                    if (partidaTMP.getJugador1ID().equals("0")) {
                         // Nos quedamos con el hueco 1
+                        Log.d(TAG, "Encontrado hueco 1");
                         jugador.setNumeroJugador(1);
-                        newPartida.setJugador1ID(jugador.getJugadorId());
-                        newPartida.setPartidaID(partidaTMP.getPartidaID());
-                        break;
-                    } else if (partidaTMP.getJugador2ID() == "") {
+                        jugador.setPartida(partidaTMP.getPartidaID());
+                        partidaTMP.setJugador1ID(jugador.getJugadorId());
+                        partidaTMP.setPartidaID(partidaTMP.getPartidaID());
+                    } else if (partidaTMP.getJugador2ID().equals("0")) {
                         // Si el hueco 1 está ocupado, usamos el hueco 2 que está vacío
+                        Log.d(TAG, "Encontrado hueco 2");
                         jugador.setNumeroJugador(2);
-                        newPartida.setJugador2ID(jugador.getJugadorId());
-                        newPartida.setPartidaID(partidaTMP.getPartidaID());
-                        break;
+                        jugador.setPartida(partidaTMP.getPartidaID());
+                        partidaTMP.setJugador2ID(jugador.getJugadorId());
+                        partidaTMP.setPartidaID(partidaTMP.getPartidaID());
                     }
 
+                    Log.d(TAG, "Partida id:" + partidaTMP.getPartidaID());
                     // Hemos encontrado sala vacía
-                    if (newPartida.getPartidaID() != null) {
-                        jugadorReady.setText(newPartida.getPartidaID());
+                    if (!partidaTMP.getPartidaID().equals("0") && partidaTMP.getPartidaID() != null) {
                         // Actualizamos Firebase
-                        mDatabase.child("PARTIDAS").child(newPartida.getPartidaID()).setValue(newPartida);
+                        mDatabase.child("PARTIDAS").child(partidaTMP.getPartidaID()).setValue(partidaTMP);
                         // Quitamos el listener de las partidas y pasamos a escuchar solo esta sala
                         mDatabase.child("PARTIDAS").removeEventListener(partidasListener);
 
 
-                        ValueEventListener salaListener = new ValueEventListener() {
+                        salaListener = new ValueEventListener() {
                             @Override
                             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                                 // Recuperamos los datos de la sala de Firebase cuando hay algún cambio
@@ -244,15 +269,15 @@ public class MainActivity extends AppCompatActivity {
                                     @Override
                                     public void onClick(View v) {
                                         mensajeEstado.setText("Preparado ... Esperando Rival ...");
+                                        jugadorReady.setText("¡Preparado!");
                                         readyJugadorIMG.setImageResource(R.drawable.ic_check_black_24dp);
                                         readyJugadorIMG.setBackgroundColor(getResources().getColor(R.color.verde));
                                         if (jugador.getNumeroJugador() == 1) {
-                                            newPartida.setJugador1Ready(true);
+                                            partidaTMP.setJugador1Ready(true);
                                         } else {
-                                            newPartida.setJugador2Ready(true);
+                                            partidaTMP.setJugador2Ready(true);
                                         }
-                                        mDatabase.child("PARTIDAS").child(newPartida.getPartidaID()).setValue(newPartida);
-
+                                        mDatabase.child("PARTIDAS").child(partidaTMP.getPartidaID()).setValue(partidaTMP);
                                     }
                                 });
 
@@ -261,45 +286,48 @@ public class MainActivity extends AppCompatActivity {
                                 if (jugador.getNumeroJugador() == 1) {
                                     if (miPartida.isJugador2Ready()) {
                                         readyRivalIMG.setImageResource(R.drawable.ic_check_black_24dp);
-                                        readyJugadorIMG.setBackgroundColor(getResources().getColor(R.color.verde));
+                                        readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.verde));
                                     }
                                 } else {
                                     if (miPartida.isJugador1Ready()) {
                                         readyRivalIMG.setImageResource(R.drawable.ic_check_black_24dp);
-                                        readyJugadorIMG.setBackgroundColor(getResources().getColor(R.color.verde));
+                                        readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.verde));
                                     }
+                                    rivalReady.setText("¡Preparado!");
                                 }
 
                                 // Si nuestra sala ya tiene los 2 jugadores asignados
                                 // lanzamos el intent del Juego
                                 if (miPartida.isJugador1Ready() && miPartida.isJugador2Ready()) {
                                     Log.d(TAG, "Habemus Partidum");
+                                    Toast.makeText(getApplicationContext(), "A Jugar ...", Toast.LENGTH_LONG).show();
                                 }
 
                             }
 
                             @Override
                             public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                                Log.d(TAG, "Cancelado esperando Rival");
                             }
                         };
-                        mDatabase.child("PARTIDAS").child(newPartida.getPartidaID()).addValueEventListener(salaListener);
+                        mDatabase.child("PARTIDAS").child(partidaTMP.getPartidaID()).addValueEventListener(salaListener);
+                        if (partidaTMP.getPartidaID() != null) break;
                     }
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                Log.d(TAG, "Cancelado Buscando Hueco");
             }
         };
 
         mDatabase.child("PARTIDAS").addValueEventListener(partidasListener);
 
         // No hay salas vacías
-        if (newPartida.getPartidaID() == null) {
-            Toast.makeText(this, "De momento no hay salas vacías", Toast.LENGTH_LONG).show();
-        }
+        //  if (newPartida.getPartidaID() == null) {
+        Toast.makeText(this, "De momento no hay salas vacías", Toast.LENGTH_LONG).show();
+        //  }
 
 
 
@@ -311,14 +339,25 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
+    // Controlar que si cerramos la aplicación y el juegador tiene
+    //  asignado una sala, borrarlo de Firebase para que no se quede pillada la sala
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        borrarJugadorSalaFirebase();
+    }
+
     public void jugar(View view) {
 
         // Crear Salas en Firebase
         for (int n = 0; n < 10; n++) {
-            mDatabase.child("PARTIDAS").setValue(new Partida());
+            mDatabase.child("PARTIDAS").child("Sala " + n).setValue(new Partida("Sala " + n, "0", "0", new Tablero()));
         }
-    }
 
+
+    }
 
 
 
@@ -333,4 +372,21 @@ public class MainActivity extends AppCompatActivity {
             endSignIn(currentUser);
         }
     */
+
+    public void borrarJugadorSalaFirebase() {
+        // Si el jugador ya tenía partida asignada, la borramos de Firebase
+        if (!jugador.getPartida().equals("0")) {
+            if (jugador.getNumeroJugador() == 1) {
+                mDatabase.child("PARTIDAS").child("").child(jugador.getPartida()).child("jugador1ID").setValue("0");
+                mDatabase.child("PARTIDAS").child(jugador.getPartida()).child("jugador1Ready").setValue(false);
+            } else {
+
+                mDatabase.child("PARTIDAS").child(jugador.getPartida()).child("jugador2ID").setValue("0");
+                mDatabase.child("PARTIDAS").child(jugador.getPartida()).child("jugador2Ready").setValue(false);
+            }
+            jugador.setPartida("0");
+        }
+    }
+
+
 }
