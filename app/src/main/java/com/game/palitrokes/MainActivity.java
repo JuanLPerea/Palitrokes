@@ -18,7 +18,7 @@ import android.widget.Toast;
 import com.game.palitrokes.Adapters.RecordsAdapter;
 import com.game.palitrokes.Modelos.Jugador;
 import com.game.palitrokes.Modelos.Partida;
-import com.game.palitrokes.Modelos.Tablero;
+import com.game.palitrokes.Utilidades.Utilidades;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -29,7 +29,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText nickET;
     private TextView onlineTV;
     private Button botonOnline;
+    private ImageView avatarJugador;
     private Jugador jugador;
     private RecyclerView recordsRecycler;
     private RecyclerView.Adapter adapter;
@@ -58,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
 
+
+
         // Referencias a las vistas
         nickET = findViewById(R.id.editText);
         onlineTV = findViewById(R.id.onlineTV);
@@ -65,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         layoutManager = new LinearLayoutManager(this);
         recordsRecycler.setLayoutManager(layoutManager);
         botonOnline = findViewById(R.id.jugaronlineBTN);
+        avatarJugador = findViewById(R.id.avatarIV);
 
         //Lista de jugadores online
         jugadores = new ArrayList<>();
@@ -113,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 jugador = dataSnapshot.getValue(Jugador.class);
                 if (jugador == null) {
+                    // Si el jugador es nuevo lo creamos
                     String nickName = "";
                     if (nickET.getText() == null) {
                         nickName = "Jugador";
@@ -120,6 +124,11 @@ public class MainActivity extends AppCompatActivity {
                         nickName = nickET.getText().toString();
                     }
                     userRef.setValue(new Jugador(currentUser.getUid(), nickName));
+
+                    // Subimos una imágen a Firebase Storage con el nombre del ID del jugador
+                    // para usarla como avatar
+                    Utilidades.subirImagenFirebase(getApplicationContext(), jugador.getJugadorId());
+
                 } else {
                     nickET.setText(jugador.getNickname());
                 }
@@ -148,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
                     if (jugadorTMP.isOnline()) jugadores.add(jugadorTMP);
                 }
                 onlineTV.setText("Online: " + jugadores.size());
-
                 botonOnline.setVisibility(View.VISIBLE);
 
 
@@ -351,11 +359,15 @@ public class MainActivity extends AppCompatActivity {
 
     public void jugar(View view) {
 
+
+        Utilidades.descargarImagenFirebase(getApplicationContext(), jugador.getJugadorId(), avatarJugador);
+
+        /*
         // Crear Salas en Firebase
         for (int n = 0; n < 10; n++) {
             mDatabase.child("PARTIDAS").child("Sala " + n).setValue(new Partida("Sala " + n, "0", "0", new Tablero()));
         }
-
+        */
 
     }
 
@@ -387,6 +399,7 @@ public class MainActivity extends AppCompatActivity {
             jugador.setPartida("0");
         }
     }
+
 
 
 }
