@@ -32,6 +32,7 @@ import android.widget.Toast;
 import com.game.palitrokes.Adapters.RecordsAdapter;
 import com.game.palitrokes.Modelos.Jugador;
 import com.game.palitrokes.Modelos.Partida;
+import com.game.palitrokes.Modelos.Records;
 import com.game.palitrokes.Modelos.Tablero;
 import com.game.palitrokes.Utilidades.Constantes;
 import com.game.palitrokes.Utilidades.Utilidades;
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference mDatabase;
     private DatabaseReference userRef;
     private DatabaseReference jugadoresRef;
+    private DatabaseReference recordsRef;
     private EditText nickET;
     private TextView onlineTV;
     private Button botonOnline;
@@ -67,8 +69,10 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager layoutManager;
     private List<Jugador> jugadores;
+    private List<Records> records;
     private ValueEventListener jugadoresListener;
     private ValueEventListener partidasListener;
+    private ValueEventListener recordsListener;
     private Partida salaSeleccionada;
     private static final String[] PERMISOS = {
             Manifest.permission.CAMERA,
@@ -112,7 +116,8 @@ public class MainActivity extends AppCompatActivity {
         jugadores = new ArrayList<>();
 
         // Recycler View para los Records
-        adapter = new RecordsAdapter(jugadores);
+        records = new ArrayList<>();
+        adapter = new RecordsAdapter(records);
         recordsRecycler.setAdapter(adapter);
 
         // Pedir permisos para las fotos y avatares
@@ -153,9 +158,6 @@ public class MainActivity extends AppCompatActivity {
         userRef = mDatabase.child("USUARIOS").child(currentUser.getUid());
         jugadoresRef = mDatabase.child("USUARIOS");
 
-
-
-
         // Cargamos los datos del usuario o los creamos si no existen (La primera vez que instalamos la APP)
         ValueEventListener userListener = new ValueEventListener() {
             @Override
@@ -169,38 +171,20 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         nickName = nickET.getText().toString();
                     }
-                    userRef.setValue(new Jugador(currentUser.getUid(), nickName));
+                    Jugador newJugador = new Jugador(currentUser.getUid(), nickName);
+                    newJugador.setOnline(true);
+                    userRef.setValue(newJugador);
 
                     // Subimos una imagen a Firebase Storage con el nombre del ID del jugador
                     // para usarla como avatar
                     Utilidades.subirImagenFirebase(currentUser.getUid(), getResources().getDrawable(R.drawable.paco));
-/*
+
                 } else {
                     nickET.setText(jugador.getNickname());
-
-                    // Recuperamos la imagen del usuario del archivo en el dispositivo, si existe
-                    // si no existe, la cargamos de Firebase, que siempre la tenemos
-                    File fotopath = getDatabasePath(Utilidades.crearNombreArchivo());
-                    boolean existe_foto = fotopath.exists();
-                    if (existe_foto) {
-                        InputStream imageStream = null;
-                        try {
-                            imageStream = getContentResolver().openInputStream(Uri.fromFile(fotopath));
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        }
-                        Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
-                        selectedImage = Utilidades.getResizedBitmap(selectedImage, 128);// 400 is for example, replace with desired size
-                        avatarJugador.setImageBitmap(selectedImage);
-                    } else {
+                    jugador.setOnline(true);
+                    userRef.setValue(jugador);
                         Utilidades.descargarImagenFirebase(jugador.getJugadorId() , avatarJugador);
-                    }
-
-*/
                 }
-
-
-                // Log.d(Constantes.TAG, "Usuario BBDD " + jugador.getNickname());
             }
 
             @Override
@@ -208,7 +192,31 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(Constantes.TAG, "Error Usuario BBDD o Crear nuevo");
             }
         };
-        userRef.addValueEventListener(userListener);
+        userRef.addListenerForSingleValueEvent(userListener);
+
+
+
+        // Cargar los records y mostrarlos en el Recycler
+        recordsRef = mDatabase.child("RECORDS");
+        recordsListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                records.removeAll(records);
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
+                    Records recordTMP = snapshot.getValue(Records.class);
+                    records.add(recordTMP);
+                }
+                adapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        };
+        recordsRef.addListenerForSingleValueEvent(recordsListener);
+
+
 
 
         // Cargar la lista de jugadores online
@@ -233,6 +241,8 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         jugadoresRef.addValueEventListener(jugadoresListener);
+
+
 
 
     }
@@ -372,6 +382,7 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(Constantes.TAG, "Hay otro jugador en el hueco 2");
                             mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
                             Utilidades.descargarImagenFirebase(salaSeleccionada.getJugador2ID(), avatarRival);
+                            esperar1Segundo();
                             progressBar.setVisibility(View.INVISIBLE);
                             if (salaSeleccionada.isJugador2Ready()) {
                                 // El otro jugador está listo
@@ -405,6 +416,7 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(Constantes.TAG, "Hay otro jugador en el hueco 1");
                             mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
                             Utilidades.descargarImagenFirebase(salaSeleccionada.getJugador1ID(), avatarRival);
+                            esperar1Segundo();
                             progressBar.setVisibility(View.INVISIBLE);
                             if (salaSeleccionada.isJugador1Ready()) {
                                 // El otro jugador está listo
@@ -571,6 +583,9 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void crearSalas(View view) {
+
+      //  resetearRecords();
+
         // Crear Salas en Firebase
         for (int n = 0; n < 10; n++) {
             mDatabase.child("PARTIDAS").child("Sala " + n).setValue(new Partida("Sala " + n, n , "0", "0", new Tablero()));
@@ -688,6 +703,43 @@ public class MainActivity extends AppCompatActivity {
         } else if (requestCode == Constantes.CODIGO_PETICION_HACER_FOTO)
         {
             setearImagenDesdeCamara (resultCode, data);
+        }
+    }
+
+    private void esperar1Segundo (){
+        Log.d(Constantes.TAG, "Esperamos 1 segundo");
+        // Dejamos una pausa para que se actualice la sala
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void recuperarImagenGuardada() {
+        // Recuperamos la imagen del usuario del archivo en el dispositivo, si existe
+        // si no existe, la cargamos de Firebase, que siempre la tenemos
+        File fotopath = getDatabasePath(Utilidades.crearNombreArchivo());
+        boolean existe_foto = fotopath.exists();
+        if (existe_foto) {
+            InputStream imageStream = null;
+            try {
+                imageStream = getContentResolver().openInputStream(Uri.fromFile(fotopath));
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+            selectedImage = Utilidades.getResizedBitmap(selectedImage, 128);// 400 is for example, replace with desired size
+            avatarJugador.setImageBitmap(selectedImage);
+        }
+    }
+
+
+    private void resetearRecords() {
+        // Crear Salas en Firebase
+        for (int n = 0; n < 10; n++) {
+            mDatabase.child("RECORDS").child(""+n).setValue(new Records("adfadfadfasdfadf" , "Jugador " + n , "0" ));
         }
     }
 }

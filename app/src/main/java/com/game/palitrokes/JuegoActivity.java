@@ -87,6 +87,7 @@ public class JuegoActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 finTiempo = true;
+                cronometro1.cancel();
                 finTurno();
             }
         };
@@ -101,6 +102,7 @@ public class JuegoActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 finTiempo = true;
+                cronometro2.cancel();
                 finTurno();
             }
         };
@@ -474,6 +476,8 @@ public class JuegoActivity extends AppCompatActivity {
 
     private void finJuego() {
 
+        // Quitar todos los listeners
+        //(Importante para no volverse loco con callbacks que no se sabe de donde vienen)
         salaRef.removeEventListener(salaListener);
         rivalRef.removeEventListener(rivalListener);
         jugadorRef.removeEventListener(jugadorListener);
@@ -505,6 +509,15 @@ public class JuegoActivity extends AppCompatActivity {
         // Actualizamos Firebase y limpiamos los datos...
         limpiarSala();
         actualizarJugadores();
+
+
+        Log.d(Constantes.TAG, "Esperamos 1 segundo");
+        // Dejamos una pausa para que se actualice la sala
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // Lanzamos el intent del MainActivity
          startActivity(volverIntent);

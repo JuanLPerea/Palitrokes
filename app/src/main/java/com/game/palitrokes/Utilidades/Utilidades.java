@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.ImageView;
 
+import com.game.palitrokes.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.storage.FirebaseStorage;
@@ -79,6 +80,7 @@ public class Utilidades {
             public void onFailure(@NonNull Exception exception) {
                 // Handle any errors
                 Log.d(Constantes.TAG, "Error Descargando Imágen " + exception);
+             //   imageView.setImageDrawable(   R.drawable.camera);
             }
         });
 

@@ -2,41 +2,71 @@ package com.game.palitrokes.Adapters;
 
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 
-import com.game.palitrokes.Modelos.Jugador;
+import com.game.palitrokes.Modelos.Records;
+import com.game.palitrokes.R;
+import com.game.palitrokes.Utilidades.Utilidades;
+
+import org.w3c.dom.Text;
 
 import java.util.List;
 
 public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterViewHolder> {
 
 
-    List<Jugador> jugadores;
+    List<Records> records;
 
-    public RecordsAdapter(List<Jugador> jugadores) {
-        this.jugadores = jugadores;
+    public RecordsAdapter(List<Records> records) {
+        this.records = records;
+    }
+
+    public RecordsAdapter() {
     }
 
     @NonNull
     @Override
     public RecordsAdapter.AdapterViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
-        return null;
+
+        View v = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.row_records, viewGroup, false);
+        RecordsAdapter.AdapterViewHolder holder = new RecordsAdapter.AdapterViewHolder(v);
+
+        return holder;
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecordsAdapter.AdapterViewHolder adapterViewHolder, int i) {
+    public void onBindViewHolder(@NonNull RecordsAdapter.AdapterViewHolder holder, int i) {
+
+        Records recordRow = records.get(i);
+
+        Utilidades.descargarImagenFirebase(recordRow.getIdJugador(), holder.avatarRecord);
+        holder.nickRecord.setText(recordRow.getNickname());
+        holder.victoriasRecord.setText(recordRow.getVictorias());
 
     }
 
     @Override
     public int getItemCount() {
-        return 0;
+        return records.size();
     }
 
     public class AdapterViewHolder extends RecyclerView.ViewHolder {
-        public AdapterViewHolder(@NonNull View itemView) {
+
+        TextView nickRecord, victoriasRecord;
+        ImageView avatarRecord;
+
+        public AdapterViewHolder(@NonNull View itemView)
+        {
             super(itemView);
+
+            avatarRecord = itemView.findViewById(R.id.avatarRecordIV);
+            nickRecord = itemView.findViewById(R.id.nickRecordET);
+            victoriasRecord = itemView.findViewById(R.id.recordVictoriasET);
+
         }
     }
 }

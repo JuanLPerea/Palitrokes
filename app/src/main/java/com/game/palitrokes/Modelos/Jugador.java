@@ -20,7 +20,7 @@ public class Jugador {
         this.partida = "";
         this.victorias = 0;
         this.derrotas = 0;
-        this.online = true;
+        this.online = false;
         this.turno = false;
         this.empezarPartida = false;
         this.actualizado = System.currentTimeMillis() + "*";
