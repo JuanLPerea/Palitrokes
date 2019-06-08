@@ -84,7 +84,7 @@ public class Jugador {
     }
 
     public void setVictorias(int victorias) {
-        this.victorias = victorias;
+        this.victorias += victorias;
     }
 
     public int getDerrotas() {
@@ -92,7 +92,7 @@ public class Jugador {
     }
 
     public void setDerrotas(int derrotas) {
-        this.derrotas = derrotas;
+        this.derrotas += derrotas;
     }
 
     public boolean isOnline() {

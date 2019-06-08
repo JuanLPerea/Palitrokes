@@ -8,21 +8,22 @@ public class Partida {
     private boolean jugador1Ready;
     private boolean jugador2Ready;
     private boolean jugando;
-    private String turno;
+    private int turno;
     private Tablero tablero;
-    private String ganador;
+    private int ganador;
+    private int numeroSala;
 
-    public Partida(String partidaID, String jugador1ID, String jugador2ID, Tablero tablero) {
+    public Partida(String partidaID, int numeroSala, String jugador1ID, String jugador2ID, Tablero tablero) {
         this.partidaID = partidaID;
         this.jugador1ID = jugador1ID;
         this.jugador2ID = jugador2ID;
         this.tablero = tablero;
-        this.turno = this.jugador1ID;
-        this.ganador = "-";
+        this.turno = 0;
+        this.ganador = 0;
         this.jugando = false;
         this.jugador1Ready = false;
         this.jugador2Ready = false;
-
+        this.numeroSala = numeroSala;
     }
 
     public Partida() {
@@ -30,11 +31,20 @@ public class Partida {
         this.jugador1ID = null;
         this.jugador2ID = null;
         this.tablero = new Tablero();
-        this.turno = null;
-        this.ganador = null;
+        this.turno = 0;
+        this.ganador = 0;
         this.jugando = false;
         this.jugador1Ready = false;
         this.jugador2Ready = false;
+    }
+
+
+    public int getNumeroSala() {
+        return numeroSala;
+    }
+
+    public void setNumeroSala(int numeroSala) {
+        this.numeroSala = numeroSala;
     }
 
     public boolean isJugador1Ready() {
@@ -85,11 +95,11 @@ public class Partida {
         this.jugador2ID = jugador2ID;
     }
 
-    public String getTurno() {
+    public int getTurno() {
         return turno;
     }
 
-    public void setTurno(String turno) {
+    public void setTurno(int turno) {
         this.turno = turno;
     }
 
@@ -101,11 +111,11 @@ public class Partida {
         this.tablero = tablero;
     }
 
-    public String getGanador() {
+    public int getGanador() {
         return ganador;
     }
 
-    public void setGanador(String ganador) {
+    public void setGanador(int ganador) {
         this.ganador = ganador;
     }
 }

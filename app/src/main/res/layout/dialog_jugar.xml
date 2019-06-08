@@ -3,8 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/dialogJugar"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
     android:layout_margin="40dp"
     android:gravity="center|center_horizontal"
     android:orientation="vertical">
@@ -13,7 +14,7 @@
         android:id="@+id/textView4"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
+        android:gravity="bottom|center_horizontal"
         android:text="Buscar Rival"
         android:textSize="24sp" />
 
@@ -21,15 +22,30 @@
         android:id="@+id/rivalNickET"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
+        android:gravity="bottom|center_horizontal"
         android:text="Rival" />
 
-    <ImageView
-        android:id="@+id/rivalImageIV"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:layout_marginBottom="20dp"
-        android:background="@color/common_google_signin_btn_text_light_default" />
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="20dp">
+
+        <ImageView
+            android:id="@+id/rivalImageIV"
+            android:layout_width="128dp"
+            android:layout_height="128dp"
+            android:layout_gravity="center"
+            app:srcCompat="@drawable/camera" />
+
+        <ProgressBar
+            android:id="@+id/progressBar2"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center" />
+
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -74,15 +90,10 @@
         android:layout_margin="20dp"
         android:text="¡ Preparado !" />
 
-    <ProgressBar
-        android:id="@+id/progressBar2"
-        style="?android:attr/progressBarStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
     <TextView
         android:id="@+id/mensajeEstadoTV"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
         android:text="Mensaje Estado" />
 </LinearLayout>

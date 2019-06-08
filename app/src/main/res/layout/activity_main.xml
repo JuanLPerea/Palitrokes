@@ -45,7 +45,7 @@
             android:orientation="horizontal">
 
             <EditText
-                android:id="@+id/editText"
+                android:id="@+id/nickET"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="10"
@@ -54,9 +54,10 @@
 
             <ImageView
                 android:id="@+id/avatarIV"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                app:srcCompat="@drawable/ic_tag_faces_black_24dp" />
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:onClick="personalizarAvatar"
+                android:src="@drawable/camera" />
         </LinearLayout>
 
         <LinearLayout
@@ -86,10 +87,11 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/textView"
+            android:id="@+id/recordsTV"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:onClick="crearSalas"
             android:text="Records" />
 
 
