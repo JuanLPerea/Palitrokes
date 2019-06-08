@@ -75,6 +75,21 @@ public class JuegoActivity extends AppCompatActivity {
         okJ1 = findViewById(R.id.ok_J1_BTN);
         okJ2 = findViewById(R.id.ok_J2_BTN);
 
+        okJ1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                okJugada(v);
+            }
+        });
+
+        okJ2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                okJugada(v);
+            }
+        });
+
+
         finTiempo = false;
 
         // Cronometro para el jugador 1
@@ -434,11 +449,7 @@ public class JuegoActivity extends AppCompatActivity {
         }
 
         // Cambiamos el turno
-        if (partida.getTurno() == 1) {
-            partida.setTurno(2);
-        } else {
-            partida.setTurno(1);
-        }
+        partida.turnoToggle();
 
         // Cambiamos el turno en Firebase
         salaRef.setValue(partida);

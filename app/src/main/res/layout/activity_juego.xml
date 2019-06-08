@@ -63,7 +63,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:onClick="okJugada"
                     android:text="@android:string/ok"
                     android:visibility="invisible" />
             </LinearLayout>
@@ -138,7 +137,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:onClick="okJugada"
                     android:text="@android:string/ok"
                     android:visibility="invisible" />
             </LinearLayout>

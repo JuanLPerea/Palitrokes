@@ -125,8 +125,6 @@ public class MainActivity extends AppCompatActivity {
                 (this, PERMISOS, Constantes.CODIGO_PETICION_PERMISOS );
 
         // Nos autenticamos de forma anónima en Firebase
-        // TODO Controlar que no se pueda jugar online
-        //  hasta que nos hayamos autenticado (Si no casca)
         mAuth = FirebaseAuth.getInstance();
         mAuth.signInAnonymously()
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -484,7 +482,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
+        if (jugador != null) {
+            jugador.setOnline(false);
+            userRef.setValue(jugador);
+        }
         super.onStop();
+
+
 
         /*
         if (salaSeleccionada.getTurno() == 0){
@@ -494,10 +498,49 @@ public class MainActivity extends AppCompatActivity {
         */
     }
 
+    @Override
+    public void onBackPressed() {
+        if (jugador != null) {
+            jugador.setOnline(false);
+            userRef.setValue(jugador);
+        }
+
+        super.onBackPressed();
+
+    }
+
+    //
+    // Aquí lanzamos el juego contra el ordenador (Móvil en este caso)
+    //
     public void jugar(View view) {
+
+        int victorias = 0;
+        String nickJugador = null;
+        String idjugador = null;
+
+        if (jugador != null) {
+            victorias = jugador.getVictorias();
+            nickJugador = jugador.getNickname();
+            idjugador = jugador.getJugadorId();
+        } else {
+            if (nickET.getText().equals("")) {
+                nickJugador = nickET.getText().toString();
+            } else {
+                nickJugador = "Jugador";
+            }
+            idjugador = "PALITROKES";
+        }
+
+        Intent intentvscom = new Intent(this, JuegoVsComActivity.class);
+        intentvscom.putExtra("NICKNAME" , nickJugador);
+        intentvscom.putExtra("IDJUGADOR", idjugador);
+        intentvscom.putExtra("VICTORIAS" , victorias);
+        startActivity(intentvscom);
 
 
     }
+
+
 /*
         salaSeleccionada = new Partida();
         // Los 2 estamos listos. Lanzar Intent de juego

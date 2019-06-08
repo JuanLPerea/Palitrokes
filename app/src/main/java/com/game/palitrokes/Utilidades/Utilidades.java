@@ -12,7 +12,6 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.ImageView;
 
-import com.game.palitrokes.R;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.storage.FirebaseStorage;
@@ -27,7 +26,6 @@ import java.lang.reflect.Method;
 
 public class Utilidades {
 
-    public static boolean permiso_foto_concedido;
     private static FirebaseStorage storage;
     private static StorageReference storageRef;
     private static Bitmap imagen;

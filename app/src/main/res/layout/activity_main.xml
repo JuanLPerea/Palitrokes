@@ -11,7 +11,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="0.75">
 
         <ImageView
             android:id="@+id/imageView"
@@ -33,14 +33,12 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:paddingLeft="20dp"
-        android:paddingRight="20dp">
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="3"
             android:gravity="center_horizontal|center_vertical"
             android:orientation="horizontal">
 
@@ -62,7 +60,8 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="3"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -70,7 +69,6 @@
                 android:id="@+id/jugarBTN"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="20dp"
                 android:onClick="jugar"
                 android:text="Jugar" />
 
@@ -79,7 +77,6 @@
                 android:id="@+id/jugaronlineBTN"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_margin="20dp"
                 android:alpha="1"
                 android:onClick="jugarOnline"
                 android:text="Jugar Online"
@@ -89,10 +86,12 @@
         <TextView
             android:id="@+id/recordsTV"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:gravity="center"
             android:onClick="crearSalas"
-            android:text="Records" />
+            android:text="Records"
+            android:textSize="24sp" />
 
 
     </LinearLayout>

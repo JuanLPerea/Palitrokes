@@ -118,4 +118,13 @@ public class Partida {
     public void setGanador(int ganador) {
         this.ganador = ganador;
     }
+
+    public void turnoToggle(){
+        if (this.getTurno()== 2)
+        {
+            this.setTurno(1);
+        } else {
+            this.setTurno(2);
+        }
+    }
 }

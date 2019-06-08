@@ -19,7 +19,7 @@
         android:layout_weight="10"
         android:gravity="center"
         android:text="TextView"
-        android:textSize="18sp" />
+        android:textSize="24sp" />
 
     <TextView
         android:id="@+id/recordVictoriasET"
@@ -28,5 +28,5 @@
         android:layout_weight="10"
         android:gravity="center"
         android:text="TextView"
-        android:textSize="18sp" />
+        android:textSize="24sp" />
 </LinearLayout>
