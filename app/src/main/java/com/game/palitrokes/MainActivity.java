@@ -84,6 +84,21 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
 
+        Intent intent = getIntent();
+        String salaAnterior = intent.getStringExtra("SALA_ANTERIOR");
+
+                if (salaAnterior != null){
+
+                    Log.d(Constantes.TAG, "Ha vuelto de otro intent " + salaAnterior);
+                    // Dejamos una pausa para que se actualice la sala
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+
         // Referencias a las vistas
         nickET = findViewById(R.id.nickET);
         onlineTV = findViewById(R.id.onlineTV);
@@ -494,16 +509,15 @@ public class MainActivity extends AppCompatActivity {
 
     }
 */
-    /*
 
+/*
         @Override
         public void onStart() {
             super.onStart();
-            // Check if user is signed in (non-null) and update UI accordingly.
-            FirebaseUser currentUser = mAuth.getCurrentUser();
-            endSignIn(currentUser);
+
+
         }
-    */
+*/
 
 
     public void borrarJugadorSalaFirebase() {

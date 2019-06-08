@@ -475,9 +475,13 @@ public class JuegoActivity extends AppCompatActivity {
     private void finJuego() {
 
         salaRef.removeEventListener(salaListener);
+        rivalRef.removeEventListener(rivalListener);
+        jugadorRef.removeEventListener(jugadorListener);
+        cronometro1.cancel();
+        cronometro2.cancel();
 
         Intent volverIntent = new Intent(this, MainActivity.class);
-        volverIntent.putExtra("GANADOR", partida.getGanador());
+        volverIntent.putExtra("SALA_ANTERIOR", partida.getPartidaID());
 
         String resultado = "";
 
@@ -496,9 +500,7 @@ public class JuegoActivity extends AppCompatActivity {
 
         Toast.makeText(this, resultado , Toast.LENGTH_LONG).show();
 
-        salaRef.removeEventListener(salaListener);
-        rivalRef.removeEventListener(rivalListener);
-        jugadorRef.removeEventListener(jugadorListener);
+
 
         // Actualizamos Firebase y limpiamos los datos...
         limpiarSala();
