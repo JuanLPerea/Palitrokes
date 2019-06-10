@@ -6,12 +6,13 @@ import com.game.palitrokes.Utilidades.Constantes;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+
 /**
- *
- *  Procesar un tablero para obtener una jugada de salida
- *
- *
- *
+ * Juego del NIM (A.K.A. Palitrokes)
+ * Procesar un tablero para obtener una jugada de salida
+ * según estrategia: El que coge el último palo, pierde
+ * (C) Juan Luis Perea López (2019)
  */
 public class JugadaCom {
 
@@ -20,6 +21,8 @@ public class JugadaCom {
         String jugadaSalida = null;
 
 
+        // Analizar el tablero para saber si estamos en una posición ganadora o perdedora
+        // ----------------------------------------------------------------------------------------------------
         List<String> montonesBinario = new ArrayList<>();
         int maxLargoBinario = 0;
 
@@ -35,9 +38,7 @@ public class JugadaCom {
             Log.d(Constantes.TAG, montonTmp.getPalos().size() + "");
         }
 
-
         Log.d(Constantes.TAG, "Numero de columnas: " + maxLargoBinario);
-
 
         // añadir ceros a la izquierda si es necesario
         List<String> nuevoBinarioString = new ArrayList<>();
@@ -82,78 +83,116 @@ public class JugadaCom {
         if (numeroDePares == maxLargoBinario + 1) {
             Log.d(Constantes.TAG, "Posición perdedora");
 
-            // No podemos hacer nada, jugamos al azar con la esperanza de que se equivoque
-            jugadaSalida = "1#1";
+            // No podemos hacer nada, jugamos al azar con la esperanza de que se equivoque el otro jugador
+            Random r = new Random();
+        //    int montonAleatorio = r.nextInt(tablero.getNumMontones()-1);
+       //     int palosAleatorios = r.nextInt(tablero.getMontones().get(montonAleatorio).getPalos().size());
+        //    jugadaSalida = montonAleatorio + "#" + palosAleatorios;
+            jugadaSalida = "0#1";
             return jugadaSalida;
 
         } else {
-        // Posicion ganadora, alguna columna es impar
-        // ---------------------------------------------------------------------------------------------
+            // Posicion ganadora, alguna columna es impar
+            // ---------------------------------------------------------------------------------------------
             Log.d(Constantes.TAG, "Posición ganadora");
-            // Seleccionamos el monton que tenga una suma impar en las columnas
-            int columnaImpar = 0;
-            for (int cnd = 0; cnd <= maxLargoBinario; cnd++) {
-                if (sumaColumnas[cnd] % 2 != 0) {
-                    columnaImpar = cnd;
 
-                    break;
+
+            // En la estrategia de que pierde el que se quede con el último palo:
+            // Hay que comprobar que solo queda un monton con mas de 1 palo...
+            int numeroDeMontonesConMasDeUnPalo = 0;
+            int montonConMasDeUnPalo = 0;
+
+            for (Monton montonTmp : tablero.getMontones()) {
+                if (montonTmp.getPalos().size() > 1) {
+                    numeroDeMontonesConMasDeUnPalo++;
+                    montonConMasDeUnPalo = montonTmp.getNumeroMonton();
                 }
             }
+            Log.d(Constantes.TAG, "Quedan " + montonConMasDeUnPalo + " Montones con mas de 1 palo");
 
-            Log.d(Constantes.TAG, "Columna Impar: " + columnaImpar);
+            // Hay 3 casos:
+            // 1) que quede solo un monton con 1 palo
+            // 2) que queden todos los montones con 1 palo
+            // 3) que queden mas de 1 monton con mas de 1 palo.....
+            // -------------------------------------------------------------------------------------------------------------------
+            if (numeroDeMontonesConMasDeUnPalo == 1) {
+                // Si solo queda un monton con 1 palo, quitamos todos los palos menos uno
+                // del montón que tenga mas de 1 palo
+                Log.d(Constantes.TAG, "Queda solo un monton con 1 palo ");
+                jugadaSalida = montonConMasDeUnPalo + "#" + (tablero.getMontones().get(montonConMasDeUnPalo).getPalos().size() - 1);
 
-            // Nos quedamos con un monton que tenga un 1 en la posicion de la columnaImpar
-            int numeroMontonATratar = -1;
-            for (int cnd = 0; cnd < montonesBinario.size(); cnd++) {
-                String montonTmp = montonesBinario.get(cnd);
-                // Comprobar que no sean todo '1' en el monton seleccionado
-                int todounos = 0;
-                for (int pos = 0; pos < montonTmp.length() - 1; pos++) {
-                    todounos += Integer.parseInt(montonTmp.charAt(pos) + "");
+            } else if (numeroDeMontonesConMasDeUnPalo == 0) {
+                // Si todos los montones tienen solo 1 palo
+                // Quitamos cualquiera (en este caso palo que queda en el primer montón)
+                Log.d(Constantes.TAG, "Todos los montones que quedan tienen solo 1 palo");
+                jugadaSalida = "0#1";
+            } else if (numeroDeMontonesConMasDeUnPalo > 1) {
+                // En este caso usamos la estrategia analizando los montones
+                //
+                // Seleccionamos el monton que tenga una suma impar en las columnas
+                Log.d(Constantes.TAG, "Quedan muchos palos, usamos estrategia");
+                int columnaImpar = 0;
+                for (int cnd = 0; cnd <= maxLargoBinario; cnd++) {
+                    if (sumaColumnas[cnd] % 2 != 0) {
+                        columnaImpar = cnd;
+                        break;
+                    }
                 }
-                if (todounos != montonTmp.length()) {
+
+                Log.d(Constantes.TAG, "Columna Impar: " + columnaImpar);
+
+                // Nos quedamos con un monton que tenga un 1 en la posicion de la columnaImpar
+                int numeroMontonATratar = -1;
+                for (int cnd = 0; cnd < montonesBinario.size(); cnd++) {
+                    String montonTmp = montonesBinario.get(cnd);
                     Character buscarMonton = montonTmp.charAt(columnaImpar);
                     if (buscarMonton == '1') {
                         numeroMontonATratar = cnd;
                     }
                 }
-            }
 
-            if (numeroMontonATratar == -1) {
-                Log.d(Constantes.TAG, "Esto no debería pasar, por lo menos tiene que haber un monton para tratar");
-            }
 
-            // Tratamos las columnas que eran impares para que sean pares
-            String montonATratar = montonesBinario.get(numeroMontonATratar);
-            String montonTratado = "";
-            Log.d(Constantes.TAG, "Monton a tratar: " + numeroMontonATratar + " - " + montonATratar);
-            for (int cnd = 0; cnd < sumaColumnas.length; cnd++) {
-                // Sacar los caracteres uno a uno
-                Character caracter = montonATratar.charAt(cnd);
-                // en las posiciones que eran impares cambiamos 0 por 1 y viceversa
-                if (sumaColumnas[cnd] % 2 != 0) {
-                    if (caracter == '0') {
-                        montonTratado = montonTratado + "1";
+                // Tratamos las columnas que eran impares para que sean pares
+                // O si son enteramente son unos, quitamos todos los palos de ese montón
+                String montonATratar = montonesBinario.get(numeroMontonATratar);
+                String montonTratado = "";
+                Log.d(Constantes.TAG, "Monton a tratar: " + numeroMontonATratar + " - " + montonATratar);
+
+                for (int cnd = 0; cnd < sumaColumnas.length; cnd++) {
+                    // Sacar los caracteres uno a uno
+                    Character caracter = montonATratar.charAt(cnd);
+                    // en las posiciones que eran impares cambiamos 0 por 1 y viceversa
+                    if (sumaColumnas[cnd] % 2 != 0) {
+                        if (caracter == '0') {
+                            montonTratado = montonTratado + "1";
+                        } else {
+                            montonTratado = montonTratado + "0";
+                        }
                     } else {
-                        montonTratado = montonTratado + "0";
+                        // Si la columna es par la dejamos como está
+                        montonTratado = montonTratado + caracter;
                     }
-                } else {
-                    // Si la columna es par la dejamos como está
-                    montonTratado = montonTratado + caracter;
                 }
+                Log.d(Constantes.TAG, "Monton tratado: " + montonTratado);
+
+                // Si el resultado es 'unos', quitaremos todos los palos del montón elegido
+                int todoUnos = montonTratado.indexOf("0");
+                if (todoUnos == -1) {
+                    jugadaSalida = numeroMontonATratar + "#" + tablero.getMontones().get(numeroMontonATratar).getPalos().size();
+                } else {
+                    // Si el resultado tiene algún cero, Convertir monton tratado a decimal
+                    // y habrá que restar del total de palos, los que tienen que quedar,
+                    // que es el número que sale de tratar el montón elegido pasado a decimal
+                    int numeroPalosOriginal = tablero.getMontones().get(numeroMontonATratar).getPalos().size();
+                    int numeroPalosAQuitar = Integer.parseInt(montonTratado, 2);
+                    int numeroPalosSalida = numeroPalosOriginal - numeroPalosAQuitar;
+
+                    jugadaSalida = numeroMontonATratar + "#" + numeroPalosSalida;
+                }
+
             }
-            Log.d(Constantes.TAG, "Monton tratado: " + montonTratado);
-
-
-            // Convertir monton tratado a decimal
-            int numeroPalosOriginal = tablero.getMontones().get(numeroMontonATratar).getPalos().size();
-            int numeroPalosAQuitar = Integer.parseInt(montonTratado, 2);
-            int numeroPalosSalida = numeroPalosOriginal - numeroPalosAQuitar;
-
-            jugadaSalida = numeroMontonATratar + "#" + numeroPalosSalida;
-
-
         }
+
 
         Log.d(Constantes.TAG, "Jugada de salida: " + jugadaSalida);
         return jugadaSalida;

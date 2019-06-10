@@ -150,20 +150,10 @@ public class JuegoVsComActivity extends AppCompatActivity {
         partida.setJugador1ID(jugador.getJugadorId());
         partida.setJugador2ID(rival.getJugadorId());
 
-
-        jugar();
-
-    }
-
-
-    private void jugar() {
-
         visualizarTablero(partida.getTablero());
         actualizarViewsCambioTurno();
 
-
     }
-
 
     private void actualizarVistaJugador(Jugador jugadorView) {
         if (jugadorView.getNumeroJugador() == 1) {
@@ -248,14 +238,6 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
     }
 
-    private int newId() {
-        Random r = new Random();
-        int resultado = -1;
-        do {
-            resultado = r.nextInt(Integer.MAX_VALUE);
-        } while (findViewById(resultado) != null);
-        return resultado;
-    }
 
 
     private void seleccionarPalo(ImageView imageView) {
@@ -378,26 +360,134 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
             if (partida.getTurno() == 2) {
                 Log.d(Constantes.TAG, "Turno del ordenador");
-                // TODO pasar el tablero a la Clase
+                //  Pasar el tablero a la Clase
                 //  JugadaCom Nos devuelve un String con la
                 //  jugada que va ha hacer el ordenador
-
                 String jugadaCom = JugadaCom.jugadaCom(partida.getTablero());
 
                 // Hacemos los cambios que sean
-
+                hacerJugadaCom(jugadaCom);
 
                 // Cambiamos el turno y Actualizamos el tablero y los views
+                visualizarTablero(partida.getTablero());
                 partida.turnoToggle();
                 actualizarViewsCambioTurno();
-                visualizarTablero(partida.getTablero());
             }
 
         } else {
             Log.d(Constantes.TAG, "Fin juego");
+            finJuego();
         }
 
 
     }
 
+    private void hacerJugadaCom(String jugadaCom) {
+
+        int montonEnJuego = Integer.parseInt(jugadaCom.split("#")[0]);
+        int palosAQuitar = Integer.parseInt(jugadaCom.split("#")[1]);
+
+        partida.getTablero().setMontonSeleccionado(montonEnJuego);
+
+        // Simulamos que se seleccionan los palos y se quitan
+        // Haciendo una pausa de medio segundo entre palo y palo
+        // TODO poner un sonido para que quede mas chulo
+        for (int cnd = 0 ; cnd < palosAQuitar ; cnd++) {
+            // Seleccionamos un palo del montón
+            partida.getTablero().getMontones().get(montonEnJuego).getPalos().get(cnd).setSeleccionado(true);
+
+
+            // Y lo visualizamos
+            visualizarTablero(partida.getTablero());
+
+            // Dejamos una pausa de medio segundo para que al jugador
+            // le de tiempo a ver la jugada ...
+         long crono = System.currentTimeMillis() + 500;
+         while (crono > System.currentTimeMillis()) {
+
+         }
+
+
+
+        }
+
+
+        // Eliminamos el palos seleccionados del Tablero
+        partida.getTablero().eliminarSeleccionados();
+
+        // Detectar si solo queda 1 palo, le queda al jugador y ...
+        if (partida.getTablero().palosTotales() == 1) {
+            // Solo queda un palo. Ha ganado el ordenador
+            partida.setGanador(2);
+        }
+
+    }
+
+
+    private void finJuego() {
+
+        // Quitar los cronómetros
+        cronometro1.cancel();
+        cronometro2.cancel();
+
+        Intent volverIntent = new Intent(this, MainActivity.class);
+        volverIntent.putExtra("SALA_ANTERIOR", partida.getPartidaID());
+
+        String resultado = "";
+
+        if (finTiempo) {
+            resultado = "Ha habido abandono ... \n";
+        }
+
+        Log.d(Constantes.TAG, "Ganador: " + partida.getGanador());
+        if (partida.getGanador() == jugador.getNumeroJugador()) {
+            jugador.setVictorias(1);
+            resultado += "Has Ganado ¡Enhorabuena!";
+        } else {
+            jugador.setDerrotas(1);
+            resultado += "Lo siento ¡has perdido!";
+        }
+
+        Toast.makeText(this, resultado , Toast.LENGTH_LONG).show();
+
+
+
+        Log.d(Constantes.TAG, "Esperamos 1 segundo");
+        // Dejamos una pausa para que se actualice la sala
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Lanzamos el intent del MainActivity
+        startActivity(volverIntent);
+
+        finish();
+    }
+
+
+    private int newId() {
+        Random r = new Random();
+        int resultado = -1;
+        do {
+            resultado = r.nextInt(Integer.MAX_VALUE);
+        } while (findViewById(resultado) != null);
+        return resultado;
+    }
+
+    @Override
+    public void onBackPressed() {
+        finTiempo = true;
+        finJuego();
+    }
+
+
+    @Override
+    protected void onStop() {
+        if (finTiempo == true) {
+            finJuego();
+        }
+        super.onStop();
+    }
 }
