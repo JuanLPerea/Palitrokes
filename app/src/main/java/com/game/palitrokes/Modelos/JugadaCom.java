@@ -85,10 +85,15 @@ public class JugadaCom {
 
             // No podemos hacer nada, jugamos al azar con la esperanza de que se equivoque el otro jugador
             Random r = new Random();
-        //    int montonAleatorio = r.nextInt(tablero.getNumMontones()-1);
-       //     int palosAleatorios = r.nextInt(tablero.getMontones().get(montonAleatorio).getPalos().size());
-        //    jugadaSalida = montonAleatorio + "#" + palosAleatorios;
-            jugadaSalida = "0#1";
+            int montonAleatorio = r.nextInt(tablero.getMontones().size());
+            int palosAleatorios = r.nextInt(tablero.getMontones().get(montonAleatorio).getPalos().size());
+            // Al menos que quite un palo siempre
+            if (palosAleatorios == 0) palosAleatorios = 1;
+            jugadaSalida = montonAleatorio + "#" + palosAleatorios;
+          //  jugadaSalida = "0#1";
+
+            Log.d(Constantes.TAG, "Jugada de salida: " + jugadaSalida);
+            Log.d(Constantes.TAG, "-----------------------------------------------------");
             return jugadaSalida;
 
         } else {
@@ -108,7 +113,7 @@ public class JugadaCom {
                     montonConMasDeUnPalo = montonTmp.getNumeroMonton();
                 }
             }
-            Log.d(Constantes.TAG, "Quedan " + montonConMasDeUnPalo + " Montones con mas de 1 palo");
+            Log.d(Constantes.TAG, "Quedan " + numeroDeMontonesConMasDeUnPalo  + " Montones con mas de 1 palo. Total Montones: " + (tablero.getNumMontones()));
 
             // Hay 3 casos:
             // 1) que quede solo un monton con 1 palo
@@ -116,16 +121,22 @@ public class JugadaCom {
             // 3) que queden mas de 1 monton con mas de 1 palo.....
             // -------------------------------------------------------------------------------------------------------------------
             if (numeroDeMontonesConMasDeUnPalo == 1) {
-                // Si solo queda un monton con 1 palo, quitamos todos los palos menos uno
-                // del montón que tenga mas de 1 palo
-                Log.d(Constantes.TAG, "Queda solo un monton con 1 palo ");
-                jugadaSalida = montonConMasDeUnPalo + "#" + (tablero.getMontones().get(montonConMasDeUnPalo).getPalos().size() - 1);
+                // Si solo queda un monton con mas de 1 palo,
+                // Si el numero de montones es par quitamos todos los palos menos unodel montón que tenga mas de 1 palo
+                // Si el numero de montones es impar, quitamos todos los palos del montón que tenga mas de 1 palo
+                Log.d(Constantes.TAG, "Queda solo un monton con mas de 1 palo ");
+                if (tablero.getMontones().size() % 2 == 0) {
+                    jugadaSalida = montonConMasDeUnPalo + "#" + (tablero.getMontones().get(montonConMasDeUnPalo).getPalos().size());
+                } else {
+                    jugadaSalida = montonConMasDeUnPalo + "#" + (tablero.getMontones().get(montonConMasDeUnPalo).getPalos().size() - 1);
+                }
 
             } else if (numeroDeMontonesConMasDeUnPalo == 0) {
                 // Si todos los montones tienen solo 1 palo
                 // Quitamos cualquiera (en este caso palo que queda en el primer montón)
                 Log.d(Constantes.TAG, "Todos los montones que quedan tienen solo 1 palo");
                 jugadaSalida = "0#1";
+
             } else if (numeroDeMontonesConMasDeUnPalo > 1) {
                 // En este caso usamos la estrategia analizando los montones
                 //
@@ -195,6 +206,7 @@ public class JugadaCom {
 
 
         Log.d(Constantes.TAG, "Jugada de salida: " + jugadaSalida);
+        Log.d(Constantes.TAG, "-----------------------------------------------------");
         return jugadaSalida;
 
     }

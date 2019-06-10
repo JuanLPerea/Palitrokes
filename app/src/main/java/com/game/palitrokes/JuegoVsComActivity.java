@@ -402,12 +402,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
             // Dejamos una pausa de medio segundo para que al jugador
             // le de tiempo a ver la jugada ...
-         long crono = System.currentTimeMillis() + 500;
-         while (crono > System.currentTimeMillis()) {
-
-         }
-
-
+            // TODO crear AsyncTask que actualice las views sin bloquear la app
 
         }
 
