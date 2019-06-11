@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -35,7 +36,9 @@ import com.game.palitrokes.Modelos.Partida;
 import com.game.palitrokes.Modelos.Records;
 import com.game.palitrokes.Modelos.Tablero;
 import com.game.palitrokes.Utilidades.Constantes;
+import com.game.palitrokes.Utilidades.SharedPrefs;
 import com.game.palitrokes.Utilidades.Utilidades;
+import com.game.palitrokes.Utilidades.UtilityNetwork;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -54,7 +57,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
-    
+
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private DatabaseReference userRef;
@@ -91,17 +94,13 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = getIntent();
         String salaAnterior = intent.getStringExtra("SALA_ANTERIOR");
 
-                if (salaAnterior != null){
-
-                    Log.d(Constantes.TAG, "Ha vuelto de otro intent " + salaAnterior);
-                    // Dejamos una pausa para que se actualice la sala
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-
-                }
+        if (salaAnterior != null) {
+            // Si volvemos de jugar online limpiamos la sala por si acaso
+            Log.d(Constantes.TAG, "Ha vuelto de otro intent " + salaAnterior);
+            pausa(1000);
+            limpiarSala(salaAnterior);
+            pausa(1000);
+        }
 
         // Referencias a las vistas
         nickET = findViewById(R.id.nickET);
@@ -122,28 +121,43 @@ public class MainActivity extends AppCompatActivity {
 
         // Pedir permisos para las fotos y avatares
         ActivityCompat.requestPermissions
-                (this, PERMISOS, Constantes.CODIGO_PETICION_PERMISOS );
+                (this, PERMISOS, Constantes.CODIGO_PETICION_PERMISOS);
 
-        // Nos autenticamos de forma anónima en Firebase
-        mAuth = FirebaseAuth.getInstance();
-        mAuth.signInAnonymously()
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(Constantes.TAG, "signInAnonymously:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            endSignIn(user);
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(Constantes.TAG, "signInAnonymously:failure", task.getException());
-                            Toast.makeText(MainActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
-                            endSignIn(null);
+
+        // Comprobar si tenemos internet
+        if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
+
+            // Nos autenticamos de forma anónima en Firebase
+            mAuth = FirebaseAuth.getInstance();
+            mAuth.signInAnonymously()
+                    .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<AuthResult> task) {
+                            if (task.isSuccessful()) {
+                                // Sign in success, update UI with the signed-in user's information
+                                Log.d(Constantes.TAG, "signInAnonymously:success");
+                                FirebaseUser user = mAuth.getCurrentUser();
+                                endSignIn(user);
+                            } else {
+                                // If sign in fails, display a message to the user.
+                                Log.w(Constantes.TAG, "signInAnonymously:failure", task.getException());
+                                Toast.makeText(MainActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
+                                endSignIn(null);
+                            }
                         }
-                    }
-                });
+                    });
 
+        } else {
+            // Recuperamos datos del Shared Preferences si existen
+            if (!SharedPrefs.getAvatarPrefs(this).equals("")) {
+                // Hay datos guardados
+                Log.d(Constantes.TAG, "Ha recuperado las preferencias");
+                nickET.setText(SharedPrefs.getNicknamePrefs(this));
+                String ruta_archivo = SharedPrefs.getAvatarPrefs(this);
+                recuperarImagenGuardada(ruta_archivo);
+            }
+
+        }
 
     }
 
@@ -175,13 +189,13 @@ public class MainActivity extends AppCompatActivity {
 
                     // Subimos una imagen a Firebase Storage con el nombre del ID del jugador
                     // para usarla como avatar
-                    Utilidades.subirImagenFirebase(currentUser.getUid(), getResources().getDrawable(R.drawable.paco));
+                    Utilidades.subirImagenFirebase(currentUser.getUid(), getResources().getDrawable(R.drawable.pako));
 
                 } else {
                     nickET.setText(jugador.getNickname());
                     jugador.setOnline(true);
                     userRef.setValue(jugador);
-                        Utilidades.descargarImagenFirebase(jugador.getJugadorId() , avatarJugador);
+                    Utilidades.descargarImagenFirebase(jugador.getJugadorId(), avatarJugador);
                 }
             }
 
@@ -193,14 +207,13 @@ public class MainActivity extends AppCompatActivity {
         userRef.addListenerForSingleValueEvent(userListener);
 
 
-
         // Cargar los records y mostrarlos en el Recycler
         recordsRef = mDatabase.child("RECORDS");
         recordsListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 records.removeAll(records);
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()){
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Records recordTMP = snapshot.getValue(Records.class);
                     records.add(recordTMP);
                 }
@@ -213,8 +226,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         recordsRef.addListenerForSingleValueEvent(recordsListener);
-
-
 
 
         // Cargar la lista de jugadores online
@@ -239,8 +250,6 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         jugadoresRef.addValueEventListener(jugadoresListener);
-
-
 
 
     }
@@ -277,7 +286,6 @@ public class MainActivity extends AppCompatActivity {
 
                 // Quitar el listener
                 mDatabase.removeEventListener(partidasListener);
-
                 borrarJugadorSalaFirebase();
 
                 mDatabase.child("USUARIOS").addValueEventListener(jugadoresListener);
@@ -308,7 +316,7 @@ public class MainActivity extends AppCompatActivity {
                 // Actualizamos los datos de las salas
                 // Tenemos una lista con todas las salas
                 // y otra con las salas que tienen sitio disponible
-               // Log.d(Constantes.TAG, "Buscando sala");
+                // Log.d(Constantes.TAG, "Buscando sala");
 
                 salasDisponibles.removeAll(salasDisponibles);
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
@@ -334,7 +342,7 @@ public class MainActivity extends AppCompatActivity {
                 if (salaSeleccionada == null) {
                     if (salasDisponibles.size() > 0) {
                         // Seleccionamos una sala para jugar de las disponibles
-                     //   int salaAleatoria = new Random().nextInt(salasDisponibles.size());
+                        //   int salaAleatoria = new Random().nextInt(salasDisponibles.size());
                         salaSeleccionada = salasDisponibles.get(0);
                         // Reservamos el hueco
                         if (salaSeleccionada.getJugador1ID().equals("0")) {
@@ -355,7 +363,7 @@ public class MainActivity extends AppCompatActivity {
                         // Actualizamos Firebase y de paso limpiamos la sala por si hubiera quedado algo de la ultima partida
                         jugador.setNickname(nickET.getText().toString());
                         userRef.setValue(jugador);
-                   //     salaSeleccionada.setTablero(new Tablero());
+                        //     salaSeleccionada.setTablero(new Tablero());
                         salaSeleccionada.setGanador(0);
                         salaSeleccionada.setJugando(false);
                         salaSeleccionada.setJugador1Ready(false);
@@ -380,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(Constantes.TAG, "Hay otro jugador en el hueco 2");
                             mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
                             Utilidades.descargarImagenFirebase(salaSeleccionada.getJugador2ID(), avatarRival);
-                            esperar1Segundo();
+                            pausa(1000);
                             progressBar.setVisibility(View.INVISIBLE);
                             if (salaSeleccionada.isJugador2Ready()) {
                                 // El otro jugador está listo
@@ -414,7 +422,7 @@ public class MainActivity extends AppCompatActivity {
                             Log.d(Constantes.TAG, "Hay otro jugador en el hueco 1");
                             mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
                             Utilidades.descargarImagenFirebase(salaSeleccionada.getJugador1ID(), avatarRival);
-                            esperar1Segundo();
+                            pausa(1000);
                             progressBar.setVisibility(View.INVISIBLE);
                             if (salaSeleccionada.isJugador1Ready()) {
                                 // El otro jugador está listo
@@ -486,6 +494,9 @@ public class MainActivity extends AppCompatActivity {
             jugador.setOnline(false);
             userRef.setValue(jugador);
         }
+        if (salaSeleccionada != null) {
+            limpiarSala(salaSeleccionada.getPartidaID());
+        }
         super.onStop();
 
 
@@ -523,7 +534,7 @@ public class MainActivity extends AppCompatActivity {
             nickJugador = jugador.getNickname();
             idjugador = jugador.getJugadorId();
         } else {
-            if (nickET.getText().equals("")) {
+            if (!nickET.getText().toString().equals("")) {
                 nickJugador = nickET.getText().toString();
             } else {
                 nickJugador = "Jugador";
@@ -532,9 +543,9 @@ public class MainActivity extends AppCompatActivity {
         }
 
         Intent intentvscom = new Intent(this, JuegoVsComActivity.class);
-        intentvscom.putExtra("NICKNAME" , nickJugador);
+        intentvscom.putExtra("NICKNAME", nickJugador);
         intentvscom.putExtra("IDJUGADOR", idjugador);
-        intentvscom.putExtra("VICTORIAS" , victorias);
+        intentvscom.putExtra("VICTORIAS", victorias);
         startActivity(intentvscom);
 
 
@@ -554,7 +565,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     */
-        //  Utilidades.descargarImagenFirebase(getApplicationContext(), jugador.getJugadorId(), avatarJugador);
+    //  Utilidades.descargarImagenFirebase(getApplicationContext(), jugador.getJugadorId(), avatarJugador);
 
 /*
         // Crear Salas en Firebase
@@ -614,24 +625,17 @@ public class MainActivity extends AppCompatActivity {
 
         popup.show();//showing popup menu
 
-        // Aprovechamos para guardar en Firebase el Nickname
-        if (nickET.getText() != null) {
-            jugador.setNickname(nickET.getText().toString());
-            userRef.setValue(jugador);
-        }
-
 
     }
 
 
-
     public void crearSalas(View view) {
 
-      //  resetearRecords();
+        //  resetearRecords();
 
         // Crear Salas en Firebase
         for (int n = 0; n < 10; n++) {
-            mDatabase.child("PARTIDAS").child("Sala " + n).setValue(new Partida("Sala " + n, n , "0", "0", new Tablero()));
+            mDatabase.child("PARTIDAS").child("Sala " + n).setValue(new Partida("Sala " + n, n, "0", "0", new Tablero()));
         }
 
     }
@@ -640,13 +644,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         //super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if ((grantResults[0]== PackageManager.PERMISSION_GRANTED)
-                && (grantResults[1]== PackageManager.PERMISSION_GRANTED))
-        {
+        if ((grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                && (grantResults[1] == PackageManager.PERMISSION_GRANTED)) {
             Log.d("MIAPP", "ME ha concecido los permisos");
         } else {
             Log.d("MIAPP", "NO ME ha concecido los permisos");
-            Toast.makeText(this,"Hace falta que actives los permisos para Personalizar tu Avatar ...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Hace falta que actives los permisos para Personalizar tu Avatar ...", Toast.LENGTH_SHORT).show();
             permisosOK = false;
         }
     }
@@ -655,7 +658,7 @@ public class MainActivity extends AppCompatActivity {
 
         Log.d("MIAPP", "Quiere hacer una foto");
         Intent intent_foto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        this.photo_uri = Utilidades.crearFicheroImagen ();
+        this.photo_uri = Utilidades.crearFicheroImagen();
         intent_foto.putExtra(MediaStore.EXTRA_OUTPUT, this.photo_uri);
         Utilidades.desactivarModoEstricto();
         startActivityForResult(intent_foto, Constantes.CODIGO_PETICION_HACER_FOTO);
@@ -668,18 +671,17 @@ public class MainActivity extends AppCompatActivity {
         //intent_pide_foto.setAction(Intent.ACTION_PICK);//seteo la acción para galeria
         intent_pide_foto.setAction(Intent.ACTION_GET_CONTENT);//seteo la acción
         intent_pide_foto.setType("image/*");//tipo mime
-
         startActivityForResult(intent_pide_foto, Constantes.CODIGO_PETICION_SELECCIONAR_FOTO);
 
     }
 
-    private void setearImagenDesdeArchivo (int resultado, Intent data)
-    {
-        switch (resultado){
+    private void setearImagenDesdeArchivo(int resultado, Intent data) {
+        switch (resultado) {
             case RESULT_OK:
                 Log.d("MIAPP", "La foto ha sido seleccionada");
 
                 this.photo_uri = data.getData();//obtenemos la uri de la foto seleccionada
+                Log.d(Constantes.TAG, photo_uri.getPath());
 
                 InputStream imageStream = null;
                 try {
@@ -694,10 +696,22 @@ public class MainActivity extends AppCompatActivity {
                 this.avatarJugador.setImageBitmap(selectedImage);
 
                 Drawable d = new BitmapDrawable(getResources(), selectedImage);
-                Utilidades.subirImagenFirebase(jugador.getJugadorId(), d);
+
+
+                // Si tenemos internet, lo subimos a Firebase
+                if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
+                    Utilidades.subirImagenFirebase(jugador.getJugadorId(), d);
+                }
+
+                // Grabar en Shared Preferences que tenemos el archivo creado en el dispositivo
+                Uri selectedImageUri = data.getData();
+                String path = photo_uri.getPath();
+                SharedPrefs.saveAvatarPrefs(this, path);
+                SharedPrefs.saveNickPrefs(this, nickET.getText().toString());
+
 
                 //    this.avatarJugador.setImageURI(photo_uri);
-              //  this.avatarJugador.setScaleType(ImageView.ScaleType.FIT_XY);
+                //  this.avatarJugador.setScaleType(ImageView.ScaleType.FIT_XY);
 
                 break;
             case RESULT_CANCELED:
@@ -706,10 +720,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setearImagenDesdeCamara (int resultado, Intent intent)
-    {
-        switch (resultado)
-        {
+    private void setearImagenDesdeCamara(int resultado, Intent intent) {
+        switch (resultado) {
             case RESULT_OK:
                 Log.d("MIAPP", "Tiró la foto bien");
 
@@ -725,7 +737,16 @@ public class MainActivity extends AppCompatActivity {
                 this.avatarJugador.setImageBitmap(selectedImage);
 
                 Drawable d = new BitmapDrawable(getResources(), selectedImage);
-                Utilidades.subirImagenFirebase(jugador.getJugadorId(), d);
+
+                // Si tenemos internet, lo subimos a Firebase
+                if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
+                    Utilidades.subirImagenFirebase(jugador.getJugadorId(), d);
+                }
+
+
+                // Grabar en Shared Preferences que tenemos el archivo creado en el dispositivo
+                SharedPrefs.saveAvatarPrefs(this, Utilidades.crearNombreArchivo());
+                SharedPrefs.saveNickPrefs(this, nickET.getText().toString());
 
 
                 //this.avatarJugador.setImageURI(this.photo_uri);
@@ -737,35 +758,29 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         //super.onActivityResult(requestCode, resultCode, data);//no llamamos al padre
-        if (requestCode==Constantes.CODIGO_PETICION_SELECCIONAR_FOTO)
-        {
-            setearImagenDesdeArchivo (resultCode, data);
-        } else if (requestCode == Constantes.CODIGO_PETICION_HACER_FOTO)
-        {
-            setearImagenDesdeCamara (resultCode, data);
-        }
-    }
-
-    private void esperar1Segundo (){
-        Log.d(Constantes.TAG, "Esperamos 1 segundo");
-        // Dejamos una pausa para que se actualice la sala
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if (requestCode == Constantes.CODIGO_PETICION_SELECCIONAR_FOTO) {
+            setearImagenDesdeArchivo(resultCode, data);
+        } else if (requestCode == Constantes.CODIGO_PETICION_HACER_FOTO) {
+            setearImagenDesdeCamara(resultCode, data);
         }
     }
 
 
-    private void recuperarImagenGuardada() {
+
+    private void recuperarImagenGuardada(String ruta_archivo) {
         // Recuperamos la imagen del usuario del archivo en el dispositivo, si existe
         // si no existe, la cargamos de Firebase, que siempre la tenemos
-        File fotopath = getDatabasePath(Utilidades.crearNombreArchivo());
+
+        Log.d(Constantes.TAG, "Ruta archivo: " + ruta_archivo);
+
+        File fotopath = getDatabasePath(ruta_archivo);
         boolean existe_foto = fotopath.exists();
         if (existe_foto) {
+            Log.d(Constantes.TAG, "Existe foto: " + ruta_archivo);
             InputStream imageStream = null;
             try {
                 imageStream = getContentResolver().openInputStream(Uri.fromFile(fotopath));
@@ -782,7 +797,33 @@ public class MainActivity extends AppCompatActivity {
     private void resetearRecords() {
         // Crear Salas en Firebase
         for (int n = 0; n < 10; n++) {
-            mDatabase.child("RECORDS").child(""+n).setValue(new Records("adfadfadfasdfadf" , "Jugador " + n , "0" ));
+            mDatabase.child("RECORDS").child("" + n).setValue(new Records("adfadfadfasdfadf", "Jugador " + n, "0"));
         }
     }
+
+    private void limpiarSala(String sala) {
+        // Dejamos la sala vacía para poder reusarla
+        Partida partida = new Partida();
+        partida.setJugador1ID("0");
+        partida.setJugador2ID("0");
+        partida.setGanador(0);
+        partida.setJugador2Ready(false);
+        partida.setJugador1Ready(false);
+        partida.setJugando(false);
+        partida.setTablero(new Tablero());
+        partida.setTurno(0);
+        mDatabase.child("PARTIDAS").child(sala).setValue(partida);
+    }
+
+
+    private void pausa(int tiempo) {
+        // Dejamos una pausa para que se actualice la sala
+        try {
+            Thread.sleep(tiempo);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }

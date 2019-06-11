@@ -14,4 +14,8 @@ public class Constantes {
     public static final int CODIGO_PETICION_PERMISOS = 150;
     public static final int CODIGO_PETICION_HACER_FOTO = 200;
 
+    public static final String ARCHIVO_PREFS = "ARCHIVOPREFS";
+    public static final String NICKNAME_PREFS = "NICKNAME";
+    public static final String RUTA_FOTO_PREFS = "RUTAFOTO";
+
 }
