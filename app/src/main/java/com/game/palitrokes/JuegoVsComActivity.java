@@ -2,7 +2,7 @@ package com.game.palitrokes;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -22,10 +22,10 @@ import com.game.palitrokes.Modelos.Palo;
 import com.game.palitrokes.Modelos.Partida;
 import com.game.palitrokes.Modelos.Tablero;
 import com.game.palitrokes.Utilidades.Constantes;
-import com.game.palitrokes.Utilidades.Utilidades;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
+import com.game.palitrokes.Utilidades.SharedPrefs;
+import com.game.palitrokes.Utilidades.Sonidos;
+import com.game.palitrokes.Utilidades.UtilityNetwork;
+import com.game.palitrokes.Utilidades.UtilsFirebase;
 
 import java.util.Random;
 
@@ -35,18 +35,16 @@ public class JuegoVsComActivity extends AppCompatActivity {
     private LinearLayout linearBase;
     private Partida partida;
     private Jugador jugador;
-    private Jugador rival;
-    private String salaJuego;
     private ImageView avatarJ1, avatarJ2;
-    private TextView nickJ1, nickJ2, winsJ1, winsJ2, tiempoJ1, tiempoJ2;
+    private TextView nickJ1, nickJ2, winsJ1, winsJ2, tiempoJ1, tiempoJ2, level;
     private Button okJ1, okJ2;
     private int[] colores;
     private CountDownTimer cronometro1;
     private CountDownTimer cronometro2;
     CountDownTimer jugadaComTimer;
     private boolean finTiempo;
-    private MediaPlayer mediaPlayer;
     private int palosQuitados;
+    private Sonidos sonidos;
 
 
     @Override
@@ -56,8 +54,8 @@ public class JuegoVsComActivity extends AppCompatActivity {
         getSupportActionBar().hide();
 
         // Sonidos
-        mediaPlayer = MediaPlayer.create(this, R.raw.toc);
-
+       sonidos = new Sonidos(this);
+       sonidos.play(Sonidos.Efectos.ONLINE);
 
         // recuperamos las Views
         linearBase = findViewById(R.id.tableroLL);
@@ -71,6 +69,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
         tiempoJ2 = findViewById(R.id.tiempoJ2_TV);
         okJ1 = findViewById(R.id.ok_J1_BTN);
         okJ2 = findViewById(R.id.ok_J2_BTN);
+        level = findViewById(R.id.levelTV);
 
         okJ1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -96,22 +95,17 @@ public class JuegoVsComActivity extends AppCompatActivity {
         String nickJugador = intent.getStringExtra("NICKNAME");
         int victorias = intent.getIntExtra("VICTORIAS", 0);
 
-
         //Seteamos el jugador con los datos del intent
         jugador = new Jugador();
         jugador.setNumeroJugador(1);
         jugador.setVictorias(victorias);
         jugador.setNickname(nickJugador);
         jugador.setJugadorId(idJugador);
-        actualizarVistaJugador(jugador);
+        actualizarVistaJugador();
 
-        // creamos un rival vacío
-        rival = new Jugador();
-        rival.setNickname("Palitrokes");
-        rival.setVictorias(999);
-        rival.setNumeroJugador(2);
-        rival.setJugadorId("PALITROKES");
-        actualizarVistaJugador(rival);
+
+        nickJ2.setText("Palitrokes");
+        winsJ2.setText("∞");
 
 
         // Cronometro para el jugador 1
@@ -144,46 +138,53 @@ public class JuegoVsComActivity extends AppCompatActivity {
             }
         };
 
-        // Inicializamos el array de colores aleatorios para el fondo de la pantalla
-        colores = new int[6];
-        Random rnd = new Random();
-        for (int n = 0; n < colores.length; n++) {
-            colores[n] = Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256));
-        }
+
 
         // Creamos una nueva partida
         // El turno será aleatorio para que no haya ventajas
         partida = new Partida();
-        //  partida.setTurno(rnd.nextInt(2) + 1);
+        // Asegurarnos que en la primera jugada, el jugador tenga las de ganar siempre
+        Tablero nuevoTablero;
+        do {
+            nuevoTablero = new Tablero(partida.getLevel());
+        } while (!new JugadaCom().esGanador(nuevoTablero));
+        partida.setTablero(nuevoTablero);
         partida.setTurno(1);
         partida.setJugador1ID(jugador.getJugadorId());
-        partida.setJugador2ID(rival.getJugadorId());
 
-        visualizarTablero(partida.getTablero());
-        actualizarViewsCambioTurno();
+        JugadaCom jugadaCom = new JugadaCom();
+        // Creamos un objeto "JugadaCom" para poder calcular las posiciones del tablero
+        jugadaCom = new JugadaCom();
+
+        inicializarColores();
+
+        mostrarLevel();
+
 
     }
 
-    private void actualizarVistaJugador(Jugador jugadorView) {
-        if (jugadorView.getNumeroJugador() == 1) {
-            // Descargar la imagen de Firebase solo 1 vez
-            if (jugador.getNickname().equals("Jugador")) {
-                    avatarJ1.setImageResource(R.drawable.camera);
-            } else {
+    private void actualizarVistaJugador() {
+
+
+        // Mirar si tenemos datos en Shared Preferences
+        if (!SharedPrefs.getAvatarPrefs(this).equals("")) {
+            String ruta_archivo = SharedPrefs.getAvatarPrefs(getApplicationContext());
+            avatarJ1.setImageURI(Uri.parse(ruta_archivo));
+        } else {
+            // Si no hay nada en Shared preferences lo recuperamos de Firebase
+            // Mirar si tenemos internet
+            if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
                 if (avatarJ1.getTag().equals("false")) {
-                    Utilidades.descargarImagenFirebase(jugadorView.getJugadorId(), avatarJ1);
+                    UtilsFirebase.descargarImagenFirebase(jugador.getJugadorId(), avatarJ1);
                     avatarJ1.setTag("true");
                 }
             }
-
-            nickJ1.setText(jugadorView.getNickname());
-            winsJ1.setText("Victorias: " + jugadorView.getVictorias());
-
-        } else {
-            // La imagen es fija, la hemos seleccionado en el onCreate
-            nickJ2.setText(jugadorView.getNickname());
-            winsJ2.setText("Victorias: " + jugadorView.getVictorias() + "");
         }
+
+        winsJ1.setText("Victorias: " + jugador.getVictorias());
+        nickJ1.setText(jugador.getNickname());
+
+
     }
 
     private void visualizarTablero(Tablero tablero) {
@@ -214,7 +215,6 @@ public class JuegoVsComActivity extends AppCompatActivity {
             montonLL.setId(newId());
             montonLL.setPadding(10, 0, 10, 0);
             montonLL.setBackgroundColor(colores[montonTMP.getNumeroMonton()]);
-
 
 //            int numeroPalos = montonTMP.getPalos().size();
 
@@ -275,7 +275,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
                     partida.getTablero().getMontones().get(montonTocado).setNumeroMonton(montonTocado);
                     partida.getTablero().setMontonSeleccionado(montonTocado);
                 }
-                mediaPlayer.start();
+                sonidos.play(Sonidos.Efectos.TICK);
             }
 
         }
@@ -374,10 +374,10 @@ public class JuegoVsComActivity extends AppCompatActivity {
                 //  Pasar el tablero a la Clase
                 //  JugadaCom Nos devuelve un String con la
                 //  jugada que va ha hacer el ordenador
-                String jugadaCom = JugadaCom.jugadaCom(partida.getTablero());
 
                 // Hacemos los cambios que sean
-                hacerJugadaCom(jugadaCom);
+                JugadaCom jugadaCom = new JugadaCom();
+                hacerJugadaCom(jugadaCom.jugadaCom(partida.getTablero()));
 
             }
 
@@ -427,7 +427,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
                 if (palosQuitados < palosAQuitar) {
                     partida.getTablero().getMontones().get(montonEnJuego).getPalos().get(palosQuitados).setSeleccionado(true);
                     palosQuitados++;
-                    mediaPlayer.start();
+                    sonidos.play(Sonidos.Efectos.TICK);
                     visualizarTablero(partida.getTablero());
                 }
 
@@ -477,6 +477,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
         cronometro1.cancel();
         cronometro2.cancel();
 
+
         Intent volverIntent = new Intent(this, MainActivity.class);
         volverIntent.putExtra("SALA_ANTERIOR", partida.getPartidaID());
 
@@ -488,11 +489,22 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
         Log.d(Constantes.TAG, "Ganador: " + partida.getGanador());
         if (partida.getGanador() == jugador.getNumeroJugador()) {
-            jugador.setVictorias(1);
             resultado += "Has Ganado ¡Enhorabuena!";
+            sonidos.play(Sonidos.Efectos.GANAR);
+
+            siguienteNivel();
+
+
         } else {
             jugador.setDerrotas(1);
-            resultado += "Lo siento ¡has perdido!";
+            resultado += "Gana Palitrokes.\nHas alcanzado el nivel " + partida.getLevel();
+            sonidos.play(Sonidos.Efectos.PERDER);
+            // Guardar record
+            UtilsFirebase.guardarRecords(jugador, partida.getLevel());
+            SharedPrefs.saveVictoriasPrefs(this, jugador.getVictorias());
+            finish();
+            // Lanzamos el intent del MainActivity
+            startActivity(volverIntent);
 
 
         }
@@ -508,10 +520,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        // Lanzamos el intent del MainActivity
-        startActivity(volverIntent);
 
-        finish();
     }
 
 
@@ -531,15 +540,85 @@ public class JuegoVsComActivity extends AppCompatActivity {
     }
 
 
+/*    @Override
+    protected void onPause() {
+        super.onPause();
+        finTiempo = true;
+        finJuego();
+
+    }*/
+
     @Override
     protected void onStop() {
 
         cronometro1.cancel();
         cronometro2.cancel();
-        jugadaComTimer.cancel();
-
+        if (jugadaComTimer != null) {
+            jugadaComTimer.cancel();
+        }
         super.onStop();
     }
 
+
+
+    private void mostrarLevel() {
+
+        linearBase.setVisibility(View.INVISIBLE);
+        level.setVisibility(View.VISIBLE);
+        level.setText("Nivel " + (partida.getLevel() + 1));
+
+        final CountDownTimer levelCrono = new CountDownTimer(3000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+
+            }
+
+            @Override
+            public void onFinish() {
+                level.setVisibility(View.INVISIBLE);
+                linearBase.setVisibility(View.VISIBLE);
+                visualizarTablero(partida.getTablero());
+                actualizarViewsCambioTurno();
+            }
+        };
+
+        levelCrono.start();
+
+    }
+
+    private void siguienteNivel() {
+
+        partida.levelUp();
+
+        // Asegurarnos que en la primera jugada, el jugador tenga las de ganar siempre
+        Tablero nuevoTablero;
+        do {
+            nuevoTablero = new Tablero(partida.getLevel());
+        } while (!new JugadaCom().esGanador(nuevoTablero));
+
+        partida.setTablero(nuevoTablero);
+        partida.setGanador(0);
+        partida.setTurno(1);
+        jugador.setVictorias(1);
+
+
+        sonidos.play(Sonidos.Efectos.BGM);
+
+        inicializarColores();
+
+        actualizarVistaJugador();
+
+        mostrarLevel();
+    }
+
+
+    private void inicializarColores() {
+        // Inicializamos el array de colores aleatorios para el fondo de la pantalla
+        colores = new int[6];
+        Random rnd = new Random();
+        for (int n = 0; n < colores.length; n++) {
+            colores[n] = Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256));
+        }
+    }
 
 }

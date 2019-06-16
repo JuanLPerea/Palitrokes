@@ -17,7 +17,7 @@
             android:screenOrientation="portrait"
             ></activity>
         <activity
-            android:name=".JuegoActivity"
+            android:name=".JuegoOnlineActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".MainActivity"

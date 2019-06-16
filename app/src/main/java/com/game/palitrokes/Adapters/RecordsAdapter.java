@@ -11,6 +11,7 @@ import android.widget.TextView;
 import com.game.palitrokes.Modelos.Records;
 import com.game.palitrokes.R;
 import com.game.palitrokes.Utilidades.Utilidades;
+import com.game.palitrokes.Utilidades.UtilsFirebase;
 
 import org.w3c.dom.Text;
 
@@ -43,9 +44,10 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterV
 
         Records recordRow = records.get(i);
 
-        Utilidades.descargarImagenFirebase(recordRow.getIdJugador(), holder.avatarRecord);
+        UtilsFirebase.descargarImagenFirebase(recordRow.getIdJugador(), holder.avatarRecord);
         holder.nickRecord.setText(recordRow.getNickname());
-        holder.victoriasRecord.setText(recordRow.getVictorias());
+        holder.levelRecord.setText(recordRow.getLevel() + "");
+        holder.victoriasRecord.setText(recordRow.getVictorias() + "");
 
     }
 
@@ -56,7 +58,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterV
 
     public class AdapterViewHolder extends RecyclerView.ViewHolder {
 
-        TextView nickRecord, victoriasRecord;
+        TextView nickRecord, levelRecord,  victoriasRecord;
         ImageView avatarRecord;
 
         public AdapterViewHolder(@NonNull View itemView)
@@ -65,6 +67,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterV
 
             avatarRecord = itemView.findViewById(R.id.avatarRecordIV);
             nickRecord = itemView.findViewById(R.id.nickRecordET);
+            levelRecord = itemView.findViewById(R.id.recordlevelET);
             victoriasRecord = itemView.findViewById(R.id.recordVictoriasET);
 
         }

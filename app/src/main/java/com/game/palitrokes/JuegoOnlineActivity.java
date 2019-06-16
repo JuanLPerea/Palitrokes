@@ -22,7 +22,9 @@ import com.game.palitrokes.Modelos.Palo;
 import com.game.palitrokes.Modelos.Partida;
 import com.game.palitrokes.Modelos.Tablero;
 import com.game.palitrokes.Utilidades.Constantes;
+import com.game.palitrokes.Utilidades.Sonidos;
 import com.game.palitrokes.Utilidades.Utilidades;
+import com.game.palitrokes.Utilidades.UtilsFirebase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -33,7 +35,7 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.Random;
 
-public class JuegoActivity extends AppCompatActivity {
+public class JuegoOnlineActivity extends AppCompatActivity {
 
     private LinearLayout linearBase;
     private Partida partida;
@@ -55,6 +57,7 @@ public class JuegoActivity extends AppCompatActivity {
     private CountDownTimer cronometro1;
     private CountDownTimer cronometro2;
     private boolean finTiempo;
+    private Sonidos sonidos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +78,10 @@ public class JuegoActivity extends AppCompatActivity {
         okJ1 = findViewById(R.id.ok_J1_BTN);
         okJ2 = findViewById(R.id.ok_J2_BTN);
 
+        // Sonidos
+        sonidos = new Sonidos(this);
+        sonidos.play(Sonidos.Efectos.ONLINE);
+
         okJ1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -88,7 +95,6 @@ public class JuegoActivity extends AppCompatActivity {
                 okJugada(v);
             }
         });
-
 
         finTiempo = false;
 
@@ -190,7 +196,7 @@ public class JuegoActivity extends AppCompatActivity {
         if (jugadorView.getNumeroJugador() == 1) {
             // Descargar la imagen de Firebase solo 1 vez
             if (avatarJ1.getTag().equals("false")) {
-                Utilidades.descargarImagenFirebase(jugadorView.getJugadorId(), avatarJ1);
+                UtilsFirebase.descargarImagenFirebase(jugadorView.getJugadorId(), avatarJ1);
                 avatarJ1.setTag("true");
             }
             nickJ1.setText(jugadorView.getNickname());
@@ -199,7 +205,7 @@ public class JuegoActivity extends AppCompatActivity {
         } else {
             // Descargar la imagen de Firebase solo 1 vez
             if (avatarJ2.getTag().equals("false")) {
-                Utilidades.descargarImagenFirebase(jugadorView.getJugadorId(), avatarJ2);
+                UtilsFirebase.descargarImagenFirebase(jugadorView.getJugadorId(), avatarJ2);
                 avatarJ2.setTag("true");
             }
             nickJ2.setText(jugadorView.getNickname());
@@ -334,7 +340,7 @@ public class JuegoActivity extends AppCompatActivity {
                     partida.getTablero().getMontones().get(montonTocado).setNumeroMonton(montonTocado);
                     partida.getTablero().setMontonSeleccionado(montonTocado);
                 }
-
+                sonidos.play(Sonidos.Efectos.TICK);
             }
 
             salaRef.setValue(partida);
@@ -508,14 +514,14 @@ public class JuegoActivity extends AppCompatActivity {
         if (partida.getGanador() == jugador.getNumeroJugador()) {
             jugador.setVictorias(1);
             resultado += "Has Ganado ¡Enhorabuena!";
+            sonidos.play(Sonidos.Efectos.GANAR);
         } else {
             jugador.setDerrotas(1);
             resultado += "Lo siento ¡has perdido!";
+            sonidos.play(Sonidos.Efectos.PERDER);
         }
 
         Toast.makeText(this, resultado , Toast.LENGTH_LONG).show();
-
-
 
         // Actualizamos Firebase y limpiamos los datos...
         limpiarSala();
@@ -529,11 +535,10 @@ public class JuegoActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
+        finish();
         // Lanzamos el intent del MainActivity
          startActivity(volverIntent);
 
-         finish();
     }
 
     private void limpiarSala() {
@@ -544,8 +549,8 @@ public class JuegoActivity extends AppCompatActivity {
         partida.setJugador2Ready(false);
         partida.setJugador1Ready(false);
         partida.setJugando(false);
-        partida.setTablero(new Tablero());
-        partida.setTurno(0);
+        partida.setTablero(new Tablero(0));
+        partida.setTurno(1);
         salaRef.setValue(partida);
     }
 

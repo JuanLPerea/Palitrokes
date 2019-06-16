@@ -1,11 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    tools:context=".JuegoOnlineActivity">
+
+
+
+    <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context=".JuegoActivity">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -56,7 +62,8 @@
                     android:gravity="center"
                     android:text="15"
                     android:textColor="@color/rojo"
-                    android:textSize="36sp" />
+                    android:textSize="36sp"
+                    android:visibility="invisible" />
 
                 <Button
                     android:id="@+id/ok_J1_BTN"
@@ -130,7 +137,8 @@
                     android:gravity="center"
                     android:text="15"
                     android:textColor="@color/rojo"
-                    android:textSize="36sp" />
+                    android:textSize="36sp"
+                    android:visibility="invisible" />
 
                 <Button
                     android:id="@+id/ok_J2_BTN"
@@ -144,4 +152,18 @@
 
 
     </LinearLayout>
-</LinearLayout>
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/levelTV"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:text="Nivel 1"
+        android:textColor="@android:color/black"
+        android:textSize="48dp"
+        android:visibility="invisible" />
+
+
+</FrameLayout>

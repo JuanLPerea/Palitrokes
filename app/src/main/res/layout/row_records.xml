@@ -10,6 +10,7 @@
         android:id="@+id/avatarRecordIV"
         android:layout_width="32dp"
         android:layout_height="32dp"
+        android:layout_marginLeft="20dp"
         app:srcCompat="@drawable/camera" />
 
     <TextView
@@ -18,15 +19,24 @@
         android:layout_height="wrap_content"
         android:layout_weight="10"
         android:gravity="center"
-        android:text="TextView"
+        android:text="Jugador"
+        android:textSize="24sp" />
+
+    <TextView
+        android:id="@+id/recordlevelET"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="5"
+        android:gravity="center"
+        android:text="-"
         android:textSize="24sp" />
 
     <TextView
         android:id="@+id/recordVictoriasET"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="10"
+        android:layout_weight="5"
         android:gravity="center"
-        android:text="TextView"
+        android:text="-"
         android:textSize="24sp" />
 </LinearLayout>

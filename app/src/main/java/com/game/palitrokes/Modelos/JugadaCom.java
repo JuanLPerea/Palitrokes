@@ -16,71 +16,17 @@ import java.util.Random;
  */
 public class JugadaCom {
 
-    public static String jugadaCom(Tablero tablero) {
+    private List<String> montonesBinario = new ArrayList<>();
+    private int maxLargoBinario = 0;
+    private int[] sumaColumnas;
+
+    public String jugadaCom(Tablero tablero) {
 
         String jugadaSalida = null;
 
-
-        // Analizar el tablero para saber si estamos en una posición ganadora o perdedora
-        // ----------------------------------------------------------------------------------------------------
-        List<String> montonesBinario = new ArrayList<>();
-        int maxLargoBinario = 0;
-
-        // Convertir el número de palos de cada montón a binario y
-        // Guardarlo en una lista de Strings
-        for (Monton montonTmp : tablero.getMontones()) {
-            String cadenaBinario = decimalABinario(montonTmp.getPalos().size());
-            // Guardamos el largo máximo de las cadenas en formato binario
-            if (cadenaBinario.length() > maxLargoBinario) {
-                maxLargoBinario = cadenaBinario.length() - 1;
-            }
-            montonesBinario.add(cadenaBinario);
-            Log.d(Constantes.TAG, montonTmp.getPalos().size() + "");
-        }
-
-        Log.d(Constantes.TAG, "Numero de columnas: " + maxLargoBinario);
-
-        // añadir ceros a la izquierda si es necesario
-        List<String> nuevoBinarioString = new ArrayList<>();
-        for (String binarioString : montonesBinario) {
-            String nuevoString = binarioString;
-            if (binarioString.length() <= maxLargoBinario) {
-                for (int cnd = 0; cnd < maxLargoBinario - binarioString.length() + 1; cnd++) {
-                    nuevoString = "0" + nuevoString;
-                }
-            }
-            nuevoBinarioString.add(nuevoString);
-        }
-        montonesBinario = nuevoBinarioString;
-
-
-        for (String binarioString : montonesBinario) {
-            Log.d(Constantes.TAG, "Montones en binario: " + binarioString);
-        }
-
-
-        // Sumar las columnas
-        int numeroDePares = 0;
-        int[] sumaColumnas = new int[maxLargoBinario + 1];
-        for (int posicion = 0; posicion <= maxLargoBinario; posicion++) {
-            for (String binarioString : montonesBinario) {
-                if ((binarioString.length() - 1) - posicion >= 0) {
-                    sumaColumnas[maxLargoBinario - posicion] += Integer.parseInt(binarioString.charAt(binarioString.length() - posicion - 1) + "");
-                }
-            }
-        }
-
-
-        for (int cnd = 0; cnd <= maxLargoBinario; cnd++) {
-            Log.d(Constantes.TAG, "Suma Columnas: " + sumaColumnas[cnd]);
-            if (sumaColumnas[cnd] % 2 == 0) numeroDePares++;
-        }
-
-        Log.d(Constantes.TAG, "Numero de pares: " + numeroDePares);
-
         // Posicion perdedora, todas las columnas pares
         // ---------------------------------------------------------------------------------------------
-        if (numeroDePares == maxLargoBinario + 1) {
+        if (!esGanador(tablero)) {
             Log.d(Constantes.TAG, "Posición perdedora");
 
             // No podemos hacer nada, jugamos al azar con la esperanza de que se equivoque el otro jugador
@@ -231,6 +177,78 @@ public class JugadaCom {
         return binario;
 
     }
+
+    public boolean esGanador(Tablero tablero) {
+
+        boolean esGanador = false;
+
+        // Analizar el tablero para saber si estamos en una posición ganadora o perdedora
+        // ----------------------------------------------------------------------------------------------------
+
+
+        // Convertir el número de palos de cada montón a binario y
+        // Guardarlo en una lista de Strings
+        for (Monton montonTmp : tablero.getMontones()) {
+            String cadenaBinario = decimalABinario(montonTmp.getPalos().size());
+            // Guardamos el largo máximo de las cadenas en formato binario
+            if (cadenaBinario.length() > maxLargoBinario) {
+                maxLargoBinario = cadenaBinario.length() - 1;
+            }
+            montonesBinario.add(cadenaBinario);
+            Log.d(Constantes.TAG, montonTmp.getPalos().size() + "");
+        }
+
+        Log.d(Constantes.TAG, "Numero de columnas: " + maxLargoBinario);
+
+        // añadir ceros a la izquierda si es necesario
+        List<String> nuevoBinarioString = new ArrayList<>();
+        for (String binarioString : montonesBinario) {
+            String nuevoString = binarioString;
+            if (binarioString.length() <= maxLargoBinario) {
+                for (int cnd = 0; cnd < maxLargoBinario - binarioString.length() + 1; cnd++) {
+                    nuevoString = "0" + nuevoString;
+                }
+            }
+            nuevoBinarioString.add(nuevoString);
+        }
+        montonesBinario = nuevoBinarioString;
+
+
+        for (String binarioString : montonesBinario) {
+            Log.d(Constantes.TAG, "Montones en binario: " + binarioString);
+        }
+
+
+        // Sumar las columnas
+        int numeroDePares = 0;
+        sumaColumnas = new int[maxLargoBinario + 1];
+        for (int posicion = 0; posicion <= maxLargoBinario; posicion++) {
+            for (String binarioString : montonesBinario) {
+                if ((binarioString.length() - 1) - posicion >= 0) {
+                    sumaColumnas[maxLargoBinario - posicion] += Integer.parseInt(binarioString.charAt(binarioString.length() - posicion - 1) + "");
+                }
+            }
+        }
+
+
+        for (int cnd = 0; cnd <= maxLargoBinario; cnd++) {
+            Log.d(Constantes.TAG, "Suma Columnas: " + sumaColumnas[cnd]);
+            if (sumaColumnas[cnd] % 2 == 0) numeroDePares++;
+        }
+
+        Log.d(Constantes.TAG, "Numero de pares: " + numeroDePares);
+
+        if (numeroDePares == maxLargoBinario + 1) {
+            esGanador = false;
+        } else {
+            esGanador = true;
+        }
+
+
+        return esGanador;
+    }
+
+
 
 
 }

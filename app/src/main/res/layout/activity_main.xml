@@ -13,6 +13,15 @@
         android:layout_height="0dp"
         android:layout_weight="0.75">
 
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|left"
+            android:layout_marginLeft="10dp"
+            android:src="@drawable/pako" />
+
+
         <ImageView
             android:id="@+id/imageView"
             android:layout_width="match_parent"
@@ -29,13 +38,7 @@
             android:layout_marginRight="30dp"
             android:text="Online: 0" />
 
-        <ImageView
-            android:id="@+id/imageView2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|left"
-            android:layout_marginLeft="50dp"
-            app:srcCompat="@drawable/pako" />
+
     </FrameLayout>
 
     <LinearLayout
@@ -51,13 +54,27 @@
             android:gravity="center_horizontal|center_vertical"
             android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/nickET"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:ems="10"
-                android:hint="Nickname"
-                android:inputType="textPersonName" />
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/nickET"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:hint="Nickname"
+                    android:inputType="textPersonName"
+                    android:maxLength="10" />
+
+                <TextView
+                    android:id="@+id/victoriasET"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Victorias:" />
+            </LinearLayout>
 
             <ImageView
                 android:id="@+id/avatarIV"
@@ -65,6 +82,7 @@
                 android:layout_height="64dp"
                 android:onClick="personalizarAvatar"
                 android:src="@drawable/camera" />
+
         </LinearLayout>
 
         <LinearLayout
@@ -87,6 +105,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:alpha="1"
+                android:enabled="false"
                 android:onClick="jugarOnline"
                 android:text="Jugar Online"
                 android:visibility="invisible" />
@@ -101,6 +120,50 @@
             android:onClick="crearSalas"
             android:text="Records"
             android:textSize="24sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@color/common_google_signin_btn_text_light_disabled"
+            android:gravity="center">
+
+            <ImageView
+                android:id="@+id/cabecera1"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/camera"
+                android:layout_marginLeft="20dp" />
+
+            <TextView
+                android:id="@+id/cabecera2"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="10"
+                android:gravity="center"
+                android:text="Jugador"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/cabecera3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="5"
+                android:gravity="center"
+                android:text="Nivel"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/cabecera4"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="5"
+                android:gravity="center"
+                android:text="Victorias"
+                android:textSize="16sp" />
+
+
+        </LinearLayout>
 
 
     </LinearLayout>

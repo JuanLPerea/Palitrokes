@@ -28,65 +28,6 @@ import java.lang.reflect.Method;
 
 public class Utilidades {
 
-    private static FirebaseStorage storage;
-    private static StorageReference storageRef;
-    private static Bitmap imagen;
-
-    public static void subirImagenFirebase(String jugadorID, Drawable drawable){
-
-        // Referencia a Firebase Storage
-        storage = FirebaseStorage.getInstance();
-        storageRef = storage.getReference();
-
-        Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] data = baos.toByteArray();
-
-        UploadTask uploadTask = storageRef.child("AVATAR").child(jugadorID).putBytes(data);
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
-                Log.d(Constantes.TAG, "Error Subiendo Imágen " + exception);
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, etc.
-                // ...
-                Log.d(Constantes.TAG, "Foto Subida Correctamente");
-            }
-        });
-    }
-
-
-    public static void descargarImagenFirebase(String jugadorID, final ImageView imageView) {
-        storage = FirebaseStorage.getInstance();
-        storageRef = storage.getReference();
-        StorageReference avatarRef = storageRef.child("AVATAR").child(jugadorID);
-        imagen = null;
-
-        final long ONE_MEGABYTE = 1024 * 1024;
-        avatarRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
-            @Override
-            public void onSuccess(byte[] bytes) {
-                // Data for "images/island.jpg" is returns, use this as needed
-                imagen = BitmapFactory.decodeByteArray(bytes, 0 , bytes.length);
-                imageView.setImageBitmap(imagen);
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle any errors
-                Log.d(Constantes.TAG, "Error Descargando Imágen " + exception);
-             //   imageView.setImageDrawable(   R.drawable.camera);
-            }
-        });
-
-    }
-
-
     //creamos el fichero donde irá la imagen
     public static Uri crearFicheroImagen () {
         Uri uri_destino = null;

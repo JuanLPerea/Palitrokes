@@ -36,5 +36,20 @@ public class SharedPrefs {
         editor.commit();
     }
 
+    public static int getVictoriasPrefs(Context context) {
+        int nickPrefs = 0;
+        SharedPreferences sharedPreferences = context.getSharedPreferences(Constantes.ARCHIVO_PREFS, Context.MODE_PRIVATE);
+        nickPrefs = sharedPreferences.getInt(Constantes.VICTORIAS_PREFS, 0);
+        return nickPrefs;
+    }
+
+
+    public static void saveVictoriasPrefs(Context context,int victorias) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(Constantes.ARCHIVO_PREFS, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(Constantes.VICTORIAS_PREFS, victorias);
+        editor.commit();
+    }
+
 
 }

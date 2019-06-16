@@ -14,22 +14,38 @@ public class Tablero {
     private final int MAX_MONTONES = 6;
     private final int MIN_MONTONES = 3;
 
+
     private List<Monton> montones;
     private int numMontones;
     private int montonSeleccionado;
 
     // Constructor generamos un nuevo tablero con montones y monedas aleatoriamente
-    public Tablero() {
+    public Tablero(int level) {
         Random r = new Random();
 
-        this.numMontones = r.nextInt(MAX_MONTONES - MIN_MONTONES) + MIN_MONTONES;
+        //this.numMontones = r.nextInt(MAX_MONTONES - MIN_MONTONES) + MIN_MONTONES;
+
+        // El número de montones depende del nivel que le pasemos
+        if (level>10) {
+            this.numMontones = 6;
+        } else if (level>6) {
+            this.numMontones = 5;
+        } else if (level>3) {
+            this.numMontones = 4;
+        } else  {
+            this.numMontones = 3;
+        }
+
         this.montonSeleccionado = -1;
 
         montones = new ArrayList<>();
 
         for (int n = 0; n < this.numMontones; n++) {
-            montones.add(new Monton(n));
+            montones.add(new Monton(n, level));
         }
+    }
+
+    public Tablero() {
     }
 
     public int getMontonSeleccionado() {
@@ -43,6 +59,7 @@ public class Tablero {
     public List<Monton> getMontones() {
         return montones;
     }
+
 
     public void setMontones(List<Monton> montones) {
         this.montones = montones;

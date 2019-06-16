@@ -10,7 +10,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -20,8 +19,10 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -39,6 +40,7 @@ import com.game.palitrokes.Utilidades.Constantes;
 import com.game.palitrokes.Utilidades.SharedPrefs;
 import com.game.palitrokes.Utilidades.Utilidades;
 import com.game.palitrokes.Utilidades.UtilityNetwork;
+import com.game.palitrokes.Utilidades.UtilsFirebase;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -50,8 +52,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference jugadoresRef;
     private DatabaseReference recordsRef;
     private EditText nickET;
-    private TextView onlineTV;
+    private TextView onlineTV, victoriasTV;
     private Button botonOnline;
     private ImageView avatarJugador;
     private Jugador jugador;
@@ -84,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
     private Uri photo_uri;//para almacenar la ruta de la imagen
     private String ruta_foto;//nombre fichero creado
     private boolean permisosOK;
+    private String salaAnterior;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,18 +95,11 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().hide();
 
         Intent intent = getIntent();
-        String salaAnterior = intent.getStringExtra("SALA_ANTERIOR");
-
-        if (salaAnterior != null) {
-            // Si volvemos de jugar online limpiamos la sala por si acaso
-            Log.d(Constantes.TAG, "Ha vuelto de otro intent " + salaAnterior);
-            pausa(1000);
-            limpiarSala(salaAnterior);
-            pausa(1000);
-        }
+        salaAnterior = intent.getStringExtra("SALA_ANTERIOR");
 
         // Referencias a las vistas
         nickET = findViewById(R.id.nickET);
+        victoriasTV = findViewById(R.id.victoriasET);
         onlineTV = findViewById(R.id.onlineTV);
         recordsRecycler = findViewById(R.id.recordsRecycler);
         layoutManager = new LinearLayoutManager(this);
@@ -118,6 +114,8 @@ public class MainActivity extends AppCompatActivity {
         records = new ArrayList<>();
         adapter = new RecordsAdapter(records);
         recordsRecycler.setAdapter(adapter);
+
+        jugador = new Jugador();
 
         // Pedir permisos para las fotos y avatares
         ActivityCompat.requestPermissions
@@ -146,18 +144,11 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
                     });
-
-        } else {
-            // Recuperamos datos del Shared Preferences si existen
-            if (!SharedPrefs.getAvatarPrefs(this).equals("")) {
-                // Hay datos guardados
-                Log.d(Constantes.TAG, "Ha recuperado las preferencias");
-                nickET.setText(SharedPrefs.getNicknamePrefs(this));
-                String ruta_archivo = SharedPrefs.getAvatarPrefs(this);
-                recuperarImagenGuardada(ruta_archivo);
-            }
-
         }
+
+
+        recuperarDatosSharedPreferences();
+
 
     }
 
@@ -169,6 +160,14 @@ public class MainActivity extends AppCompatActivity {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         userRef = mDatabase.child("USUARIOS").child(currentUser.getUid());
         jugadoresRef = mDatabase.child("USUARIOS");
+
+        // Si volvemos de jugar online limpiamos la sala por si acaso
+        if (salaAnterior != null) {
+            Log.d(Constantes.TAG, "Ha vuelto de otro intent " + salaAnterior);
+            pausa(1000);
+            limpiarSala(salaAnterior);
+            pausa(1000);
+        }
 
         // Cargamos los datos del usuario o los creamos si no existen (La primera vez que instalamos la APP)
         ValueEventListener userListener = new ValueEventListener() {
@@ -189,13 +188,11 @@ public class MainActivity extends AppCompatActivity {
 
                     // Subimos una imagen a Firebase Storage con el nombre del ID del jugador
                     // para usarla como avatar
-                    Utilidades.subirImagenFirebase(currentUser.getUid(), getResources().getDrawable(R.drawable.pako));
+                    UtilsFirebase.subirImagenFirebase(currentUser.getUid(), getResources().getDrawable(R.drawable.camera));
 
                 } else {
-                    nickET.setText(jugador.getNickname());
                     jugador.setOnline(true);
                     userRef.setValue(jugador);
-                    Utilidades.descargarImagenFirebase(jugador.getJugadorId(), avatarJugador);
                 }
             }
 
@@ -206,26 +203,7 @@ public class MainActivity extends AppCompatActivity {
         };
         userRef.addListenerForSingleValueEvent(userListener);
 
-
-        // Cargar los records y mostrarlos en el Recycler
-        recordsRef = mDatabase.child("RECORDS");
-        recordsListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                records.removeAll(records);
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Records recordTMP = snapshot.getValue(Records.class);
-                    records.add(recordTMP);
-                }
-                adapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
-        };
-        recordsRef.addListenerForSingleValueEvent(recordsListener);
+        cargarRecords();
 
 
         // Cargar la lista de jugadores online
@@ -240,6 +218,11 @@ public class MainActivity extends AppCompatActivity {
                     if (jugadorTMP.isOnline()) jugadores.add(jugadorTMP);
                 }
                 onlineTV.setText("Online: " + jugadores.size());
+                if (jugadores.size() > 1) {
+                    botonOnline.setEnabled(true);
+                } else {
+                    botonOnline.setEnabled(false);
+                }
                 botonOnline.setVisibility(View.VISIBLE);
 
             }
@@ -251,6 +234,33 @@ public class MainActivity extends AppCompatActivity {
         };
         jugadoresRef.addValueEventListener(jugadoresListener);
 
+
+    }
+
+    private void cargarRecords() {
+
+
+        // Cargar los records y mostrarlos en el Recycler
+        recordsRef = FirebaseDatabase.getInstance().getReference().child("RECORDS");
+        ValueEventListener cargarRecords = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                records.removeAll(records);
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    Records recordTmp = snapshot.getValue(Records.class);
+                    records.add(recordTmp);
+                }
+                adapter.notifyDataSetChanged();
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        };
+        recordsRef.addListenerForSingleValueEvent(cargarRecords);
 
     }
 
@@ -312,7 +322,6 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
                 // Actualizamos los datos de las salas
                 // Tenemos una lista con todas las salas
                 // y otra con las salas que tienen sitio disponible
@@ -351,14 +360,12 @@ public class MainActivity extends AppCompatActivity {
                             jugador.setNumeroJugador(1);
                             jugador.setPartida(salaSeleccionada.getPartidaID());
                             salaSeleccionada.setJugador1ID(jugador.getJugadorId());
-                            salaSeleccionada.setPartidaID(salaSeleccionada.getPartidaID());
                         } else if (salaSeleccionada.getJugador2ID().equals("0")) {
                             // Si el hueco 1 está ocupado, usamos el hueco 2 que está vacío
                             Log.d(Constantes.TAG, "Encontrado hueco 2");
                             jugador.setNumeroJugador(2);
                             jugador.setPartida(salaSeleccionada.getPartidaID());
                             salaSeleccionada.setJugador2ID(jugador.getJugadorId());
-                            salaSeleccionada.setPartidaID(salaSeleccionada.getPartidaID());
                         }
                         // Actualizamos Firebase y de paso limpiamos la sala por si hubiera quedado algo de la ultima partida
                         jugador.setNickname(nickET.getText().toString());
@@ -387,7 +394,7 @@ public class MainActivity extends AppCompatActivity {
                             // Hay otro jugador que ha seleccionado esta sala
                             Log.d(Constantes.TAG, "Hay otro jugador en el hueco 2");
                             mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
-                            Utilidades.descargarImagenFirebase(salaSeleccionada.getJugador2ID(), avatarRival);
+                            UtilsFirebase.descargarImagenFirebase(salaSeleccionada.getJugador2ID(), avatarRival);
                             pausa(1000);
                             progressBar.setVisibility(View.INVISIBLE);
                             if (salaSeleccionada.isJugador2Ready()) {
@@ -402,7 +409,7 @@ public class MainActivity extends AppCompatActivity {
                                     // Como somos el jugador 1 tenemos el turno (Estas son mis reglas)
                                     mDatabase.child("PARTIDAS").removeEventListener(partidasListener);
                                     Log.d(Constantes.TAG, "Lanzar Juego");
-                                    Intent jugar = new Intent(jugarOnline.getContext(), JuegoActivity.class);
+                                    Intent jugar = new Intent(jugarOnline.getContext(), JuegoOnlineActivity.class);
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador2ID());
                                     startActivity(jugar);
@@ -421,7 +428,7 @@ public class MainActivity extends AppCompatActivity {
                             // Hay otro jugador que ha seleccionado esta sala
                             Log.d(Constantes.TAG, "Hay otro jugador en el hueco 1");
                             mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
-                            Utilidades.descargarImagenFirebase(salaSeleccionada.getJugador1ID(), avatarRival);
+                            UtilsFirebase.descargarImagenFirebase(salaSeleccionada.getJugador1ID(), avatarRival);
                             pausa(1000);
                             progressBar.setVisibility(View.INVISIBLE);
                             if (salaSeleccionada.isJugador1Ready()) {
@@ -433,7 +440,7 @@ public class MainActivity extends AppCompatActivity {
                                 if (salaSeleccionada.isJugador2Ready()) {
                                     mDatabase.child("PARTIDAS").removeEventListener(partidasListener);
                                     // Los 2 estamos listos. Lanzar Intent de juego
-                                    Intent jugar = new Intent(jugarOnline.getContext(), JuegoActivity.class);
+                                    Intent jugar = new Intent(jugarOnline.getContext(), JuegoOnlineActivity.class);
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador1ID());
                                     startActivity(jugar);
@@ -490,13 +497,17 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        if (jugador != null) {
-            jugador.setOnline(false);
-            userRef.setValue(jugador);
+
+        if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)){
+            if (jugador != null) {
+                jugador.setOnline(false);
+                userRef.setValue(jugador);
+            }
+            if (salaSeleccionada != null) {
+                limpiarSala(salaSeleccionada.getPartidaID());
+            }
         }
-        if (salaSeleccionada != null) {
-            limpiarSala(salaSeleccionada.getPartidaID());
-        }
+
         super.onStop();
 
 
@@ -509,37 +520,34 @@ public class MainActivity extends AppCompatActivity {
         */
     }
 
-    @Override
-    public void onBackPressed() {
-        if (jugador != null) {
-            jugador.setOnline(false);
-            userRef.setValue(jugador);
-        }
 
-        super.onBackPressed();
-
-    }
 
     //
     // Aquí lanzamos el juego contra el ordenador (Móvil en este caso)
     //
     public void jugar(View view) {
 
-        int victorias = 0;
-        String nickJugador = null;
-        String idjugador = null;
+        int victorias = SharedPrefs.getVictoriasPrefs(this);
+        String nickJugador = "Jugador";
+        String idjugador = "VSCOM";
 
+
+        if (!nickET.getText().toString().equals("")) {
+            nickJugador = nickET.getText().toString();
+        }
+
+        SharedPrefs.saveNickPrefs(this, nickJugador);
+        SharedPrefs.saveVictoriasPrefs(this, victorias);
+        SharedPrefs.saveAvatarPrefs(this, photo_uri + "");
+
+
+        // Ponemos al false el que el jugador está online para que no le tengan en cuenta para jugar en este modo
         if (jugador != null) {
-            victorias = jugador.getVictorias();
-            nickJugador = jugador.getNickname();
             idjugador = jugador.getJugadorId();
-        } else {
-            if (!nickET.getText().toString().equals("")) {
-                nickJugador = nickET.getText().toString();
-            } else {
-                nickJugador = "Jugador";
+            if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
+                jugador.setOnline(false);
+                userRef.setValue(jugador);
             }
-            idjugador = "PALITROKES";
         }
 
         Intent intentvscom = new Intent(this, JuegoVsComActivity.class);
@@ -555,7 +563,7 @@ public class MainActivity extends AppCompatActivity {
 /*
         salaSeleccionada = new Partida();
         // Los 2 estamos listos. Lanzar Intent de juego
-        Intent jugar = new Intent(this, JuegoActivity.class);
+        Intent jugar = new Intent(this, JuegoOnlineActivity.class);
         jugar.putExtra(Constantes.PARTIDA, "Sala 0");
         jugar.putExtra(Constantes.RIVALID, "DrKCdhn2a1Z4LAgX1DNeZks7F2u1");
         startActivity(jugar);
@@ -633,9 +641,9 @@ public class MainActivity extends AppCompatActivity {
 
         //  resetearRecords();
 
-        // Crear Salas en Firebase
+       // Crear Salas en Firebase
         for (int n = 0; n < 10; n++) {
-            mDatabase.child("PARTIDAS").child("Sala " + n).setValue(new Partida("Sala " + n, n, "0", "0", new Tablero()));
+            mDatabase.child("PARTIDAS").child("Sala " + n).setValue(new Partida("Sala " + n, n, "0", "0", new Tablero(0), 0));
         }
 
     }
@@ -686,10 +694,11 @@ public class MainActivity extends AppCompatActivity {
                 InputStream imageStream = null;
                 try {
                     imageStream = getContentResolver().openInputStream(this.photo_uri);
-                } catch (FileNotFoundException e) {
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
                 Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+
 
                 selectedImage = Utilidades.getResizedBitmap(selectedImage, 128);// 400 is for example, replace with desired size
 
@@ -699,14 +708,17 @@ public class MainActivity extends AppCompatActivity {
 
 
                 // Si tenemos internet, lo subimos a Firebase
-                if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
-                    Utilidades.subirImagenFirebase(jugador.getJugadorId(), d);
+                if (jugador != null) {
+                    if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
+                        UtilsFirebase.subirImagenFirebase(jugador.getJugadorId(), d);
+                    }
                 }
+
 
                 // Grabar en Shared Preferences que tenemos el archivo creado en el dispositivo
                 Uri selectedImageUri = data.getData();
                 String path = photo_uri.getPath();
-                SharedPrefs.saveAvatarPrefs(this, path);
+                SharedPrefs.saveAvatarPrefs(this, photo_uri + "");
                 SharedPrefs.saveNickPrefs(this, nickET.getText().toString());
 
 
@@ -725,7 +737,6 @@ public class MainActivity extends AppCompatActivity {
             case RESULT_OK:
                 Log.d("MIAPP", "Tiró la foto bien");
 
-
                 InputStream imageStream = null;
                 try {
                     imageStream = getContentResolver().openInputStream(this.photo_uri);
@@ -739,10 +750,11 @@ public class MainActivity extends AppCompatActivity {
                 Drawable d = new BitmapDrawable(getResources(), selectedImage);
 
                 // Si tenemos internet, lo subimos a Firebase
-                if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
-                    Utilidades.subirImagenFirebase(jugador.getJugadorId(), d);
+                if (jugador != null) {
+                    if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
+                        UtilsFirebase.subirImagenFirebase(jugador.getJugadorId(), d);
+                    }
                 }
-
 
                 // Grabar en Shared Preferences que tenemos el archivo creado en el dispositivo
                 SharedPrefs.saveAvatarPrefs(this, Utilidades.crearNombreArchivo());
@@ -770,48 +782,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     private void recuperarImagenGuardada(String ruta_archivo) {
         // Recuperamos la imagen del usuario del archivo en el dispositivo, si existe
         // si no existe, la cargamos de Firebase, que siempre la tenemos
 
         Log.d(Constantes.TAG, "Ruta archivo: " + ruta_archivo);
+        avatarJugador.setImageURI(Uri.parse(ruta_archivo));
 
-        File fotopath = getDatabasePath(ruta_archivo);
-        boolean existe_foto = fotopath.exists();
-        if (existe_foto) {
-            Log.d(Constantes.TAG, "Existe foto: " + ruta_archivo);
-            InputStream imageStream = null;
-            try {
-                imageStream = getContentResolver().openInputStream(Uri.fromFile(fotopath));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-            Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
-            selectedImage = Utilidades.getResizedBitmap(selectedImage, 128);// 400 is for example, replace with desired size
-            avatarJugador.setImageBitmap(selectedImage);
-        }
     }
 
 
     private void resetearRecords() {
-        // Crear Salas en Firebase
+        // Crear Records en Firebase
         for (int n = 0; n < 10; n++) {
-            mDatabase.child("RECORDS").child("" + n).setValue(new Records("adfadfadfasdfadf", "Jugador " + n, "0"));
+            mDatabase.child("RECORDS").child("" + n).setValue(new Records("adfadfadfasdfadf", "Jugador " + n, 0, n));
         }
     }
 
     private void limpiarSala(String sala) {
         // Dejamos la sala vacía para poder reusarla
         Partida partida = new Partida();
+        partida.setPartidaID(sala);
         partida.setJugador1ID("0");
         partida.setJugador2ID("0");
         partida.setGanador(0);
         partida.setJugador2Ready(false);
         partida.setJugador1Ready(false);
         partida.setJugando(false);
-        partida.setTablero(new Tablero());
-        partida.setTurno(0);
+
+        partida.setTurno(1);
         mDatabase.child("PARTIDAS").child(sala).setValue(partida);
     }
 
@@ -825,5 +824,62 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
+    private void recuperarDatosSharedPreferences() {
+        // Recuperamos datos del Shared Preferences si existen
+        if (!SharedPrefs.getAvatarPrefs(this).equals("")) {
+            // Hay datos guardados
+            Log.d(Constantes.TAG, "Ha recuperado las preferencias");
+
+            jugador.setNickname(SharedPrefs.getNicknamePrefs(this));
+            jugador.setVictorias(SharedPrefs.getVictoriasPrefs(this));
+
+            victoriasTV.setText("Victorias : " + jugador.getVictorias());
+            nickET.setText(jugador.getNickname());
+            String ruta_archivo = SharedPrefs.getAvatarPrefs(this);
+            recuperarImagenGuardada(ruta_archivo);
+
+        }
+    }
+
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (UtilityNetwork.isWifiAvailable( this )|| UtilityNetwork.isNetworkAvailable(this)) {
+            if (jugador != null && jugador.getJugadorId() != null) {
+                jugador.setOnline(false);
+                userRef.setValue(jugador);
+            }
+        }
+
+
+     //   finish();
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (UtilityNetwork.isWifiAvailable( this )|| UtilityNetwork.isNetworkAvailable(this)) {
+            if (jugador != null && jugador.getJugadorId() != null) {
+                jugador.setOnline(true);
+                userRef.setValue(jugador);
+            }
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (jugador != null) {
+            jugador.setOnline(false);
+            userRef.setValue(jugador);
+        }
+
+        //  super.onBackPressed();
+        finish();
+
+    }
 
 }

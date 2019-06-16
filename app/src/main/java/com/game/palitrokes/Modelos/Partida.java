@@ -12,8 +12,9 @@ public class Partida {
     private Tablero tablero;
     private int ganador;
     private int numeroSala;
+    private int level;
 
-    public Partida(String partidaID, int numeroSala, String jugador1ID, String jugador2ID, Tablero tablero) {
+    public Partida(String partidaID, int numeroSala, String jugador1ID, String jugador2ID, Tablero tablero, int level) {
         this.partidaID = partidaID;
         this.jugador1ID = jugador1ID;
         this.jugador2ID = jugador2ID;
@@ -24,13 +25,14 @@ public class Partida {
         this.jugador1Ready = false;
         this.jugador2Ready = false;
         this.numeroSala = numeroSala;
+        this.level = level;
     }
 
     public Partida() {
         this.partidaID = null;
         this.jugador1ID = null;
         this.jugador2ID = null;
-        this.tablero = new Tablero();
+        this.tablero = new Tablero(8);
         this.turno = 0;
         this.ganador = 0;
         this.jugando = false;
@@ -38,6 +40,13 @@ public class Partida {
         this.jugador2Ready = false;
     }
 
+    public int getLevel() {
+        return level;
+    }
+
+    public void levelUp() {
+        level++;
+    }
 
     public int getNumeroSala() {
         return numeroSala;
