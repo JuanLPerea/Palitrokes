@@ -1,8 +1,11 @@
 package com.game.palitrokes.Utilidades;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+
+import java.util.List;
 
 public class UtilityNetwork {
 
@@ -27,5 +30,6 @@ public class UtilityNetwork {
 
         return bdev;
     }
+
 
 }

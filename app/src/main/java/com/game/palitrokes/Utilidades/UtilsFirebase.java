@@ -1,5 +1,6 @@
 package com.game.palitrokes.Utilidades;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -63,7 +64,7 @@ public class UtilsFirebase {
     }
 
 
-    public static void descargarImagenFirebase(String jugadorID, final ImageView imageView) {
+    public static void descargarImagenFirebase(final Context context, String jugadorID, final String nombreArchivo) {
 
         FirebaseStorage storage;
         StorageReference storageRef;
@@ -72,15 +73,16 @@ public class UtilsFirebase {
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReference();
         StorageReference avatarRef = storageRef.child("AVATAR").child(jugadorID);
-        imagen[0] = null;
+       // imagen[0] = null;
 
         final long ONE_MEGABYTE = 1024 * 1024;
         avatarRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
             @Override
             public void onSuccess(byte[] bytes) {
                 // Data for "images/island.jpg" is returns, use this as needed
-                imagen[0] = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                imageView.setImageBitmap(imagen[0]);
+               // imagen[0] = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                Utilidades.guardarImagenMemoriaInterna(context, nombreArchivo, bytes);
+
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -90,6 +92,7 @@ public class UtilsFirebase {
                 //   imageView.setImageDrawable(   R.drawable.camera);
             }
         });
+
 
     }
 

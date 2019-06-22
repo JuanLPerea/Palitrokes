@@ -165,7 +165,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
     private void actualizarVistaJugador() {
 
-
+/*
         // Mirar si tenemos datos en Shared Preferences
         if (!SharedPrefs.getAvatarPrefs(this).equals("")) {
             String ruta_archivo = SharedPrefs.getAvatarPrefs(getApplicationContext());
@@ -180,7 +180,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
                 }
             }
         }
-
+*/
         winsJ1.setText("Victorias: " + jugador.getVictorias());
         nickJ1.setText(jugador.getNickname());
 
@@ -501,7 +501,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
             sonidos.play(Sonidos.Efectos.PERDER);
             // Guardar record
             UtilsFirebase.guardarRecords(jugador, partida.getLevel());
-            SharedPrefs.saveVictoriasPrefs(this, jugador.getVictorias());
+            SharedPrefs.saveJugadorPrefs(this, jugador);
             finish();
             // Lanzamos el intent del MainActivity
             startActivity(volverIntent);

@@ -27,7 +27,9 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.util.List;
 
 
 public class Utilidades {
@@ -138,4 +140,17 @@ public class Utilidades {
 
     }
 
+
+
+    public static byte[] bitmapToArrayBytes (Bitmap bitmap){
+
+        byte[] arrayBytes = null;
+
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        arrayBytes = stream.toByteArray();
+
+        return  arrayBytes;
+
+    }
 }

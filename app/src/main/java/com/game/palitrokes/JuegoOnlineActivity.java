@@ -194,20 +194,11 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
     private void actualizarVistaJugador(Jugador jugadorView) {
         if (jugadorView.getNumeroJugador() == 1) {
-            // Descargar la imagen de Firebase solo 1 vez
-            if (avatarJ1.getTag().equals("false")) {
-                UtilsFirebase.descargarImagenFirebase(jugadorView.getJugadorId(), avatarJ1);
-                avatarJ1.setTag("true");
-            }
+            avatarJ1.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
             nickJ1.setText(jugadorView.getNickname());
             winsJ1.setText("Victorias: " + jugadorView.getVictorias());
-
         } else {
-            // Descargar la imagen de Firebase solo 1 vez
-            if (avatarJ2.getTag().equals("false")) {
-                UtilsFirebase.descargarImagenFirebase(jugadorView.getJugadorId(), avatarJ2);
-                avatarJ2.setTag("true");
-            }
+            avatarJ2.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
             nickJ2.setText(jugadorView.getNickname());
             winsJ2.setText("Victorias: " + jugadorView.getVictorias() + "");
         }
@@ -233,9 +224,9 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 visualizarTablero(partida.getTablero());
                 // Si no hay ganador, mirar de quien es el turno
                 if (partida.getGanador() == 0) {
-                        // Actualizar los botones y crono en la pantalla
-                        // dependiendo si es nuestro turno o el del rival
-                        actualizarViewsCambioTurno();
+                    // Actualizar los botones y crono en la pantalla
+                    // dependiendo si es nuestro turno o el del rival
+                    actualizarViewsCambioTurno();
                 } else {
                     // Aquí detectamos si hay ganador. La partida termina
                     finJuego();
@@ -371,7 +362,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 cronometro1.start();
                 break;
             case 2:
-            // Es el turno del jugador 2
+                // Es el turno del jugador 2
                 if (jugador.getNumeroJugador() == 1) {
                     // si somos el jugador 1
                     okJ1.setVisibility(View.INVISIBLE);            //Botón del jugador 1 invisible (No hay botón en ningun lado porque el turno es del otro)
@@ -409,7 +400,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 // comprobamos, si solo queda uno, hemos ganado!!
                 if (partida.getTablero().palosTotales() == 1) {
 
-                //    Toast.makeText(this, "¡¡Has Ganado!!", Toast.LENGTH_LONG).show();
+                    //    Toast.makeText(this, "¡¡Has Ganado!!", Toast.LENGTH_LONG).show();
                     partida.setGanador(jugador.getNumeroJugador());
                     salaRef.setValue(partida);
 
@@ -445,13 +436,13 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         cronometro2.cancel();
 
         // Si no hay ningún palo seleccionado esque el jugador pasa bastante de jugar y se ha acabado el tiempo sin hacer nada
-        Log.d(Constantes.TAG, "Fin del turno " + partida.getTurno() + " Fin tiempo? " + finTiempo );
+        Log.d(Constantes.TAG, "Fin del turno " + partida.getTurno() + " Fin tiempo? " + finTiempo);
         if (finTiempo && partida.getTurno() == jugador.getNumeroJugador()) {
-                // Si es el jugador el que no ha hecho nada, pierde
-               // Toast.makeText(this, "Lo siento, si no haces ninguna jugada, pierdes" , Toast.LENGTH_LONG).show();
-                partida.setGanador(rival.getNumeroJugador());
-                // Notificamos el ganador
-                salaRef.setValue(partida);
+            // Si es el jugador el que no ha hecho nada, pierde
+            // Toast.makeText(this, "Lo siento, si no haces ninguna jugada, pierdes" , Toast.LENGTH_LONG).show();
+            partida.setGanador(rival.getNumeroJugador());
+            // Notificamos el ganador
+            salaRef.setValue(partida);
         }
 
         // Cambiamos el turno
@@ -521,7 +512,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             sonidos.play(Sonidos.Efectos.PERDER);
         }
 
-        Toast.makeText(this, resultado , Toast.LENGTH_LONG).show();
+        Toast.makeText(this, resultado, Toast.LENGTH_LONG).show();
 
         // Actualizamos Firebase y limpiamos los datos...
         limpiarSala();
@@ -537,7 +528,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         }
         finish();
         // Lanzamos el intent del MainActivity
-         startActivity(volverIntent);
+        startActivity(volverIntent);
 
     }
 

@@ -1,5 +1,7 @@
 package com.game.palitrokes.Adapters;
 
+import android.content.Context;
+import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -21,9 +23,11 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterV
 
 
     List<Records> records;
+    Context context;
 
-    public RecordsAdapter(List<Records> records) {
+    public RecordsAdapter(Context context, List<Records> records) {
         this.records = records;
+        this.context = context;
     }
 
     public RecordsAdapter() {
@@ -44,7 +48,14 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterV
 
         Records recordRow = records.get(i);
 
-        UtilsFirebase.descargarImagenFirebase(recordRow.getIdJugador(), holder.avatarRecord);
+       // UtilsFirebase.descargarImagenFirebase(recordRow.getIdJugador(), holder.avatarRecord);
+        //Cargar imagen de los records siempre de los archivos guardados en memoria interna
+        // Estos archivos se actualizan cuando se descargan de Firebase al producirse el evento OnDataChange en los Records
+
+        Bitmap imagenRecord = Utilidades.recuperarImagenMemoriaInterna(context, "RECORDIMG" + i );
+        if (imagenRecord != null) {
+            holder.avatarRecord.setImageBitmap(imagenRecord);
+        }
         holder.nickRecord.setText(recordRow.getNickname());
         holder.levelRecord.setText(recordRow.getLevel() + "");
         holder.victoriasRecord.setText(recordRow.getVictorias() + "");

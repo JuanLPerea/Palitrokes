@@ -112,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Recycler View para los Records
         records = new ArrayList<>();
-        adapter = new RecordsAdapter(records);
+        adapter = new RecordsAdapter(getApplicationContext(), records);
         recordsRecycler.setAdapter(adapter);
 
         jugador = new Jugador();
@@ -120,6 +120,9 @@ public class MainActivity extends AppCompatActivity {
         // Pedir permisos para las fotos y avatares
         ActivityCompat.requestPermissions
                 (this, PERMISOS, Constantes.CODIGO_PETICION_PERMISOS);
+
+        // Recuperamos los datos del Shared Preferences
+        recuperarDatosSharedPreferences();
 
 
         // Comprobar si tenemos internet
@@ -147,8 +150,6 @@ public class MainActivity extends AppCompatActivity {
                     });
         }
 
-        // Si no tenemos internet, recuperamos los datos de usuario, avatar y records de Shared Preferences
-        recuperarDatosSharedPreferences();
 
     }
 
@@ -246,10 +247,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
+                int n = 0;
                 records.removeAll(records);
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Records recordTmp = snapshot.getValue(Records.class);
                     records.add(recordTmp);
+                    // Descargamos imagen de Firebase y la guardamos en el dispositivo para usarla mas tarde
+                    Utilidades.eliminarArchivo(getApplicationContext(), "RECORDIMG" + n + ".jpg");
+                    UtilsFirebase.descargarImagenFirebase(getApplicationContext(), recordTmp.getIdJugador(), "RECORDIMG" + n );
+                    n++;
                 }
                 adapter.notifyDataSetChanged();
 
@@ -394,7 +400,7 @@ public class MainActivity extends AppCompatActivity {
                             // Hay otro jugador que ha seleccionado esta sala
                             Log.d(Constantes.TAG, "Hay otro jugador en el hueco 2");
                             mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
-                            UtilsFirebase.descargarImagenFirebase(salaSeleccionada.getJugador2ID(), avatarRival);
+                            //   UtilsFirebase.descargarImagenFirebase(salaSeleccionada.getJugador2ID(), avatarRival);
                             pausa(1000);
                             progressBar.setVisibility(View.INVISIBLE);
                             if (salaSeleccionada.isJugador2Ready()) {
@@ -428,7 +434,7 @@ public class MainActivity extends AppCompatActivity {
                             // Hay otro jugador que ha seleccionado esta sala
                             Log.d(Constantes.TAG, "Hay otro jugador en el hueco 1");
                             mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
-                            UtilsFirebase.descargarImagenFirebase(salaSeleccionada.getJugador1ID(), avatarRival);
+                            //  UtilsFirebase.descargarImagenFirebase(salaSeleccionada.getJugador1ID(), avatarRival);
                             pausa(1000);
                             progressBar.setVisibility(View.INVISIBLE);
                             if (salaSeleccionada.isJugador1Ready()) {
@@ -498,7 +504,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
 
-        if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)){
+        if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
             if (jugador != null) {
                 jugador.setOnline(false);
                 userRef.setValue(jugador);
@@ -521,13 +527,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     //
     // Aquí lanzamos el juego contra el ordenador (Móvil en este caso)
     //
     public void jugar(View view) {
 
-        int victorias = SharedPrefs.getVictoriasPrefs(this);
+        //  int victorias = SharedPrefs.getVictoriasPrefs(this);
         String nickJugador = "Jugador";
         String idjugador = "VSCOM";
 
@@ -536,9 +541,9 @@ public class MainActivity extends AppCompatActivity {
             nickJugador = nickET.getText().toString();
         }
 
-        SharedPrefs.saveNickPrefs(this, nickJugador);
-        SharedPrefs.saveVictoriasPrefs(this, victorias);
-        SharedPrefs.saveAvatarPrefs(this, photo_uri + "");
+        //     SharedPrefs.saveNickPrefs(this, nickJugador);
+        //    SharedPrefs.saveVictoriasPrefs(this, victorias);
+        //    SharedPrefs.saveAvatarPrefs(this, photo_uri + "");
 
 
         // Ponemos al false el que el jugador está online para que no le tengan en cuenta para jugar en este modo
@@ -553,7 +558,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intentvscom = new Intent(this, JuegoVsComActivity.class);
         intentvscom.putExtra("NICKNAME", nickJugador);
         intentvscom.putExtra("IDJUGADOR", idjugador);
-        intentvscom.putExtra("VICTORIAS", victorias);
+        //   intentvscom.putExtra("VICTORIAS", victorias);
         startActivity(intentvscom);
 
 
@@ -641,7 +646,7 @@ public class MainActivity extends AppCompatActivity {
 
         //  resetearRecords();
 
-       // Crear Salas en Firebase
+        // Crear Salas en Firebase
         for (int n = 0; n < 10; n++) {
             mDatabase.child("PARTIDAS").child("Sala " + n).setValue(new Partida("Sala " + n, n, "0", "0", new Tablero(0), 0));
         }
@@ -718,8 +723,8 @@ public class MainActivity extends AppCompatActivity {
                 // Grabar en Shared Preferences que tenemos el archivo creado en el dispositivo
                 Uri selectedImageUri = data.getData();
                 String path = photo_uri.getPath();
-                SharedPrefs.saveAvatarPrefs(this, photo_uri + "");
-                SharedPrefs.saveNickPrefs(this, nickET.getText().toString());
+                //         SharedPrefs.saveAvatarPrefs(this, photo_uri + "");
+                //         SharedPrefs.saveNickPrefs(this, nickET.getText().toString());
 
 
                 //    this.avatarJugador.setImageURI(photo_uri);
@@ -757,8 +762,8 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 // Grabar en Shared Preferences que tenemos el archivo creado en el dispositivo
-                SharedPrefs.saveAvatarPrefs(this, Utilidades.crearNombreArchivo());
-                SharedPrefs.saveNickPrefs(this, nickET.getText().toString());
+                //       SharedPrefs.saveAvatarPrefs(this, Utilidades.crearNombreArchivo());
+                //       SharedPrefs.saveNickPrefs(this, nickET.getText().toString());
 
 
                 //this.avatarJugador.setImageURI(this.photo_uri);
@@ -827,6 +832,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void recuperarDatosSharedPreferences() {
         // Recuperamos datos del Shared Preferences si existen
+        /*
         if (!SharedPrefs.getAvatarPrefs(this).equals("")) {
             // Hay datos guardados
             Log.d(Constantes.TAG, "Ha recuperado las preferencias");
@@ -840,14 +846,14 @@ public class MainActivity extends AppCompatActivity {
             recuperarImagenGuardada(ruta_archivo);
 
         }
+        */
     }
-
 
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (UtilityNetwork.isWifiAvailable( this )|| UtilityNetwork.isNetworkAvailable(this)) {
+        if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
             if (jugador != null && jugador.getJugadorId() != null) {
                 jugador.setOnline(false);
                 userRef.setValue(jugador);
@@ -855,14 +861,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-     //   finish();
+        //   finish();
 
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (UtilityNetwork.isWifiAvailable( this )|| UtilityNetwork.isNetworkAvailable(this)) {
+        if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
             if (jugador != null && jugador.getJugadorId() != null) {
                 jugador.setOnline(true);
                 userRef.setValue(jugador);
