@@ -48,7 +48,6 @@ public class SharedPrefs {
         List<Records> records = new ArrayList<>();
         SharedPreferences sharedPreferences = context.getSharedPreferences(Constantes.ARCHIVO_PREFS, Context.MODE_PRIVATE);
 
-
             for (int n = 0; n < 10; n++) {
                 String recordGuardado = sharedPreferences.getString(Constantes.RECORDS_PREFS + n, null);
 

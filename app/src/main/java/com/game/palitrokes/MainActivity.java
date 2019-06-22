@@ -7,8 +7,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -19,10 +17,8 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -188,7 +184,10 @@ public class MainActivity extends AppCompatActivity {
 
                     // Subimos una imagen a Firebase Storage con el nombre del ID del jugador
                     // para usarla como avatar
-                    UtilsFirebase.subirImagenFirebase(currentUser.getUid(), getResources().getDrawable(R.drawable.camera));
+                    Bitmap avatarNuevo = BitmapFactory.decodeResource(getApplicationContext().getResources() , R.drawable.camera);
+                    UtilsFirebase.subirImagenFirebase(currentUser.getUid(), avatarNuevo);
+                    Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR, Utilidades.bitmapToArrayBytes(avatarNuevo));
+                    avatarJugador.setImageBitmap(avatarNuevo);
 
                 } else {
                     jugador.setOnline(true);
@@ -253,7 +252,7 @@ public class MainActivity extends AppCompatActivity {
                     records.add(recordTmp);
                     // Descargamos imagen de Firebase y la guardamos en el dispositivo para usarla mas tarde
                     Utilidades.eliminarArchivo(getApplicationContext(), "RECORDIMG" + n + ".jpg");
-                    UtilsFirebase.descargarImagenFirebase(getApplicationContext(), recordTmp.getIdJugador(), "RECORDIMG" + n );
+                    UtilsFirebase.descargarImagenFirebaseYGuardarla(getApplicationContext(), recordTmp.getIdJugador(), "RECORDIMG" + n );
                     n++;
                 }
                 adapter.notifyDataSetChanged();
@@ -278,6 +277,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Quitar el listener de los jugadores
         userRef.removeEventListener(jugadoresListener);
+
+        //Subimos nuestro avatar a Firebase (Aquí es seguro que tenemos internet)
+        UtilsFirebase.subirImagenFirebase(jugador.getJugadorId(), Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
 
         // Establecer un listener para las partidas
         // Hay salas creadas previamente en Firebase (Partidas)
@@ -321,6 +323,7 @@ public class MainActivity extends AppCompatActivity {
 
         jugadorReady.setText(jugador.getNickname());
         mensajeEstado.setText("Buscando Rival...");
+        avatarRival.setImageResource(R.drawable.camera);
 
 
         // Hacemos una lista con las salas disponibles en Firebase
@@ -401,7 +404,9 @@ public class MainActivity extends AppCompatActivity {
                             // Hay otro jugador que ha seleccionado esta sala
                             Log.d(Constantes.TAG, "Hay otro jugador en el hueco 2");
                             mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
-                            //   UtilsFirebase.descargarImagenFirebase(salaSeleccionada.getJugador2ID(), avatarRival);
+                            // Descargamos la imagen del Rival y la visualizamos
+                            UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), salaSeleccionada.getJugador2ID(), avatarRival);
+
                             pausa(1000);
                             progressBar.setVisibility(View.INVISIBLE);
                             if (salaSeleccionada.isJugador2Ready()) {
@@ -435,7 +440,9 @@ public class MainActivity extends AppCompatActivity {
                             // Hay otro jugador que ha seleccionado esta sala
                             Log.d(Constantes.TAG, "Hay otro jugador en el hueco 1");
                             mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
-                            //  UtilsFirebase.descargarImagenFirebase(salaSeleccionada.getJugador1ID(), avatarRival);
+                            // Descargamos la imagen del Rival y la visualizamos
+                            UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), salaSeleccionada.getJugador1ID(), avatarRival);
+
                             pausa(1000);
                             progressBar.setVisibility(View.INVISIBLE);
                             if (salaSeleccionada.isJugador1Ready()) {
@@ -579,7 +586,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     */
-    //  Utilidades.descargarImagenFirebase(getApplicationContext(), jugador.getJugadorId(), avatarJugador);
+    //  Utilidades.descargarImagenFirebaseYGuardarla(getApplicationContext(), jugador.getJugadorId(), avatarJugador);
 
 /*
         // Crear Salas en Firebase
@@ -819,9 +826,12 @@ public class MainActivity extends AppCompatActivity {
         // Seteamos la imagen del avatar con el archivo guardado localmente en el dispositivo
         // Este archivo se actualiza cada vez que lo personalizamos con una imagen de la galería o la cámara
         avatarJugador.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
+        // Mostramos el nick del jugador y las victorias
+        nickET.setText(jugador.getNickname());
+        victoriasTV.setText("Victorias: " + jugador.getVictorias());
+
         // Cargamos records y los mostramos
         records = SharedPrefs.getRecordsPrefs(getApplicationContext());
-
         adapter = new RecordsAdapter(getApplicationContext(), records);
         recordsRecycler.setAdapter(adapter);
         adapter.notifyDataSetChanged();
@@ -833,7 +843,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
-            if (jugador != null && jugador.getJugadorId() != null) {
+            if (jugador != null && jugador.getJugadorId() != null  && userRef != null) {
                 jugador.setOnline(false);
                 userRef.setValue(jugador);
             }

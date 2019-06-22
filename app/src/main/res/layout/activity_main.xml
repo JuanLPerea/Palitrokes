@@ -118,7 +118,7 @@
             android:layout_weight="1"
             android:gravity="center"
             android:onClick="crearSalas"
-            android:text="Records"
+            android:text="Records Mundiales"
             android:textSize="24sp" />
 
         <LinearLayout

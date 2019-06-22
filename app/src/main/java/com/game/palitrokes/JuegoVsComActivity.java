@@ -482,8 +482,12 @@ public class JuegoVsComActivity extends AppCompatActivity {
             jugador.setDerrotas(1);
             resultado += "Gana Palitrokes.\nHas alcanzado el nivel " + partida.getLevel();
             sonidos.play(Sonidos.Efectos.PERDER);
-            // Guardar record
-            UtilsFirebase.guardarRecords(jugador, partida.getLevel());
+            // Guardar record si hay internet, podemos mirar si hemos entrado en los records del juego
+            // Si no hay internet, solo sumamos la victoria a nuestras estadísticas
+            if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)){
+                UtilsFirebase.guardarRecords(jugador, partida.getLevel());
+            }
+
             SharedPrefs.saveJugadorPrefs(this, jugador);
             finish();
             // Lanzamos el intent del MainActivity

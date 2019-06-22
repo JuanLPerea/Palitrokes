@@ -30,18 +30,16 @@ import java.util.List;
 public class UtilsFirebase {
 
 
-    public static void subirImagenFirebase(String jugadorID, Drawable drawable) {
+    public static void subirImagenFirebase(String jugadorID, Bitmap bitmap) {
 
         FirebaseStorage storage;
         StorageReference storageRef;
-        Bitmap imagen;
-
 
         // Referencia a Firebase Storage
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReference();
 
-        Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
+       // Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] data = baos.toByteArray();
@@ -51,7 +49,7 @@ public class UtilsFirebase {
             @Override
             public void onFailure(@NonNull Exception exception) {
                 // Handle unsuccessful uploads
-                Log.d(Constantes.TAG, "Error Subiendo Imágen " + exception);
+                Log.d(Constantes.TAG, "Error Subiendo imagen " + exception);
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -64,7 +62,7 @@ public class UtilsFirebase {
     }
 
 
-    public static void descargarImagenFirebase(final Context context, String jugadorID, final String nombreArchivo) {
+    public static void descargarImagenFirebaseYGuardarla(final Context context, String jugadorID, final String nombreArchivo) {
 
         FirebaseStorage storage;
         StorageReference storageRef;
@@ -82,6 +80,39 @@ public class UtilsFirebase {
                 // Data for "images/island.jpg" is returns, use this as needed
                // imagen[0] = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 Utilidades.guardarImagenMemoriaInterna(context, nombreArchivo, bytes);
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle any errors
+                Log.d(Constantes.TAG, "Error Descargando Imagen " + exception);
+                //   imageView.setImageDrawable(   R.drawable.camera);
+            }
+        });
+
+
+    }
+
+
+    public static void descargarImagenFirebaseView(final Context context, String jugadorID, final ImageView view) {
+
+        FirebaseStorage storage;
+        StorageReference storageRef;
+        final Bitmap[] imagen = new Bitmap[1];
+
+        storage = FirebaseStorage.getInstance();
+        storageRef = storage.getReference();
+        StorageReference avatarRef = storageRef.child("AVATAR").child(jugadorID);
+        // imagen[0] = null;
+
+        final long ONE_MEGABYTE = 1024 * 1024;
+        avatarRef.getBytes(ONE_MEGABYTE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                // Data for "images/island.jpg" is returns, use this as needed
+                 imagen[0] = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                 view.setImageBitmap(imagen[0]);
 
             }
         }).addOnFailureListener(new OnFailureListener() {

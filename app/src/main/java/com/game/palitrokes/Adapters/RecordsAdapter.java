@@ -48,7 +48,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterV
 
         Records recordRow = records.get(i);
 
-       // UtilsFirebase.descargarImagenFirebase(recordRow.getIdJugador(), holder.avatarRecord);
+       // UtilsFirebase.descargarImagenFirebaseYGuardarla(recordRow.getIdJugador(), holder.avatarRecord);
         //Cargar imagen de los records siempre de los archivos guardados en memoria interna
         // Estos archivos se actualizan cuando se descargan de Firebase al producirse el evento OnDataChange en los Records
 

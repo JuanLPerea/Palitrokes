@@ -194,11 +194,11 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
     private void actualizarVistaJugador(Jugador jugadorView) {
         if (jugadorView.getNumeroJugador() == 1) {
-            avatarJ1.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
+            UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), jugadorView.getJugadorId(), avatarJ1);
             nickJ1.setText(jugadorView.getNickname());
             winsJ1.setText("Victorias: " + jugadorView.getVictorias());
         } else {
-            avatarJ2.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
+            UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), jugadorView.getJugadorId(), avatarJ2);
             nickJ2.setText(jugadorView.getNickname());
             winsJ2.setText("Victorias: " + jugadorView.getVictorias() + "");
         }
