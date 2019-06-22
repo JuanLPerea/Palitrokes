@@ -1,5 +1,6 @@
 package com.game.palitrokes.Utilidades;
 
+import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -22,6 +23,9 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
@@ -69,10 +73,13 @@ public class Utilidades {
 
             }catch (Exception e)
             {
-
+                Log.e(Constantes.TAG, "Error al trucar el método disableDeathOnFileUriExposure", e);
             }
         }
     }
+
+
+    // Redimensionar Bitmap
     public static Bitmap getResizedBitmap(Bitmap image, int maxSize) {
         int width = image.getWidth();
         int height = image.getHeight();
@@ -96,5 +103,39 @@ public class Utilidades {
     return ruta_captura_foto;
     }
 
+    public static void guardarImagenMemoriaInterna (Context context, String archivo, byte[] byteArray) {
+        try {
+            FileOutputStream outputStream = context.openFileOutput(archivo + ".jpg", Context.MODE_PRIVATE);
+            outputStream.write(byteArray);
+            outputStream.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e2) {
+            e2.printStackTrace();
+        }
+    }
+
+    public static Bitmap recuperarImagenMemoriaInterna (Context context, String archivo) {
+        Bitmap bitmap = null;
+
+        try{
+            FileInputStream fileInputStream =
+                    new FileInputStream(context.getFilesDir().getPath()+ "/" + archivo + ".jpg");
+            bitmap = BitmapFactory.decodeStream(fileInputStream);
+        }catch (IOException io){
+            io.printStackTrace();
+        }
+
+        return bitmap;
+    }
+
+    public static void eliminarArchivo (Context context, String archivo) {
+
+        boolean eliminado = false;
+
+        File file = new File(context.getFilesDir().getPath() + "/" + archivo + ".jpg");
+        if (file.exists()) eliminado = file.delete();
+
+    }
 
 }

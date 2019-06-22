@@ -125,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
         // Comprobar si tenemos internet
         if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
 
+            // Si tenemos internet recuperamos los datos del usuario de Firebase
             // Nos autenticamos de forma anónima en Firebase
             mAuth = FirebaseAuth.getInstance();
             mAuth.signInAnonymously()
@@ -146,9 +147,8 @@ public class MainActivity extends AppCompatActivity {
                     });
         }
 
-
+        // Si no tenemos internet, recuperamos los datos de usuario, avatar y records de Shared Preferences
         recuperarDatosSharedPreferences();
-
 
     }
 
