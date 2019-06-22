@@ -124,7 +124,6 @@ public class MainActivity extends AppCompatActivity {
         // Recuperamos los datos del Shared Preferences
         recuperarDatosSharedPreferences();
 
-
         // Comprobar si tenemos internet
         if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
 
@@ -258,6 +257,8 @@ public class MainActivity extends AppCompatActivity {
                     n++;
                 }
                 adapter.notifyDataSetChanged();
+                // Guardamos los records actualizados de Firebase en el Shared Preferences
+                SharedPrefs.saveRecordsPrefs(getApplicationContext(),records);
 
             }
 
@@ -704,33 +705,20 @@ public class MainActivity extends AppCompatActivity {
                 }
                 Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
 
-
                 selectedImage = Utilidades.getResizedBitmap(selectedImage, 128);// 400 is for example, replace with desired size
 
                 this.avatarJugador.setImageBitmap(selectedImage);
 
-                Drawable d = new BitmapDrawable(getResources(), selectedImage);
+                // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
+                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR ,Utilidades.bitmapToArrayBytes(selectedImage));
 
-
-                // Si tenemos internet, lo subimos a Firebase
-                if (jugador != null) {
-                    if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
-                        UtilsFirebase.subirImagenFirebase(jugador.getJugadorId(), d);
-                    }
+                // De paso guardamos los datos del jugador (Nickname, id, victorias en el Shared Preferences)
+                if (!nickET.getText().toString().equals("")) {
+                    jugador.setNickname(nickET.getText().toString());
                 }
-
-
-                // Grabar en Shared Preferences que tenemos el archivo creado en el dispositivo
-                Uri selectedImageUri = data.getData();
-                String path = photo_uri.getPath();
-                //         SharedPrefs.saveAvatarPrefs(this, photo_uri + "");
-                //         SharedPrefs.saveNickPrefs(this, nickET.getText().toString());
-
-
-                //    this.avatarJugador.setImageURI(photo_uri);
-                //  this.avatarJugador.setScaleType(ImageView.ScaleType.FIT_XY);
-
+                SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
                 break;
+
             case RESULT_CANCELED:
                 Log.d("MIAPP", "La foto NO ha sido seleccionada canceló");
                 break;
@@ -752,22 +740,16 @@ public class MainActivity extends AppCompatActivity {
                 selectedImage = Utilidades.getResizedBitmap(selectedImage, 128);// 400 is for example, replace with desired size
                 this.avatarJugador.setImageBitmap(selectedImage);
 
-                Drawable d = new BitmapDrawable(getResources(), selectedImage);
+                // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
+                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR ,Utilidades.bitmapToArrayBytes(selectedImage));
 
-                // Si tenemos internet, lo subimos a Firebase
-                if (jugador != null) {
-                    if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
-                        UtilsFirebase.subirImagenFirebase(jugador.getJugadorId(), d);
-                    }
+                // De paso guardamos los datos del jugador (Nickname, id, victorias en el Shared Preferences)
+                if (!nickET.getText().toString().equals("")) {
+                    jugador.setNickname(nickET.getText().toString());
                 }
+                SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
 
-                // Grabar en Shared Preferences que tenemos el archivo creado en el dispositivo
-                //       SharedPrefs.saveAvatarPrefs(this, Utilidades.crearNombreArchivo());
-                //       SharedPrefs.saveNickPrefs(this, nickET.getText().toString());
-
-
-                //this.avatarJugador.setImageURI(this.photo_uri);
-                //this.avatarJugador.setScaleType(ImageView.ScaleType.FIT_XY);
+                // Actualizamos la galería
                 sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, photo_uri));
                 break;
             case RESULT_CANCELED:
@@ -831,22 +813,19 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void recuperarDatosSharedPreferences() {
-        // Recuperamos datos del Shared Preferences si existen
-        /*
-        if (!SharedPrefs.getAvatarPrefs(this).equals("")) {
-            // Hay datos guardados
-            Log.d(Constantes.TAG, "Ha recuperado las preferencias");
+        // Recuperamos datos del Shared Preferences
+        // Cargamos datos del jugador
+        jugador = SharedPrefs.getJugadorPrefs(getApplicationContext());
+        // Seteamos la imagen del avatar con el archivo guardado localmente en el dispositivo
+        // Este archivo se actualiza cada vez que lo personalizamos con una imagen de la galería o la cámara
+        avatarJugador.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
+        // Cargamos records y los mostramos
+        records = SharedPrefs.getRecordsPrefs(getApplicationContext());
 
-            jugador.setNickname(SharedPrefs.getNicknamePrefs(this));
-            jugador.setVictorias(SharedPrefs.getVictoriasPrefs(this));
+        adapter = new RecordsAdapter(getApplicationContext(), records);
+        recordsRecycler.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
 
-            victoriasTV.setText("Victorias : " + jugador.getVictorias());
-            nickET.setText(jugador.getNickname());
-            String ruta_archivo = SharedPrefs.getAvatarPrefs(this);
-            recuperarImagenGuardada(ruta_archivo);
-
-        }
-        */
     }
 
 
@@ -869,7 +848,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
-            if (jugador != null && jugador.getJugadorId() != null) {
+            if (jugador != null && jugador.getJugadorId() != null && userRef != null) {
                 jugador.setOnline(true);
                 userRef.setValue(jugador);
             }

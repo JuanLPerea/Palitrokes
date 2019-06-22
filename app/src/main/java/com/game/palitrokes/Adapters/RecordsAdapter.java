@@ -53,8 +53,10 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterV
         // Estos archivos se actualizan cuando se descargan de Firebase al producirse el evento OnDataChange en los Records
 
         Bitmap imagenRecord = Utilidades.recuperarImagenMemoriaInterna(context, "RECORDIMG" + i );
-        if (imagenRecord != null) {
+        if (imagenRecord != null && recordRow.getIdJugador() != "idJugador") {
             holder.avatarRecord.setImageBitmap(imagenRecord);
+        } else {
+            holder.avatarRecord.setImageResource(R.drawable.camera);
         }
         holder.nickRecord.setText(recordRow.getNickname());
         holder.levelRecord.setText(recordRow.getLevel() + "");

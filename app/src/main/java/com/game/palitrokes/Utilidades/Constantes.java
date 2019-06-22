@@ -20,4 +20,5 @@ public class Constantes {
     public static final String RUTA_FOTO_PREFS = "RUTAFOTO";
     public static final String VICTORIAS_PREFS = "VICTORIAS";
     public static final String ARCHIVO_IMAGEN_JUGADOR = "ARCHIVOIMAGENJUGADOR";
+    public static final String RECORDS_PREFS = "RECORDSPREFS";
 }

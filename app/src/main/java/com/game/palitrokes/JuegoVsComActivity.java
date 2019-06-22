@@ -24,6 +24,7 @@ import com.game.palitrokes.Modelos.Tablero;
 import com.game.palitrokes.Utilidades.Constantes;
 import com.game.palitrokes.Utilidades.SharedPrefs;
 import com.game.palitrokes.Utilidades.Sonidos;
+import com.game.palitrokes.Utilidades.Utilidades;
 import com.game.palitrokes.Utilidades.UtilityNetwork;
 import com.game.palitrokes.Utilidades.UtilsFirebase;
 
@@ -105,7 +106,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
 
         nickJ2.setText("Palitrokes");
-        winsJ2.setText("∞");
+        winsJ2.setText("Victorias: ∞");
 
 
         // Cronometro para el jugador 1
@@ -164,27 +165,9 @@ public class JuegoVsComActivity extends AppCompatActivity {
     }
 
     private void actualizarVistaJugador() {
-
-/*
-        // Mirar si tenemos datos en Shared Preferences
-        if (!SharedPrefs.getAvatarPrefs(this).equals("")) {
-            String ruta_archivo = SharedPrefs.getAvatarPrefs(getApplicationContext());
-            avatarJ1.setImageURI(Uri.parse(ruta_archivo));
-        } else {
-            // Si no hay nada en Shared preferences lo recuperamos de Firebase
-            // Mirar si tenemos internet
-            if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
-                if (avatarJ1.getTag().equals("false")) {
-                    UtilsFirebase.descargarImagenFirebase(jugador.getJugadorId(), avatarJ1);
-                    avatarJ1.setTag("true");
-                }
-            }
-        }
-*/
+        avatarJ1.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
         winsJ1.setText("Victorias: " + jugador.getVictorias());
         nickJ1.setText(jugador.getNickname());
-
-
     }
 
     private void visualizarTablero(Tablero tablero) {
