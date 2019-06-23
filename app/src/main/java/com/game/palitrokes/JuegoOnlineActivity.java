@@ -22,6 +22,7 @@ import com.game.palitrokes.Modelos.Palo;
 import com.game.palitrokes.Modelos.Partida;
 import com.game.palitrokes.Modelos.Tablero;
 import com.game.palitrokes.Utilidades.Constantes;
+import com.game.palitrokes.Utilidades.SharedPrefs;
 import com.game.palitrokes.Utilidades.Sonidos;
 import com.game.palitrokes.Utilidades.Utilidades;
 import com.game.palitrokes.Utilidades.UtilsFirebase;
@@ -506,6 +507,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             jugador.setVictorias(1);
             resultado += "Has Ganado ¡Enhorabuena!";
             sonidos.play(Sonidos.Efectos.GANAR);
+            SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+
         } else {
             jugador.setDerrotas(1);
             resultado += "Lo siento ¡has perdido!";

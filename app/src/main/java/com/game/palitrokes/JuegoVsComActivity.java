@@ -90,18 +90,11 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
         finTiempo = false;
 
-        // Recuperamos los datos del jugador del Intent
-        Intent intent = getIntent();
-        String idJugador = intent.getStringExtra("IDJUGADOR");
-        String nickJugador = intent.getStringExtra("NICKNAME");
-        int victorias = intent.getIntExtra("VICTORIAS", 0);
-
-        //Seteamos el jugador con los datos del intent
+        // Recuperamos los datos del jugador de Shared Preferences
+        // Seteamos el jugador
         jugador = new Jugador();
+        jugador = SharedPrefs.getJugadorPrefs(getApplicationContext());
         jugador.setNumeroJugador(1);
-        jugador.setVictorias(victorias);
-        jugador.setNickname(nickJugador);
-        jugador.setJugadorId(idJugador);
         actualizarVistaJugador();
 
 

@@ -169,8 +169,8 @@ public class MainActivity extends AppCompatActivity {
         ValueEventListener userListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                jugador = dataSnapshot.getValue(Jugador.class);
-                if (jugador == null) {
+                Jugador jugadorTMP = dataSnapshot.getValue(Jugador.class);
+                if (jugadorTMP == null) {
                     // Si el jugador es nuevo lo creamos
                     String nickName = "";
                     if (nickET.getText() == null) {
@@ -191,6 +191,7 @@ public class MainActivity extends AppCompatActivity {
 
                 } else {
                     jugador.setOnline(true);
+                    jugador.setJugadorId(jugadorTMP.getJugadorId());
                     userRef.setValue(jugador);
                 }
             }
@@ -304,14 +305,14 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(Constantes.TAG, "Cancelado Dialog");
 
                 // Quitar el listener
-                mDatabase.removeEventListener(partidasListener);
+                mDatabase.child("PARTIDAS").removeEventListener(partidasListener);
                 borrarJugadorSalaFirebase();
-
+                jugador.setPartida("0");
+                salaSeleccionada = null;
                 mDatabase.child("USUARIOS").addValueEventListener(jugadoresListener);
                 jugarOnline.dismiss();
             }
         });
-
 
         final TextView rivalReady = jugarOnline.findViewById(R.id.estadoRivalTV);
         final TextView jugadorReady = jugarOnline.findViewById(R.id.estadoJugadorTV);
@@ -321,32 +322,42 @@ public class MainActivity extends AppCompatActivity {
         final ProgressBar progressBar = jugarOnline.findViewById(R.id.progressBar2);
         final ImageView avatarRival = jugarOnline.findViewById(R.id.rivalImageIV);
 
-        jugadorReady.setText(jugador.getNickname());
-        mensajeEstado.setText("Buscando Rival...");
-        avatarRival.setImageResource(R.drawable.camera);
-
-
         // Hacemos una lista con las salas disponibles en Firebase
         partidasListener = new ValueEventListener() {
             List<Partida> salasDisponibles = new ArrayList<>();
 
+
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+
+                // Actualizamos los views del Dialog
+                jugadorReady.setText(jugador.getNickname());
+                mensajeEstado.setText("Buscando Rival...");
+                avatarRival.setImageResource(R.drawable.camera);
+                readyJugadorIMG.setImageResource(R.drawable.ic_cached_black_24dp);
+                readyJugadorIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
+                readyRivalIMG.setImageResource(R.drawable.ic_cached_black_24dp);
+                readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
+                progressBar.setVisibility(View.VISIBLE);
                 // Actualizamos los datos de las salas
                 // Tenemos una lista con todas las salas
                 // y otra con las salas que tienen sitio disponible
                 // Log.d(Constantes.TAG, "Buscando sala");
-
                 salasDisponibles.removeAll(salasDisponibles);
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Partida salaTMP = snapshot.getValue(Partida.class);
-                    if (salaTMP.getJugador1ID().equals("0") || salaTMP.getJugador2ID().equals("0")) {
-                        salasDisponibles.add(salaTMP);
-                    } else {
-                        // si ya tenemos la sala seleccionada, actualizamos los datos
-                        // con los cambios que ha habido en Firebase
-                        if (salaSeleccionada != null && salaTMP.getNumeroSala() == salaSeleccionada.getNumeroSala()) {
+
+                    // si ya tenemos la sala seleccionada, actualizamos los datos
+                    // con los cambios que ha habido en Firebase
+                    if (salaSeleccionada != null) {
+                        if (salaTMP.getNumeroSala() == salaSeleccionada.getNumeroSala()) {
                             salaSeleccionada = salaTMP;
+                            break;
+                        }
+                    } else {
+                        // si no tenemos sala seleccionada, buscamos una añadiendo las disponibles a la lista
+                        if (salaTMP.getJugador1ID().equals("0") || salaTMP.getJugador2ID().equals("0")) {
+                            salasDisponibles.add(salaTMP);
                         }
                     }
                 }
@@ -540,33 +551,25 @@ public class MainActivity extends AppCompatActivity {
     //
     public void jugar(View view) {
 
-        //  int victorias = SharedPrefs.getVictoriasPrefs(this);
-        String nickJugador = "Jugador";
-        String idjugador = "VSCOM";
-
-
-        if (!nickET.getText().toString().equals("")) {
-            nickJugador = nickET.getText().toString();
-        }
-
-        //     SharedPrefs.saveNickPrefs(this, nickJugador);
-        //    SharedPrefs.saveVictoriasPrefs(this, victorias);
-        //    SharedPrefs.saveAvatarPrefs(this, photo_uri + "");
-
 
         // Ponemos al false el que el jugador está online para que no le tengan en cuenta para jugar en este modo
         if (jugador != null) {
-            idjugador = jugador.getJugadorId();
             if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
                 jugador.setOnline(false);
                 userRef.setValue(jugador);
             }
+        } else {
+            jugador = new Jugador();
         }
 
+        if (nickET.getText() != null) {
+            jugador.setNickname(nickET.getText().toString());
+        }
+
+
+        SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+
         Intent intentvscom = new Intent(this, JuegoVsComActivity.class);
-        intentvscom.putExtra("NICKNAME", nickJugador);
-        intentvscom.putExtra("IDJUGADOR", idjugador);
-        //   intentvscom.putExtra("VICTORIAS", victorias);
         startActivity(intentvscom);
 
 
@@ -618,7 +621,7 @@ public class MainActivity extends AppCompatActivity {
                 mDatabase.child("PARTIDAS").child(jugador.getPartida()).child("jugador2ID").setValue("0");
                 mDatabase.child("PARTIDAS").child(jugador.getPartida()).child("jugador2Ready").setValue(false);
             }
-            jugador.setPartida("0");
+
         }
     }
 
@@ -720,7 +723,10 @@ public class MainActivity extends AppCompatActivity {
                 Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR ,Utilidades.bitmapToArrayBytes(selectedImage));
 
                 // De paso guardamos los datos del jugador (Nickname, id, victorias en el Shared Preferences)
-                if (!nickET.getText().toString().equals("")) {
+                if (jugador == null) {
+                    jugador = new Jugador();
+                }
+                if (!nickET.getText().toString().equals("") ) {
                     jugador.setNickname(nickET.getText().toString());
                 }
                 SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
@@ -751,6 +757,9 @@ public class MainActivity extends AppCompatActivity {
                 Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR ,Utilidades.bitmapToArrayBytes(selectedImage));
 
                 // De paso guardamos los datos del jugador (Nickname, id, victorias en el Shared Preferences)
+                if (jugador == null) {
+                    jugador = new Jugador();
+                }
                 if (!nickET.getText().toString().equals("")) {
                     jugador.setNickname(nickET.getText().toString());
                 }
@@ -773,16 +782,6 @@ public class MainActivity extends AppCompatActivity {
         } else if (requestCode == Constantes.CODIGO_PETICION_HACER_FOTO) {
             setearImagenDesdeCamara(resultCode, data);
         }
-    }
-
-
-    private void recuperarImagenGuardada(String ruta_archivo) {
-        // Recuperamos la imagen del usuario del archivo en el dispositivo, si existe
-        // si no existe, la cargamos de Firebase, que siempre la tenemos
-
-        Log.d(Constantes.TAG, "Ruta archivo: " + ruta_archivo);
-        avatarJugador.setImageURI(Uri.parse(ruta_archivo));
-
     }
 
 
@@ -823,6 +822,7 @@ public class MainActivity extends AppCompatActivity {
         // Recuperamos datos del Shared Preferences
         // Cargamos datos del jugador
         jugador = SharedPrefs.getJugadorPrefs(getApplicationContext());
+
         // Seteamos la imagen del avatar con el archivo guardado localmente en el dispositivo
         // Este archivo se actualiza cada vez que lo personalizamos con una imagen de la galería o la cámara
         avatarJugador.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
