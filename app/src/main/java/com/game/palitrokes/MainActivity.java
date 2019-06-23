@@ -169,8 +169,8 @@ public class MainActivity extends AppCompatActivity {
         ValueEventListener userListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                Jugador jugadorTMP = dataSnapshot.getValue(Jugador.class);
-                if (jugadorTMP == null) {
+                jugador = dataSnapshot.getValue(Jugador.class);
+                if (jugador == null) {
                     // Si el jugador es nuevo lo creamos
                     String nickName = "";
                     if (nickET.getText() == null) {
@@ -178,9 +178,9 @@ public class MainActivity extends AppCompatActivity {
                     } else {
                         nickName = nickET.getText().toString();
                     }
-                    Jugador newJugador = new Jugador(currentUser.getUid(), nickName);
-                    newJugador.setOnline(true);
-                    userRef.setValue(newJugador);
+                    jugador = new Jugador(currentUser.getUid(), nickName);
+                    jugador.setOnline(true);
+                    userRef.setValue(jugador);
 
                     // Subimos una imagen a Firebase Storage con el nombre del ID del jugador
                     // para usarla como avatar
@@ -188,10 +188,11 @@ public class MainActivity extends AppCompatActivity {
                     UtilsFirebase.subirImagenFirebase(currentUser.getUid(), avatarNuevo);
                     Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR, Utilidades.bitmapToArrayBytes(avatarNuevo));
                     avatarJugador.setImageBitmap(avatarNuevo);
+                    SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
 
                 } else {
+                    jugador = SharedPrefs.getJugadorPrefs(getApplicationContext());
                     jugador.setOnline(true);
-                    jugador.setJugadorId(jugadorTMP.getJugadorId());
                     userRef.setValue(jugador);
                 }
             }
@@ -280,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
         userRef.removeEventListener(jugadoresListener);
 
         //Subimos nuestro avatar a Firebase (Aquí es seguro que tenemos internet)
-        UtilsFirebase.subirImagenFirebase(jugador.getJugadorId(), Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
+        UtilsFirebase.subirImagenFirebase(mAuth.getCurrentUser().getUid(), Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
 
         // Establecer un listener para las partidas
         // Hay salas creadas previamente en Firebase (Partidas)
@@ -334,10 +335,7 @@ public class MainActivity extends AppCompatActivity {
                 jugadorReady.setText(jugador.getNickname());
                 mensajeEstado.setText("Buscando Rival...");
                 avatarRival.setImageResource(R.drawable.camera);
-                readyJugadorIMG.setImageResource(R.drawable.ic_cached_black_24dp);
-                readyJugadorIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
-                readyRivalIMG.setImageResource(R.drawable.ic_cached_black_24dp);
-                readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
+
                 progressBar.setVisibility(View.VISIBLE);
                 // Actualizamos los datos de las salas
                 // Tenemos una lista con todas las salas
@@ -433,14 +431,17 @@ public class MainActivity extends AppCompatActivity {
                                     mDatabase.child("PARTIDAS").removeEventListener(partidasListener);
                                     Log.d(Constantes.TAG, "Lanzar Juego");
                                     Intent jugar = new Intent(jugarOnline.getContext(), JuegoOnlineActivity.class);
+                                    jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador2ID());
                                     startActivity(jugar);
-                                    jugarOnline.dismiss();
-                                    // Eliminamos el listener
-
                                     finish();
+                                    jugarOnline.dismiss();
                                 }
+                            } else {
+                                readyRivalIMG.setImageResource(R.drawable.ic_cached_black_24dp);
+                                readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
+                                rivalReady.setText("Esperando al rival");
                             }
                         }
 
@@ -466,15 +467,17 @@ public class MainActivity extends AppCompatActivity {
                                     mDatabase.child("PARTIDAS").removeEventListener(partidasListener);
                                     // Los 2 estamos listos. Lanzar Intent de juego
                                     Intent jugar = new Intent(jugarOnline.getContext(), JuegoOnlineActivity.class);
+                                    jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador1ID());
                                     startActivity(jugar);
-                                    jugarOnline.dismiss();
-                                    // Eliminamos el listener
-
                                     finish();
-
+                                    jugarOnline.dismiss();
                                 }
+                            } else {
+                                readyRivalIMG.setImageResource(R.drawable.ic_cached_black_24dp);
+                                readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
+                                rivalReady.setText("Esperando al rival");
                             }
                         }
                     }
@@ -570,6 +573,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
 
         Intent intentvscom = new Intent(this, JuegoVsComActivity.class);
+        intentvscom.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         startActivity(intentvscom);
 
 
@@ -722,6 +726,7 @@ public class MainActivity extends AppCompatActivity {
                 // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
                 Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR ,Utilidades.bitmapToArrayBytes(selectedImage));
 
+
                 // De paso guardamos los datos del jugador (Nickname, id, victorias en el Shared Preferences)
                 if (jugador == null) {
                     jugador = new Jugador();
@@ -730,6 +735,7 @@ public class MainActivity extends AppCompatActivity {
                     jugador.setNickname(nickET.getText().toString());
                 }
                 SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+
                 break;
 
             case RESULT_CANCELED:
@@ -867,13 +873,16 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (jugador != null) {
-            jugador.setOnline(false);
-            userRef.setValue(jugador);
+        if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
+            if (jugador != null && jugador.getJugadorId() != null && userRef != null) {
+                jugador.setOnline(true);
+                userRef.setValue(jugador);
+            }
         }
 
-        //  super.onBackPressed();
+
         finish();
+       // super.onBackPressed();
 
     }
 

@@ -54,7 +54,7 @@ public class SharedPrefs {
                 if (recordGuardado != null) {
                     String[] recordSplit = recordGuardado.split("#");
                     if (recordSplit != null) {
-                        records.add(new Records(recordSplit[0], recordSplit[1], Integer.parseInt(recordSplit[2]), Integer.parseInt(recordSplit[3])));
+                        records.add(new Records(recordSplit[0], recordSplit[1], Integer.parseInt(recordSplit[3]), Integer.parseInt(recordSplit[2])));
                     }
                 } else {
                     records.add(new Records("idJugador" ,"Jugador " + n, 0,0));

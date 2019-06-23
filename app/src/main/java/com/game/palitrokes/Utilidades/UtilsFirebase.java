@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.widget.ImageView;
 
+import com.game.palitrokes.MainActivity;
 import com.game.palitrokes.Modelos.Jugador;
 import com.game.palitrokes.Modelos.Records;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -127,9 +128,12 @@ public class UtilsFirebase {
 
     }
 
-    public static void guardarRecords(final Jugador jugador, final int level) {
+    public static void guardarRecords(Context context , final Jugador jugador , final int level) {
 
         final DatabaseReference recordsRef = FirebaseDatabase.getInstance().getReference().child("RECORDS");
+
+        //Subimos nuestro avatar a Firebase (Aquí es seguro que tenemos internet)
+        UtilsFirebase.subirImagenFirebase(jugador.getJugadorId(), Utilidades.recuperarImagenMemoriaInterna(context, Constantes.ARCHIVO_IMAGEN_JUGADOR));
 
         // Recuperar la lista de records guardada en Firebase
         // Cargar los records y mostrarlos en el Recycler

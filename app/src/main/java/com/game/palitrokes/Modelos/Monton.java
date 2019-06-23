@@ -29,13 +29,13 @@ public class Monton {
                 numPalosAleat = r.nextInt(2) +1;
                 break;
             case 1:
-                numPalosAleat = r.nextInt(4) +1;
+                numPalosAleat = r.nextInt(3) +2;
                 break;
             case 2:
-                numPalosAleat = r.nextInt(6) +1;
+                numPalosAleat = r.nextInt(3) +3;
                 break;
             default:
-                numPalosAleat = r.nextInt(8) +1;
+                numPalosAleat = r.nextInt(4) +4;
                 break;
         }
 

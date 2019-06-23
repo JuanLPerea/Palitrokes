@@ -478,7 +478,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
             // Guardar record si hay internet, podemos mirar si hemos entrado en los records del juego
             // Si no hay internet, solo sumamos la victoria a nuestras estadísticas
             if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)){
-                UtilsFirebase.guardarRecords(jugador, partida.getLevel());
+                UtilsFirebase.guardarRecords(getApplicationContext(), jugador, partida.getLevel());
             }
 
             SharedPrefs.saveJugadorPrefs(this, jugador);

@@ -109,7 +109,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 finTiempo = true;
-                cronometro1.cancel();
+             //   cronometro1.cancel();
                 finTurno();
             }
         };
@@ -124,7 +124,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 finTiempo = true;
-                cronometro2.cancel();
+               // cronometro2.cancel();
                 finTurno();
             }
         };
@@ -439,11 +439,14 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         // Si no hay ningún palo seleccionado esque el jugador pasa bastante de jugar y se ha acabado el tiempo sin hacer nada
         Log.d(Constantes.TAG, "Fin del turno " + partida.getTurno() + " Fin tiempo? " + finTiempo);
         if (finTiempo && partida.getTurno() == jugador.getNumeroJugador()) {
-            // Si es el jugador el que no ha hecho nada, pierde
-            // Toast.makeText(this, "Lo siento, si no haces ninguna jugada, pierdes" , Toast.LENGTH_LONG).show();
-            partida.setGanador(rival.getNumeroJugador());
-            // Notificamos el ganador
-            salaRef.setValue(partida);
+            if ( partida.getTablero().palosSeleccionadosTotal() == 0) {
+                // Si es el jugador el que no ha hecho nada, pierde
+                // Toast.makeText(this, "Lo siento, si no haces ninguna jugada, pierdes" , Toast.LENGTH_LONG).show();
+                partida.setGanador(rival.getNumeroJugador());
+                // Notificamos el ganador
+                salaRef.setValue(partida);
+            }
+
         }
 
         // Cambiamos el turno
