@@ -18,6 +18,7 @@ public class SharedPrefs {
         editor.putString(Constantes.NICKNAME_PREFS, jugador.getNickname());
         editor.putString(Constantes.JUGADORID_PREFS, jugador.getJugadorId());
         editor.putInt(Constantes.VICTORIAS_PREFS, jugador.getVictorias());
+        editor.putBoolean(Constantes.FIRST_RUN, jugador.isFirstRun());
         editor.commit();
     }
 
@@ -28,6 +29,7 @@ public class SharedPrefs {
         jugador.setNickname(sharedPreferences.getString(Constantes.NICKNAME_PREFS, "Jugador"));
         jugador.setJugadorId(sharedPreferences.getString(Constantes.JUGADORID_PREFS, null));
         jugador.setVictorias(sharedPreferences.getInt(Constantes.VICTORIAS_PREFS, 0));
+        jugador.setFirstRun(sharedPreferences.getBoolean(Constantes.FIRST_RUN, true));
 
         return jugador;
     }

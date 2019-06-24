@@ -59,6 +59,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
     private CountDownTimer cronometro2;
     private boolean finTiempo;
     private Sonidos sonidos;
+    private int ultimoTurno = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,7 +82,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
         // Sonidos
         sonidos = new Sonidos(this);
-        sonidos.play(Sonidos.Efectos.ONLINE);
+        sonidos.play(Sonidos.Efectos.UIIIIU);
 
         okJ1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,7 +110,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 finTiempo = true;
-             //   cronometro1.cancel();
+                //   cronometro1.cancel();
                 finTurno();
             }
         };
@@ -124,7 +125,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 finTiempo = true;
-               // cronometro2.cancel();
+                // cronometro2.cancel();
                 finTurno();
             }
         };
@@ -214,6 +215,11 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         // Cada vez que hay un cambio en la BBDD se lanza este evento...
         //
 
+        cronometro1.start();
+        partida = new Partida();
+        partida.setTurno(1);
+        ultimoTurno = 0;
+
         salaRef = mDatabase.child("PARTIDAS").child(salaJuego).getRef();
 
         salaListener = new ValueEventListener() {
@@ -224,14 +230,18 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 // cambio en la BB.DD. y por lo tanto se lanza este Listener
                 visualizarTablero(partida.getTablero());
                 // Si no hay ganador, mirar de quien es el turno
-                if (partida.getGanador() == 0) {
-                    // Actualizar los botones y crono en la pantalla
-                    // dependiendo si es nuestro turno o el del rival
-                    actualizarViewsCambioTurno();
-                } else {
+                if (partida.getGanador() != 0) {
                     // Aquí detectamos si hay ganador. La partida termina
                     finJuego();
                 }
+
+                if (ultimoTurno != partida.getTurno()) {
+                    actualizarViewsCambioTurno();
+                    ultimoTurno = partida.getTurno();
+                    sonidos.play(Sonidos.Efectos.UIIIIU);
+                }
+
+                // TODO NO DETECTA BIEN CUANDO ACABA EL TURNO EL RIVAL. ARREGLAR
             }
 
             @Override
@@ -360,6 +370,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 tiempoJ1.setVisibility(View.VISIBLE);        //Tiempo del jugador 1 visible
                 tiempoJ2.setVisibility(View.INVISIBLE);      //Tiempo del jugador 2 invisible
                 // Seamos el jugador 1 o el 2 el crono lo tiene el jugador 1, porque es su turno
+                cronometro2.cancel();
                 cronometro1.start();
                 break;
             case 2:
@@ -377,6 +388,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 tiempoJ1.setVisibility(View.INVISIBLE);        //Tiempo del jugador 1 INvisible
                 tiempoJ2.setVisibility(View.VISIBLE);      //Tiempo del jugador 2 invisible
                 // Seamos el jugador 1 o el 2 el crono lo tiene el jugador 1, porque es su turno
+                cronometro1.cancel();
                 cronometro2.start();
                 break;
         }
@@ -438,22 +450,34 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
         // Si no hay ningún palo seleccionado esque el jugador pasa bastante de jugar y se ha acabado el tiempo sin hacer nada
         Log.d(Constantes.TAG, "Fin del turno " + partida.getTurno() + " Fin tiempo? " + finTiempo);
-        if (finTiempo && partida.getTurno() == jugador.getNumeroJugador()) {
-            if ( partida.getTablero().palosSeleccionadosTotal() == 0) {
-                // Si es el jugador el que no ha hecho nada, pierde
-                // Toast.makeText(this, "Lo siento, si no haces ninguna jugada, pierdes" , Toast.LENGTH_LONG).show();
-                partida.setGanador(rival.getNumeroJugador());
-                // Notificamos el ganador
-                salaRef.setValue(partida);
-            }
+        if (finTiempo) {
+            if (partida.getTurno() == jugador.getNumeroJugador()) {
+                if (partida.getTablero().palosSeleccionadosTotal() == 0) {
+                    // Si es el jugador el que no ha hecho nada, pierde
+                    // Toast.makeText(this, "Lo siento, si no haces ninguna jugada, pierdes" , Toast.LENGTH_LONG).show();
+                    partida.setGanador(rival.getNumeroJugador());
+                    // Notificamos el ganador
+                    salaRef.setValue(partida);
+                } else {
+                    okJugada(null);
+                }
 
+                actualizarViewsCambioTurno();
+
+                // Cambiamos el turno en Firebase
+                salaRef.setValue(partida);
+
+            }
+        } else {
+            // Cambiamos el turno
+            partida.turnoToggle();
+            actualizarViewsCambioTurno();
+            // Cambiamos el turno en Firebase
+            salaRef.setValue(partida);
         }
 
-        // Cambiamos el turno
-        partida.turnoToggle();
 
-        // Cambiamos el turno en Firebase
-        salaRef.setValue(partida);
+
 
     }
 

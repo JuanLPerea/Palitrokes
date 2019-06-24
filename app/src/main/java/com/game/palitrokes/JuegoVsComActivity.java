@@ -56,7 +56,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
         // Sonidos
        sonidos = new Sonidos(this);
-       sonidos.play(Sonidos.Efectos.ONLINE);
+       sonidos.play(Sonidos.Efectos.UIIIIU);
 
         // recuperamos las Views
         linearBase = findViewById(R.id.tableroLL);
@@ -344,6 +344,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
             partida.turnoToggle();
             actualizarViewsCambioTurno();
+            sonidos.play(Sonidos.Efectos.UIIIIU);
 
             if (partida.getTurno() == 2) {
                 Log.d(Constantes.TAG, "Turno del ordenador");

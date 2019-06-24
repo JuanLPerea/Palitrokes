@@ -7,11 +7,11 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-
     <FrameLayout
+        android:id="@+id/frameTitulo"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.75">
+        android:layout_weight="4">
 
 
         <ImageView
@@ -31,8 +31,8 @@
 
         <TextView
             android:id="@+id/onlineTV"
-            android:layout_width="59dp"
-            android:layout_height="19dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="bottom|right|end"
             android:layout_marginRight="30dp"
             android:text="Online: 0" />
@@ -40,137 +40,154 @@
 
     </FrameLayout>
 
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_weight="2"
+        android:gravity="center_horizontal|center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/nickET"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:hint="Nickname"
+                android:inputType="textPersonName"
+                android:maxLength="10" />
+
+            <TextView
+                android:id="@+id/victoriasET"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Victorias:" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/avatarIV"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:onClick="personalizarAvatar"
+            android:src="@drawable/camera" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/jugarBTN"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="jugar"
+            android:text="Jugar" />
+
+
+        <Button
+            android:id="@+id/jugaronlineBTN"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="1"
+            android:enabled="false"
+            android:onClick="jugarOnline"
+            android:text="Jugar Online"
+            android:visibility="invisible" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/recordsTV"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:gravity="center"
+        android:onClick="crearSalas"
+        android:text="Records Mundiales"
+        android:textSize="24sp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="3"
-            android:gravity="center_horizontal|center_vertical"
-            android:orientation="horizontal">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        android:background="@color/common_google_signin_btn_text_light_disabled"
+        android:gravity="center">
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:orientation="vertical">
-
-                <EditText
-                    android:id="@+id/nickET"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ems="10"
-                    android:hint="Nickname"
-                    android:inputType="textPersonName"
-                    android:maxLength="10" />
-
-                <TextView
-                    android:id="@+id/victoriasET"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Victorias:" />
-            </LinearLayout>
-
-            <ImageView
-                android:id="@+id/avatarIV"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:onClick="personalizarAvatar"
-                android:src="@drawable/camera" />
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="3"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/jugarBTN"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:onClick="jugar"
-                android:text="Jugar" />
-
-
-            <Button
-                android:id="@+id/jugaronlineBTN"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:alpha="1"
-                android:enabled="false"
-                android:onClick="jugarOnline"
-                android:text="Jugar Online"
-                android:visibility="invisible" />
-        </LinearLayout>
+        <ImageView
+            android:id="@+id/cabecera1"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginLeft="20dp"
+            android:src="@drawable/camera" />
 
         <TextView
-            android:id="@+id/recordsTV"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
+            android:id="@+id/cabecera2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="10"
             android:gravity="center"
-            android:onClick="crearSalas"
-            android:text="Records Mundiales"
-            android:textSize="24sp" />
+            android:text="Jugador"
+            android:textSize="16sp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:background="@color/common_google_signin_btn_text_light_disabled"
-            android:gravity="center">
+        <TextView
+            android:id="@+id/cabecera3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="5"
+            android:gravity="center"
+            android:text="Nivel"
+            android:textSize="16sp" />
 
-            <ImageView
-                android:id="@+id/cabecera1"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/camera"
-                android:layout_marginLeft="20dp" />
-
-            <TextView
-                android:id="@+id/cabecera2"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="10"
-                android:gravity="center"
-                android:text="Jugador"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/cabecera3"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="5"
-                android:gravity="center"
-                android:text="Nivel"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/cabecera4"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="5"
-                android:gravity="center"
-                android:text="Victorias"
-                android:textSize="16sp" />
-
-
-        </LinearLayout>
+        <TextView
+            android:id="@+id/cabecera4"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="5"
+            android:gravity="center"
+            android:text="Victorias"
+            android:textSize="16sp" />
 
 
     </LinearLayout>
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/recordsRecycler"
+
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_weight="5">
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="10dp"
+            android:onClick="infoButton"
+            android:src="@drawable/info_48dp"
+            app:elevation="12dp"
+            app:maxImageSize="48dp" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recordsRecycler"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+    </FrameLayout>
+
 
 </LinearLayout>

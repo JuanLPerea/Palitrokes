@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -69,6 +70,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recordsRecycler;
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager layoutManager;
+    private FloatingActionButton fab;
     private List<Jugador> jugadores;
     private List<Records> records;
     private ValueEventListener jugadoresListener;
@@ -102,6 +104,10 @@ public class MainActivity extends AppCompatActivity {
         recordsRecycler.setLayoutManager(layoutManager);
         botonOnline = findViewById(R.id.jugaronlineBTN);
         avatarJugador = findViewById(R.id.avatarIV);
+        fab = findViewById(R.id.fab);
+        fab.bringToFront();
+
+
 
         //Lista de jugadores online
         jugadores = new ArrayList<>();
@@ -434,8 +440,8 @@ public class MainActivity extends AppCompatActivity {
                                     jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador2ID());
-                                    startActivity(jugar);
                                     finish();
+                                    startActivity(jugar);
                                     jugarOnline.dismiss();
                                 }
                             } else {
@@ -470,8 +476,8 @@ public class MainActivity extends AppCompatActivity {
                                     jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador1ID());
-                                    startActivity(jugar);
                                     finish();
+                                    startActivity(jugar);
                                     jugarOnline.dismiss();
                                 }
                             } else {
@@ -574,6 +580,7 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intentvscom = new Intent(this, JuegoVsComActivity.class);
         intentvscom.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        finish();
         startActivity(intentvscom);
 
 
@@ -829,6 +836,19 @@ public class MainActivity extends AppCompatActivity {
         // Cargamos datos del jugador
         jugador = SharedPrefs.getJugadorPrefs(getApplicationContext());
 
+        if (jugador.isFirstRun()) {
+            // La primera vez que instalamos la aplicación lanzamos la actividad de Info
+            // Para explicar el juego
+            Log.d(Constantes.TAG, "Lanzar info");
+            jugador.setFirstRun(false);
+            SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+            Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
+            finish();
+            startActivity(infointent);
+
+
+        }
+
         // Seteamos la imagen del avatar con el archivo guardado localmente en el dispositivo
         // Este archivo se actualiza cada vez que lo personalizamos con una imagen de la galería o la cámara
         avatarJugador.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
@@ -886,4 +906,12 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    public void infoButton(View view) {
+        Log.d(Constantes.TAG, "Tocado info");
+        Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
+        finish();
+        startActivity(infointent);
+
+
+    }
 }

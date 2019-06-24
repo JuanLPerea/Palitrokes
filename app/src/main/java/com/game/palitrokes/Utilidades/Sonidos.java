@@ -10,8 +10,8 @@ public class Sonidos {
 
     private Context contexto;
     private SoundPool player;
-    public enum Efectos {TICK, GANAR, PERDER, BGM, ONLINE};
-    private int tick, ganar, perder, bgm, online;
+    public enum Efectos {TICK, GANAR, PERDER, BGM, UIIIIU};
+    private int tick, ganar, perder, bgm, uiiiu;
 
 
     public Sonidos(Context contexto) {
@@ -21,7 +21,7 @@ public class Sonidos {
         ganar = player.load(contexto, R.raw.win, 1);
         perder = player.load(contexto, R.raw.lose, 1);
         bgm = player.load(contexto, R.raw.fiiiu, 1);
-        online = player.load(contexto, R.raw.uiiiiu, 1);
+        uiiiu = player.load(contexto, R.raw.uiiiiu, 1);
 
 
     }
@@ -41,8 +41,8 @@ public class Sonidos {
             case BGM:
                 player.play(bgm, 1,1,0,0,1);
                 break;
-            case ONLINE:
-                player.play(online, 1,1,0,0,1);
+            case UIIIIU:
+                player.play(uiiiu, 1,1,0,0,1);
                 break;
         }
     }

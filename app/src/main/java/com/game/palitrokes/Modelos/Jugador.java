@@ -3,16 +3,14 @@ package com.game.palitrokes.Modelos;
 public class Jugador {
 
     private String jugadorId;
-    private String rivalId;
     private String nickname;
     private String partida;
     private int victorias;
     private int derrotas;
     private boolean online;
-    private boolean turno;
-    private boolean empezarPartida;
     private String actualizado;
     private int numeroJugador;
+    private boolean firstRun;
 
     public Jugador(String jugadorId, String nickname) {
         this.jugadorId = jugadorId;
@@ -21,10 +19,9 @@ public class Jugador {
         this.victorias = 0;
         this.derrotas = 0;
         this.online = false;
-        this.turno = false;
-        this.empezarPartida = false;
         this.actualizado = System.currentTimeMillis() + "*";
         this.numeroJugador = 0;
+        this.firstRun = true;
     }
 
     public Jugador() {
@@ -36,22 +33,6 @@ public class Jugador {
 
     public void setNumeroJugador(int numeroJugador) {
         this.numeroJugador = numeroJugador;
-    }
-
-    public boolean isEmpezarPartida() {
-        return empezarPartida;
-    }
-
-    public void setEmpezarPartida(boolean empezarPartida) {
-        this.empezarPartida = empezarPartida;
-    }
-
-    public String getRivalId() {
-        return rivalId;
-    }
-
-    public void setRivalId(String rivalId) {
-        this.rivalId = rivalId;
     }
 
 
@@ -103,12 +84,12 @@ public class Jugador {
         this.online = online;
     }
 
-    public boolean isTurno() {
-        return turno;
+    public boolean isFirstRun() {
+        return firstRun;
     }
 
-    public void setTurno(boolean turno) {
-        this.turno = turno;
+    public void setFirstRun(boolean firstRun) {
+        this.firstRun = firstRun;
     }
 
     public String getActualizado() {
