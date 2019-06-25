@@ -11,14 +11,59 @@
         android:id="@+id/frameTitulo"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="4">
+        android:layout_weight="4"
+        android:background="@color/celeste">
+
+        <ImageView
+            android:id="@+id/nube1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/nube1"
+            android:visibility="invisible"/>
+
+        <ImageView
+            android:id="@+id/nube2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/nube2"
+            android:visibility="invisible"/>
+
+        <ImageView
+            android:id="@+id/nube3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/nube3"
+            android:visibility="invisible"/>
+
+        <ImageView
+            android:id="@+id/nube4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/nube4"
+            android:visibility="invisible"/>
+
+        <ImageView
+            android:id="@+id/nube5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/nube5"
+            android:visibility="invisible"/>
+
+        <ImageView
+            android:id="@+id/nube6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/nube6"
+            android:visibility="invisible"/>
 
 
         <ImageView
+            android:id="@+id/palitrokesIV"
             android:layout_width="172dp"
             android:layout_height="156dp"
             android:layout_gravity="bottom|left"
-            android:src="@drawable/pako" />
+            android:src="@drawable/pic34"
+            />
 
 
         <ImageView
@@ -38,81 +83,98 @@
             android:text="Online: 0" />
 
 
+
+
     </FrameLayout>
 
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="2"
+        android:orientation="vertical"
+        android:background="@color/verde"
         android:gravity="center_horizontal|center_vertical"
-        android:orientation="horizontal">
+        >
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center_horizontal"
-            android:orientation="vertical">
+            android:layout_weight="2"
+            android:gravity="center_horizontal|center_vertical"
+            android:orientation="horizontal">
 
-            <EditText
-                android:id="@+id/nickET"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:ems="10"
-                android:hint="Nickname"
-                android:inputType="textPersonName"
-                android:maxLength="10" />
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/victoriasET"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Victorias:" />
+                <EditText
+                    android:id="@+id/nickET"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:textColor="@color/negro"
+                    android:hint="Nickname"
+                    android:inputType="textPersonName"
+                    android:maxLength="10" />
+
+                <TextView
+                    android:id="@+id/victoriasET"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/negro"
+                    android:text="Victorias:" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/avatarIV"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:onClick="personalizarAvatar"
+                android:src="@drawable/camera" />
+
         </LinearLayout>
 
-        <ImageView
-            android:id="@+id/avatarIV"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:onClick="personalizarAvatar"
-            android:src="@drawable/camera" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/jugarBTN"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="jugar"
+                android:text="Jugar" />
+
+
+            <Button
+                android:id="@+id/jugaronlineBTN"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="1"
+                android:enabled="false"
+                android:onClick="jugarOnline"
+                android:text="Jugar Online"
+                android:visibility="invisible" />
+        </LinearLayout>
 
     </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="2"
-        android:gravity="center"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/jugarBTN"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="jugar"
-            android:text="Jugar" />
-
-
-        <Button
-            android:id="@+id/jugaronlineBTN"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:alpha="1"
-            android:enabled="false"
-            android:onClick="jugarOnline"
-            android:text="Jugar Online"
-            android:visibility="invisible" />
-    </LinearLayout>
 
     <TextView
         android:id="@+id/recordsTV"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:background="@color/gris"
         android:layout_weight="1"
         android:gravity="center"
         android:onClick="crearSalas"
         android:text="Records Mundiales"
+        android:textColor="@color/blanco"
         android:textSize="24sp" />
 
     <LinearLayout
@@ -163,7 +225,8 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="5">
+        android:layout_weight="5"
+        android:background="@color/celeste">
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
@@ -184,7 +247,7 @@
         <android.support.v7.widget.RecyclerView
             android:id="@+id/recordsRecycler"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
             android:layout_weight="1" />
 
     </FrameLayout>

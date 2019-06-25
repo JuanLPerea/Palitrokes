@@ -86,7 +86,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
             }
         });
 
-        avatarJ2.setImageResource(R.drawable.pako);
+        avatarJ2.setImageResource(R.drawable.pic34);
 
         finTiempo = false;
 

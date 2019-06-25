@@ -241,7 +241,6 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                     sonidos.play(Sonidos.Efectos.UIIIIU);
                 }
 
-                // TODO NO DETECTA BIEN CUANDO ACABA EL TURNO EL RIVAL. ARREGLAR
             }
 
             @Override

@@ -8,9 +8,12 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
+import android.os.CountDownTimer;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -20,7 +23,9 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.TranslateAnimation;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
@@ -35,6 +40,7 @@ import com.game.palitrokes.Modelos.Records;
 import com.game.palitrokes.Modelos.Tablero;
 import com.game.palitrokes.Utilidades.Constantes;
 import com.game.palitrokes.Utilidades.SharedPrefs;
+import com.game.palitrokes.Utilidades.Sonidos;
 import com.game.palitrokes.Utilidades.Utilidades;
 import com.game.palitrokes.Utilidades.UtilityNetwork;
 import com.game.palitrokes.Utilidades.UtilsFirebase;
@@ -54,6 +60,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -77,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private ValueEventListener partidasListener;
     private ValueEventListener recordsListener;
     private Partida salaSeleccionada;
+    private Sonidos sonidos;
     private static final String[] PERMISOS = {
             Manifest.permission.CAMERA,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -95,6 +103,9 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = getIntent();
         salaAnterior = intent.getStringExtra("SALA_ANTERIOR");
 
+        // Sonidos
+        sonidos = new Sonidos(this);
+
         // Referencias a las vistas
         nickET = findViewById(R.id.nickET);
         victoriasTV = findViewById(R.id.victoriasET);
@@ -107,7 +118,8 @@ public class MainActivity extends AppCompatActivity {
         fab = findViewById(R.id.fab);
         fab.bringToFront();
 
-
+        // Animacion del logo
+        animacionPalitrokes();
 
         //Lista de jugadores online
         jugadores = new ArrayList<>();
@@ -911,6 +923,56 @@ public class MainActivity extends AppCompatActivity {
         Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
         finish();
         startActivity(infointent);
+
+
+    }
+
+
+
+    public void animacionPalitrokes () {
+
+        ImageView nube1 = findViewById(R.id.nube1);
+        ImageView nube2 = findViewById(R.id.nube2);
+        ImageView nube3 = findViewById(R.id.nube3);
+        ImageView nube4 = findViewById(R.id.nube4);
+        ImageView nube5 = findViewById(R.id.nube5);
+        ImageView nube6 = findViewById(R.id.nube6);
+        nube1.setVisibility(View.VISIBLE);
+        nube2.setVisibility(View.VISIBLE);
+
+
+        TranslateAnimation animation = new TranslateAnimation(0, 1000, 0, 50);
+        animation.setDuration(10000);
+        animation.setFillAfter(false);
+        nube1.startAnimation(animation);
+
+        TranslateAnimation animation1 = new TranslateAnimation(0,1000,50,100);
+        animation.setDuration(12000);
+        animation.setFillAfter(false);
+        nube2.startAnimation(animation1);
+
+
+
+
+
+
+        final CountDownTimer changeImage = new CountDownTimer(6000, 1200) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                ImageView palitrokesIV = findViewById(R.id.palitrokesIV);
+                Random rnd = new Random();
+                String name = "pic" + (rnd.nextInt(116) + 34);
+                int resource = getResources().getIdentifier(name, "drawable", "com.game.palitrokes");
+                palitrokesIV.setImageResource(resource);
+            }
+
+            @Override
+            public void onFinish() {
+                sonidos.play(Sonidos.Efectos.TICK);
+                this.start();
+            }
+        };
+        changeImage.start();
 
 
     }
