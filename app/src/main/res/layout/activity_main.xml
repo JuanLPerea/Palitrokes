@@ -7,62 +7,21 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <FrameLayout
+    <RelativeLayout
         android:id="@+id/frameTitulo"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="4"
         android:background="@color/celeste">
 
-        <ImageView
-            android:id="@+id/nube1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/nube1"
-            android:visibility="invisible"/>
-
-        <ImageView
-            android:id="@+id/nube2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/nube2"
-            android:visibility="invisible"/>
-
-        <ImageView
-            android:id="@+id/nube3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/nube3"
-            android:visibility="invisible"/>
-
-        <ImageView
-            android:id="@+id/nube4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/nube4"
-            android:visibility="invisible"/>
-
-        <ImageView
-            android:id="@+id/nube5"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/nube5"
-            android:visibility="invisible"/>
-
-        <ImageView
-            android:id="@+id/nube6"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/nube6"
-            android:visibility="invisible"/>
 
 
         <ImageView
             android:id="@+id/palitrokesIV"
             android:layout_width="172dp"
             android:layout_height="156dp"
-            android:layout_gravity="bottom|left"
             android:src="@drawable/pic34"
+            android:layout_alignParentBottom="true"
             />
 
 
@@ -70,7 +29,6 @@
             android:id="@+id/imageView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="center_horizontal"
             android:background="@drawable/logo"
             tools:layout_editor_absoluteY="183dp" />
 
@@ -78,28 +36,29 @@
             android:id="@+id/onlineTV"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|right|end"
             android:layout_marginRight="30dp"
+            android:textColor="@color/negro"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
             android:text="Online: 0" />
 
 
 
 
-    </FrameLayout>
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="2"
-        android:orientation="vertical"
+        android:layout_weight="3"
         android:background="@color/verde"
         android:gravity="center_horizontal|center_vertical"
-        >
+        android:orientation="vertical">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
+            android:layout_height="0dp"
+            android:layout_weight="3"
             android:gravity="center_horizontal|center_vertical"
             android:orientation="horizontal">
 
@@ -114,17 +73,17 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:ems="10"
-                    android:textColor="@color/negro"
                     android:hint="Nickname"
                     android:inputType="textPersonName"
-                    android:maxLength="10" />
+                    android:maxLength="10"
+                    android:textColor="@color/negro" />
 
                 <TextView
                     android:id="@+id/victoriasET"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/negro"
-                    android:text="Victorias:" />
+                    android:text="Victorias:"
+                    android:textColor="@color/negro" />
             </LinearLayout>
 
             <ImageView
@@ -138,7 +97,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_weight="2"
             android:gravity="center"
             android:orientation="horizontal">
@@ -160,6 +119,13 @@
                 android:onClick="jugarOnline"
                 android:text="Jugar Online"
                 android:visibility="invisible" />
+
+            <ImageButton
+                android:id="@+id/imageButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="invisible"
+                app:srcCompat="@drawable/ic_favorite_black_24dp" />
         </LinearLayout>
 
     </LinearLayout>
@@ -169,8 +135,8 @@
         android:id="@+id/recordsTV"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_weight="0.7"
         android:background="@color/gris"
-        android:layout_weight="1"
         android:gravity="center"
         android:onClick="crearSalas"
         android:text="Records Mundiales"
@@ -226,7 +192,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="5"
-        android:background="@color/celeste">
+        android:background="@color/marron">
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
@@ -241,6 +207,7 @@
             android:layout_marginBottom="10dp"
             android:onClick="infoButton"
             android:src="@drawable/info_48dp"
+            app:backgroundTint="@color/celeste"
             app:elevation="12dp"
             app:maxImageSize="48dp" />
 

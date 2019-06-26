@@ -56,7 +56,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
         // Sonidos
        sonidos = new Sonidos(this);
-       sonidos.play(Sonidos.Efectos.UIIIIU);
+       sonidos.play(Sonidos.Efectos.PLING);
 
         // recuperamos las Views
         linearBase = findViewById(R.id.tableroLL);
@@ -315,6 +315,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
                 // comprobamos, si solo queda uno, hemos ganado!!
                 if (partida.getTablero().palosTotales() == 1) {
                     //    Toast.makeText(this, "¡¡Has Ganado!!", Toast.LENGTH_LONG).show();
+                    avatarJ2.setImageResource(R.drawable.pic109);
                     Log.d(Constantes.TAG, "El ganador es: " + partida.getTurno());
                     partida.setGanador(partida.getTurno());
                 } else {
@@ -344,7 +345,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
             partida.turnoToggle();
             actualizarViewsCambioTurno();
-            sonidos.play(Sonidos.Efectos.UIIIIU);
+            sonidos.play(Sonidos.Efectos.PLING);
 
             if (partida.getTurno() == 2) {
                 Log.d(Constantes.TAG, "Turno del ordenador");
@@ -402,6 +403,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
                 // Seleccionamos un palo del montón
                 // Y lo visualizamos
                 if (palosQuitados < palosAQuitar) {
+                    cambiarImagenPalitrokes();
                     partida.getTablero().getMontones().get(montonEnJuego).getPalos().get(palosQuitados).setSeleccionado(true);
                     palosQuitados++;
                     sonidos.play(Sonidos.Efectos.TICK);
@@ -600,6 +602,14 @@ public class JuegoVsComActivity extends AppCompatActivity {
         for (int n = 0; n < colores.length; n++) {
             colores[n] = Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256));
         }
+    }
+
+
+    public void cambiarImagenPalitrokes () {
+        Random rnd = new Random();
+        String name = "pic" + (rnd.nextInt(116) + 34);
+        int resource = getResources().getIdentifier(name, "drawable", "com.game.palitrokes");
+        avatarJ2.setImageResource(resource);
     }
 
 }

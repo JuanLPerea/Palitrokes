@@ -23,13 +23,17 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.Button;
 import android.widget.Chronometer;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -93,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
     private String ruta_foto;//nombre fichero creado
     private boolean permisosOK;
     private String salaAnterior;
+    private CountDownTimer changeImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -453,6 +458,7 @@ public class MainActivity extends AppCompatActivity {
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador2ID());
                                     finish();
+                                    changeImage.cancel();
                                     startActivity(jugar);
                                     jugarOnline.dismiss();
                                 }
@@ -488,6 +494,7 @@ public class MainActivity extends AppCompatActivity {
                                     jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador1ID());
+                                    changeImage.cancel();
                                     finish();
                                     startActivity(jugar);
                                     jugarOnline.dismiss();
@@ -553,7 +560,7 @@ public class MainActivity extends AppCompatActivity {
                 limpiarSala(salaSeleccionada.getPartidaID());
             }
         }
-
+        changeImage.cancel();
         super.onStop();
 
 
@@ -592,6 +599,7 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intentvscom = new Intent(this, JuegoVsComActivity.class);
         intentvscom.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        changeImage.cancel();
         finish();
         startActivity(intentvscom);
 
@@ -708,12 +716,14 @@ public class MainActivity extends AppCompatActivity {
         this.photo_uri = Utilidades.crearFicheroImagen();
         intent_foto.putExtra(MediaStore.EXTRA_OUTPUT, this.photo_uri);
         Utilidades.desactivarModoEstricto();
+        changeImage.cancel();
         startActivityForResult(intent_foto, Constantes.CODIGO_PETICION_HACER_FOTO);
 
     }
 
     public void seleccionarFoto() {
         Log.d("MIAPP", "Quiere seleccionar una foto");
+        changeImage.cancel();
         Intent intent_pide_foto = new Intent();
         //intent_pide_foto.setAction(Intent.ACTION_PICK);//seteo la acción para galeria
         intent_pide_foto.setAction(Intent.ACTION_GET_CONTENT);//seteo la acción
@@ -854,6 +864,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d(Constantes.TAG, "Lanzar info");
             jugador.setFirstRun(false);
             SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+            changeImage.cancel();
             Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
             finish();
             startActivity(infointent);
@@ -901,6 +912,7 @@ public class MainActivity extends AppCompatActivity {
                 userRef.setValue(jugador);
             }
         }
+        changeImage.start();
     }
 
     @Override
@@ -912,7 +924,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-
+        changeImage.cancel();
         finish();
        // super.onBackPressed();
 
@@ -920,6 +932,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void infoButton(View view) {
         Log.d(Constantes.TAG, "Tocado info");
+        changeImage.cancel();
         Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
         finish();
         startActivity(infointent);
@@ -931,32 +944,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void animacionPalitrokes () {
 
-        ImageView nube1 = findViewById(R.id.nube1);
-        ImageView nube2 = findViewById(R.id.nube2);
-        ImageView nube3 = findViewById(R.id.nube3);
-        ImageView nube4 = findViewById(R.id.nube4);
-        ImageView nube5 = findViewById(R.id.nube5);
-        ImageView nube6 = findViewById(R.id.nube6);
-        nube1.setVisibility(View.VISIBLE);
-        nube2.setVisibility(View.VISIBLE);
+        nubeAdd();
 
-
-        TranslateAnimation animation = new TranslateAnimation(0, 1000, 0, 50);
-        animation.setDuration(10000);
-        animation.setFillAfter(false);
-        nube1.startAnimation(animation);
-
-        TranslateAnimation animation1 = new TranslateAnimation(0,1000,50,100);
-        animation.setDuration(12000);
-        animation.setFillAfter(false);
-        nube2.startAnimation(animation1);
-
-
-
-
-
-
-        final CountDownTimer changeImage = new CountDownTimer(6000, 1200) {
+        changeImage = new CountDownTimer(6000, 1200) {
             @Override
             public void onTick(long millisUntilFinished) {
                 ImageView palitrokesIV = findViewById(R.id.palitrokesIV);
@@ -968,12 +958,82 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFinish() {
-                sonidos.play(Sonidos.Efectos.TICK);
+                sonidos.play(Sonidos.Efectos.PLING);
+                this.cancel();
                 this.start();
+                nubeAdd();
             }
         };
         changeImage.start();
 
+
+    }
+
+
+    public void nubeAdd () {
+
+        RelativeLayout frameTitulo = findViewById(R.id.frameTitulo);
+        int top = frameTitulo.getTop();
+        int left = frameTitulo.getLeft();
+        int bottom = frameTitulo.getBottom();
+        int right = frameTitulo.getRight();
+
+
+        final ImageView nube1 = new ImageView(getApplicationContext());
+        Random rnd = new Random();
+        String name = "nube" + (rnd.nextInt(7) + 1);
+        int resource = getResources().getIdentifier(name, "drawable", "com.game.palitrokes");
+        nube1.setImageResource(resource);
+        nube1.bringToFront();
+        nube1.setVisibility(View.VISIBLE);
+        frameTitulo.addView(nube1);
+
+
+        int inicio = 0;
+        int fin = 0;
+
+        int aleatorio = rnd.nextInt(2);
+
+        switch (aleatorio) {
+            case 0:
+                 inicio = -200;
+                 fin = 1000;
+                break;
+            case 1:
+                inicio = 1000;
+                fin = -200;
+                break;
+        }
+
+
+        Log.d(Constantes.TAG, "Aleat: " + aleatorio);
+        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) nube1.getLayoutParams();
+        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        nube1.setLayoutParams(layoutParams);
+
+        TranslateAnimation animation = new TranslateAnimation(inicio, fin, rnd.nextInt(200), rnd.nextInt(200));
+        animation.setDuration(rnd.nextInt(5000) + 5000);
+        animation.setInterpolator(new AccelerateInterpolator());
+        animation.setRepeatCount(1);
+        nube1.startAnimation(animation);
+
+        animation.setAnimationListener(new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+                nube1.setVisibility(View.GONE);
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+
+            }
+        });
 
     }
 }

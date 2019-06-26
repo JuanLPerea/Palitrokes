@@ -20,7 +20,8 @@
         android:layout_weight="10"
         android:gravity="center"
         android:text="Jugador"
-        android:textSize="24sp" />
+        android:textSize="24sp"
+        android:textColor="@color/blanco"/>
 
     <TextView
         android:id="@+id/recordlevelET"
@@ -29,7 +30,8 @@
         android:layout_weight="5"
         android:gravity="center"
         android:text="-"
-        android:textSize="24sp" />
+        android:textSize="24sp"
+        android:textColor="@color/blanco"/>
 
     <TextView
         android:id="@+id/recordVictoriasET"
@@ -38,5 +40,6 @@
         android:layout_weight="5"
         android:gravity="center"
         android:text="-"
-        android:textSize="24sp" />
+        android:textSize="24sp"
+        android:textColor="@color/blanco"/>
 </LinearLayout>
