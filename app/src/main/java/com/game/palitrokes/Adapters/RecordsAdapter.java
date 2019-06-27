@@ -2,12 +2,14 @@ package com.game.palitrokes.Adapters;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.game.palitrokes.Modelos.Records;
@@ -18,6 +20,7 @@ import com.game.palitrokes.Utilidades.UtilsFirebase;
 import org.w3c.dom.Text;
 
 import java.util.List;
+import java.util.Random;
 
 public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterViewHolder> {
 
@@ -56,11 +59,13 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterV
         if (imagenRecord != null && recordRow.getIdJugador() != "idJugador") {
             holder.avatarRecord.setImageBitmap(imagenRecord);
         } else {
-            holder.avatarRecord.setImageResource(R.drawable.camera);
+            holder.avatarRecord.setImageResource(R.drawable.picture);
         }
         holder.nickRecord.setText(recordRow.getNickname());
         holder.levelRecord.setText(recordRow.getLevel() + "");
         holder.victoriasRecord.setText(recordRow.getVictorias() + "");
+        Random rnd = new Random();
+        holder.linearLayout.setBackgroundColor( Color.argb(255, rnd.nextInt(20) + 194, rnd.nextInt(20) + 113, rnd.nextInt(20)+71));
 
     }
 
@@ -73,6 +78,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterV
 
         TextView nickRecord, levelRecord,  victoriasRecord;
         ImageView avatarRecord;
+        LinearLayout linearLayout;
 
         public AdapterViewHolder(@NonNull View itemView)
         {
@@ -82,6 +88,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterV
             nickRecord = itemView.findViewById(R.id.nickRecordET);
             levelRecord = itemView.findViewById(R.id.recordlevelET);
             victoriasRecord = itemView.findViewById(R.id.recordVictoriasET);
+            linearLayout = itemView.findViewById(R.id.rowLinear);
 
         }
     }

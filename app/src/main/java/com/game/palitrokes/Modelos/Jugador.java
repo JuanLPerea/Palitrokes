@@ -1,5 +1,8 @@
 package com.game.palitrokes.Modelos;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Jugador {
 
     private String jugadorId;
@@ -11,6 +14,7 @@ public class Jugador {
     private String actualizado;
     private int numeroJugador;
     private boolean firstRun;
+    private List<String> favoritosID;
 
     public Jugador(String jugadorId, String nickname) {
         this.jugadorId = jugadorId;
@@ -22,6 +26,7 @@ public class Jugador {
         this.actualizado = System.currentTimeMillis() + "*";
         this.numeroJugador = 0;
         this.firstRun = true;
+        this.favoritosID = new ArrayList<>();
     }
 
     public Jugador() {
@@ -35,6 +40,13 @@ public class Jugador {
         this.numeroJugador = numeroJugador;
     }
 
+    public List<String> getFavoritosID() {
+        return favoritosID;
+    }
+
+    public void setFavoritosID(List<String> favoritosID) {
+        this.favoritosID = favoritosID;
+    }
 
     public String getJugadorId() {
         return jugadorId;

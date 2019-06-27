@@ -32,7 +32,8 @@
             android:layout_height="match_parent"
             android:layout_weight="1.5"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="20dp"
+            android:background="@color/celeste">
 
             <TextView
                 android:id="@+id/nicknameJ1_TV"
@@ -91,7 +92,8 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        >
 
 
         <ImageView
@@ -100,14 +102,16 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:tag="false"
-            app:srcCompat="@android:color/holo_blue_bright" />
+            app:srcCompat="@android:color/holo_blue_bright"
+            android:background="@drawable/nubes"/>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1.5"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="20dp"
+            android:background="@color/verde">
 
             <TextView
                 android:id="@+id/nicknameJ2_TV"

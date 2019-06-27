@@ -7,13 +7,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Build;
-import android.os.CountDownTimer;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -27,9 +25,8 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.widget.Button;
-import android.widget.Chronometer;
 import android.widget.EditText;
-import android.widget.FrameLayout;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
@@ -42,6 +39,7 @@ import com.game.palitrokes.Modelos.Jugador;
 import com.game.palitrokes.Modelos.Partida;
 import com.game.palitrokes.Modelos.Records;
 import com.game.palitrokes.Modelos.Tablero;
+import com.game.palitrokes.Utilidades.AnimacionTitulo;
 import com.game.palitrokes.Utilidades.Constantes;
 import com.game.palitrokes.Utilidades.SharedPrefs;
 import com.game.palitrokes.Utilidades.Sonidos;
@@ -65,6 +63,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView onlineTV, victoriasTV;
     private Button botonOnline;
     private ImageView avatarJugador;
+    private ImageButton favoritosBTN;
     private Jugador jugador;
     private RecyclerView recordsRecycler;
     private RecyclerView.Adapter adapter;
@@ -88,7 +89,8 @@ public class MainActivity extends AppCompatActivity {
     private ValueEventListener partidasListener;
     private ValueEventListener recordsListener;
     private Partida salaSeleccionada;
-    private Sonidos sonidos;
+    private ExecutorService executorService;
+    AnimacionTitulo animacionTitulo;
     private static final String[] PERMISOS = {
             Manifest.permission.CAMERA,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -97,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
     private String ruta_foto;//nombre fichero creado
     private boolean permisosOK;
     private String salaAnterior;
-    private CountDownTimer changeImage;
+    private boolean soloFavoritos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,8 +110,17 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = getIntent();
         salaAnterior = intent.getStringExtra("SALA_ANTERIOR");
 
-        // Sonidos
-        sonidos = new Sonidos(this);
+        // BGM
+/*
+        MediaPlayer mediaPlayer = MediaPlayer.create(this, R.raw.cutebgm);
+        if (!mediaPlayer.isPlaying())  mediaPlayer.start();
+*/
+
+        /*
+        Sonidos sonidos = new Sonidos(this);
+        sonidos.play(Sonidos.Efectos.CUTE);
+*/
+
 
         // Referencias a las vistas
         nickET = findViewById(R.id.nickET);
@@ -120,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
         recordsRecycler.setLayoutManager(layoutManager);
         botonOnline = findViewById(R.id.jugaronlineBTN);
         avatarJugador = findViewById(R.id.avatarIV);
+        favoritosBTN = findViewById(R.id.favoritosBTN);
         fab = findViewById(R.id.fab);
         fab.bringToFront();
 
@@ -207,7 +219,7 @@ public class MainActivity extends AppCompatActivity {
 
                     // Subimos una imagen a Firebase Storage con el nombre del ID del jugador
                     // para usarla como avatar
-                    Bitmap avatarNuevo = BitmapFactory.decodeResource(getApplicationContext().getResources() , R.drawable.camera);
+                    Bitmap avatarNuevo = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.picture);
                     UtilsFirebase.subirImagenFirebase(currentUser.getUid(), avatarNuevo);
                     Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR, Utilidades.bitmapToArrayBytes(avatarNuevo));
                     avatarJugador.setImageBitmap(avatarNuevo);
@@ -239,15 +251,41 @@ public class MainActivity extends AppCompatActivity {
 
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Jugador jugadorTMP = snapshot.getValue(Jugador.class);
-                    if (jugadorTMP.isOnline()) jugadores.add(jugadorTMP);
+                    if (jugadorTMP.isOnline()) {
+                        // Filtrar si solo queremos jugar con favoritos
+                        if (!jugador.getJugadorId().equals(jugadorTMP.getJugadorId())) {
+                            if (!soloFavoritos) {
+                                jugadores.add(jugadorTMP);
+                            } else {
+                                if (jugador.getFavoritosID() != null) {
+                                    for (String favorito : jugador.getFavoritosID()) {
+                                        if (favorito.equals(jugadorTMP.getJugadorId())) {
+                                            jugadores.add(jugadorTMP);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
                 }
-                onlineTV.setText("Online: " + jugadores.size());
-                if (jugadores.size() > 1) {
+
+                // Mostramos en pantalla en número de jugadores disponibles online (o favoritos online)
+                if (soloFavoritos) {
+                    onlineTV.setText("Amigos Online: " + jugadores.size());
+                } else {
+                    onlineTV.setText("Jugadores Online: " + jugadores.size());
+                }
+
+                if (jugadores.size() > 0) {
                     botonOnline.setEnabled(true);
+                    favoritosBTN.setEnabled(true);
                 } else {
                     botonOnline.setEnabled(false);
+                    favoritosBTN.setEnabled(false);
                 }
                 botonOnline.setVisibility(View.VISIBLE);
+                favoritosBTN.setVisibility(View.VISIBLE);
 
             }
 
@@ -277,12 +315,12 @@ public class MainActivity extends AppCompatActivity {
                     records.add(recordTmp);
                     // Descargamos imagen de Firebase y la guardamos en el dispositivo para usarla mas tarde
                     Utilidades.eliminarArchivo(getApplicationContext(), "RECORDIMG" + n + ".jpg");
-                    UtilsFirebase.descargarImagenFirebaseYGuardarla(getApplicationContext(), recordTmp.getIdJugador(), "RECORDIMG" + n );
+                    UtilsFirebase.descargarImagenFirebaseYGuardarla(getApplicationContext(), recordTmp.getIdJugador(), "RECORDIMG" + n);
                     n++;
                 }
                 adapter.notifyDataSetChanged();
                 // Guardamos los records actualizados de Firebase en el Shared Preferences
-                SharedPrefs.saveRecordsPrefs(getApplicationContext(),records);
+                SharedPrefs.saveRecordsPrefs(getApplicationContext(), records);
 
             }
 
@@ -345,6 +383,7 @@ public class MainActivity extends AppCompatActivity {
         final TextView mensajeEstado = jugarOnline.findViewById(R.id.mensajeEstadoTV);
         final ProgressBar progressBar = jugarOnline.findViewById(R.id.progressBar2);
         final ImageView avatarRival = jugarOnline.findViewById(R.id.rivalImageIV);
+        final ImageButton favoritoAdd = jugarOnline.findViewById(R.id.dialog_favoritosBTN);
 
         // Hacemos una lista con las salas disponibles en Firebase
         partidasListener = new ValueEventListener() {
@@ -357,7 +396,8 @@ public class MainActivity extends AppCompatActivity {
                 // Actualizamos los views del Dialog
                 jugadorReady.setText(jugador.getNickname());
                 mensajeEstado.setText("Buscando Rival...");
-                avatarRival.setImageResource(R.drawable.camera);
+                avatarRival.setImageResource(R.drawable.search);
+                favoritoAdd.setVisibility(View.INVISIBLE);
 
                 progressBar.setVisibility(View.VISIBLE);
                 // Actualizamos los datos de las salas
@@ -438,13 +478,13 @@ public class MainActivity extends AppCompatActivity {
                             mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
                             // Descargamos la imagen del Rival y la visualizamos
                             UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), salaSeleccionada.getJugador2ID(), avatarRival);
-
                             pausa(1000);
                             progressBar.setVisibility(View.INVISIBLE);
+                            favoritoAdd.setVisibility(View.VISIBLE);
                             if (salaSeleccionada.isJugador2Ready()) {
                                 // El otro jugador está listo
                                 Log.d(Constantes.TAG, "El jugador 2 está preparado");
-                                readyRivalIMG.setImageResource(R.drawable.ic_check_black_24dp);
+                                readyRivalIMG.setImageResource(R.drawable.tick);
                                 readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.verde));
                                 rivalReady.setText("¡Preparado!");
                                 if (salaSeleccionada.isJugador1Ready()) {
@@ -458,12 +498,12 @@ public class MainActivity extends AppCompatActivity {
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador2ID());
                                     finish();
-                                    changeImage.cancel();
+                                    animacionTitulo.cancel(true);
                                     startActivity(jugar);
                                     jugarOnline.dismiss();
                                 }
                             } else {
-                                readyRivalIMG.setImageResource(R.drawable.ic_cached_black_24dp);
+                                readyRivalIMG.setImageResource(R.drawable.update);
                                 readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
                                 rivalReady.setText("Esperando al rival");
                             }
@@ -478,13 +518,13 @@ public class MainActivity extends AppCompatActivity {
                             mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
                             // Descargamos la imagen del Rival y la visualizamos
                             UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), salaSeleccionada.getJugador1ID(), avatarRival);
-
                             pausa(1000);
                             progressBar.setVisibility(View.INVISIBLE);
+                            favoritoAdd.setVisibility(View.VISIBLE);
                             if (salaSeleccionada.isJugador1Ready()) {
                                 // El otro jugador está listo
                                 Log.d(Constantes.TAG, "El jugador 1 está preparado");
-                                readyRivalIMG.setImageResource(R.drawable.ic_check_black_24dp);
+                                readyRivalIMG.setImageResource(R.drawable.tick);
                                 readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.verde));
                                 rivalReady.setText("¡Preparado!");
                                 if (salaSeleccionada.isJugador2Ready()) {
@@ -494,13 +534,13 @@ public class MainActivity extends AppCompatActivity {
                                     jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador1ID());
-                                    changeImage.cancel();
+                                    animacionTitulo.cancel(true);
                                     finish();
                                     startActivity(jugar);
                                     jugarOnline.dismiss();
                                 }
                             } else {
-                                readyRivalIMG.setImageResource(R.drawable.ic_cached_black_24dp);
+                                readyRivalIMG.setImageResource(R.drawable.update);
                                 readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
                                 rivalReady.setText("Esperando al rival");
                             }
@@ -527,7 +567,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 mensajeEstado.setText("Preparado ... Esperando Rival ...");
                 jugadorReady.setText("¡Preparado!");
-                readyJugadorIMG.setImageResource(R.drawable.ic_check_black_24dp);
+                readyJugadorIMG.setImageResource(R.drawable.tick);
                 readyJugadorIMG.setBackgroundColor(getResources().getColor(R.color.verde));
                 if (salaSeleccionada != null) {
                     if (jugador.getNumeroJugador() == 1) {
@@ -536,6 +576,54 @@ public class MainActivity extends AppCompatActivity {
                         salaSeleccionada.setJugador2Ready(true);
                     }
                     mDatabase.child("PARTIDAS").child(salaSeleccionada.getPartidaID()).setValue(salaSeleccionada);
+                }
+
+            }
+        });
+
+
+        // Botón añadir jugador a favoritos
+        favoritoAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d(Constantes.TAG, "Favoritos");
+                if (jugador.getFavoritosID() == null)
+                    jugador.setFavoritosID(new ArrayList<String>());
+
+                if (salaSeleccionada != null) {
+
+
+                    if (jugador.getNumeroJugador() == 1) {
+                        if (!jugador.getFavoritosID().contains(salaSeleccionada.getJugador2ID())) {
+                            // Añadir el jugador encontrado como favorito
+                            jugador.getFavoritosID().add(salaSeleccionada.getJugador2ID());
+                            Toast.makeText(MainActivity.this, "Añadido como Amigo", Toast.LENGTH_LONG).show();
+                            favoritoAdd.setImageResource(R.drawable.corazonrojo);
+                        } else {
+                            // Borrar este jugador como favorito
+                            jugador.getFavoritosID().remove(salaSeleccionada.getJugador2ID());
+                            Toast.makeText(MainActivity.this, "Eliminado como Amigo", Toast.LENGTH_LONG).show();
+                            favoritoAdd.setImageResource(R.drawable.corazon);
+
+                        }
+                    } else if (jugador.getNumeroJugador() == 2) {
+                        if (!jugador.getFavoritosID().contains(salaSeleccionada.getJugador1ID())) {
+                            // Añadir el jugador encontrado como favorito
+                            jugador.getFavoritosID().add(salaSeleccionada.getJugador1ID());
+                            Toast.makeText(MainActivity.this, "Añadido como Amigo", Toast.LENGTH_LONG).show();
+                            favoritoAdd.setImageResource(R.drawable.corazonrojo);
+                        } else {
+                            // Borrar este jugador como favorito
+                            jugador.getFavoritosID().remove(salaSeleccionada.getJugador1ID());
+                            Toast.makeText(MainActivity.this, "Eliminado como Amigo", Toast.LENGTH_LONG).show();
+                            favoritoAdd.setImageResource(R.drawable.corazon);
+                        }
+                    }
+
+                    // Actualizamos la BB.DD.
+                    userRef.setValue(jugador);
+
+
                 }
 
             }
@@ -560,7 +648,7 @@ public class MainActivity extends AppCompatActivity {
                 limpiarSala(salaSeleccionada.getPartidaID());
             }
         }
-        changeImage.cancel();
+        animacionTitulo.cancel(true);
         super.onStop();
 
 
@@ -599,7 +687,7 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intentvscom = new Intent(this, JuegoVsComActivity.class);
         intentvscom.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        changeImage.cancel();
+        animacionTitulo.cancel(true);
         finish();
         startActivity(intentvscom);
 
@@ -716,14 +804,14 @@ public class MainActivity extends AppCompatActivity {
         this.photo_uri = Utilidades.crearFicheroImagen();
         intent_foto.putExtra(MediaStore.EXTRA_OUTPUT, this.photo_uri);
         Utilidades.desactivarModoEstricto();
-        changeImage.cancel();
+        animacionTitulo.cancel(true);
         startActivityForResult(intent_foto, Constantes.CODIGO_PETICION_HACER_FOTO);
 
     }
 
     public void seleccionarFoto() {
         Log.d("MIAPP", "Quiere seleccionar una foto");
-        changeImage.cancel();
+        animacionTitulo.cancel(true);
         Intent intent_pide_foto = new Intent();
         //intent_pide_foto.setAction(Intent.ACTION_PICK);//seteo la acción para galeria
         intent_pide_foto.setAction(Intent.ACTION_GET_CONTENT);//seteo la acción
@@ -753,14 +841,14 @@ public class MainActivity extends AppCompatActivity {
                 this.avatarJugador.setImageBitmap(selectedImage);
 
                 // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
-                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR ,Utilidades.bitmapToArrayBytes(selectedImage));
+                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR, Utilidades.bitmapToArrayBytes(selectedImage));
 
 
                 // De paso guardamos los datos del jugador (Nickname, id, victorias en el Shared Preferences)
                 if (jugador == null) {
                     jugador = new Jugador();
                 }
-                if (!nickET.getText().toString().equals("") ) {
+                if (!nickET.getText().toString().equals("")) {
                     jugador.setNickname(nickET.getText().toString());
                 }
                 SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
@@ -784,12 +872,13 @@ public class MainActivity extends AppCompatActivity {
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
+
                 Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
                 selectedImage = Utilidades.getResizedBitmap(selectedImage, 128);// 400 is for example, replace with desired size
                 this.avatarJugador.setImageBitmap(selectedImage);
 
                 // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
-                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR ,Utilidades.bitmapToArrayBytes(selectedImage));
+                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR, Utilidades.bitmapToArrayBytes(selectedImage));
 
                 // De paso guardamos los datos del jugador (Nickname, id, victorias en el Shared Preferences)
                 if (jugador == null) {
@@ -864,7 +953,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d(Constantes.TAG, "Lanzar info");
             jugador.setFirstRun(false);
             SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
-            changeImage.cancel();
+            animacionTitulo.cancel(true);
             Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
             finish();
             startActivity(infointent);
@@ -892,12 +981,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
-            if (jugador != null && jugador.getJugadorId() != null  && userRef != null) {
+            if (jugador != null && jugador.getJugadorId() != null && userRef != null) {
                 jugador.setOnline(false);
                 userRef.setValue(jugador);
             }
         }
 
+
+        //  animacionTitulo.cancel(true);
 
         //   finish();
 
@@ -912,7 +1003,7 @@ public class MainActivity extends AppCompatActivity {
                 userRef.setValue(jugador);
             }
         }
-        changeImage.start();
+        // if (animacionTitulo.isCancelled()) animacionTitulo.executeOnExecutor(executorService);
     }
 
     @Override
@@ -924,15 +1015,15 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        changeImage.cancel();
+        //  changeImage.cancel();
         finish();
-       // super.onBackPressed();
+        // super.onBackPressed();
 
     }
 
     public void infoButton(View view) {
         Log.d(Constantes.TAG, "Tocado info");
-        changeImage.cancel();
+        animacionTitulo.cancel(true);
         Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
         finish();
         startActivity(infointent);
@@ -941,52 +1032,39 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void animacionPalitrokes() {
+/*  Quito esto porque come muchos recursos
+        // Añadir nubes en un Asynctask al layout del título
+        ImageView nube1 = findViewById(R.id.nube1);
+        ImageView nube2 = findViewById(R.id.nube2);
+        ImageView nube3 = findViewById(R.id.nube3);
+        nubeAdd(nube1);
+        nubeAdd(nube2);
+        nubeAdd(nube3);
+*/
 
-    public void animacionPalitrokes () {
+        // movidas para que ejecute todos los hilos simultaneamente
+        int processors = Runtime.getRuntime().availableProcessors();
+        executorService = Executors.newFixedThreadPool(processors);
 
-        nubeAdd();
-
-        changeImage = new CountDownTimer(6000, 1200) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                ImageView palitrokesIV = findViewById(R.id.palitrokesIV);
-                Random rnd = new Random();
-                String name = "pic" + (rnd.nextInt(116) + 34);
-                int resource = getResources().getIdentifier(name, "drawable", "com.game.palitrokes");
-                palitrokesIV.setImageResource(resource);
-            }
-
-            @Override
-            public void onFinish() {
-                sonidos.play(Sonidos.Efectos.PLING);
-                this.cancel();
-                this.start();
-                nubeAdd();
-            }
-        };
-        changeImage.start();
+        // Cambiar la imagen del personaje cada tiempo en un asynctask
+        ImageView palitrokesIV = findViewById(R.id.palitrokesIV);
+        animacionTitulo = new AnimacionTitulo();
+        animacionTitulo.recuperarImageView(getApplicationContext(), palitrokesIV);
+        animacionTitulo.executeOnExecutor(executorService);
 
 
     }
 
+    public void nubeAdd(final ImageView nube) {
 
-    public void nubeAdd () {
-
-        RelativeLayout frameTitulo = findViewById(R.id.frameTitulo);
-        int top = frameTitulo.getTop();
-        int left = frameTitulo.getLeft();
-        int bottom = frameTitulo.getBottom();
-        int right = frameTitulo.getRight();
-
-
-        final ImageView nube1 = new ImageView(getApplicationContext());
         Random rnd = new Random();
         String name = "nube" + (rnd.nextInt(7) + 1);
-        int resource = getResources().getIdentifier(name, "drawable", "com.game.palitrokes");
-        nube1.setImageResource(resource);
-        nube1.bringToFront();
-        nube1.setVisibility(View.VISIBLE);
-        frameTitulo.addView(nube1);
+        int resource = getApplicationContext().getResources().getIdentifier(name, "drawable", "com.game.palitrokes");
+        nube.setImageResource(resource);
+        nube.bringToFront();
+        nube.setVisibility(View.VISIBLE);
+        //  layoutTitulo.addView(nube1);
 
 
         int inicio = 0;
@@ -996,8 +1074,8 @@ public class MainActivity extends AppCompatActivity {
 
         switch (aleatorio) {
             case 0:
-                 inicio = -200;
-                 fin = 1000;
+                inicio = -200;
+                fin = 1000;
                 break;
             case 1:
                 inicio = 1000;
@@ -1007,16 +1085,16 @@ public class MainActivity extends AppCompatActivity {
 
 
         Log.d(Constantes.TAG, "Aleat: " + aleatorio);
-        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) nube1.getLayoutParams();
+        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) nube.getLayoutParams();
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-        nube1.setLayoutParams(layoutParams);
+        nube.setLayoutParams(layoutParams);
 
         TranslateAnimation animation = new TranslateAnimation(inicio, fin, rnd.nextInt(200), rnd.nextInt(200));
-        animation.setDuration(rnd.nextInt(5000) + 5000);
+        animation.setDuration(rnd.nextInt(5000) + 7000);
         animation.setInterpolator(new AccelerateInterpolator());
-        animation.setRepeatCount(1);
-        nube1.startAnimation(animation);
+        animation.setRepeatCount(0);
+        nube.startAnimation(animation);
 
         animation.setAnimationListener(new Animation.AnimationListener() {
             @Override
@@ -1026,7 +1104,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                nube1.setVisibility(View.GONE);
+                nubeAdd(nube);
             }
 
             @Override
@@ -1036,4 +1114,25 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
+
+    public void favoritosToggle(View view) {
+        if (soloFavoritos) {
+            soloFavoritos = false;
+            favoritosBTN.setImageResource(R.drawable.corazon);
+        } else {
+            soloFavoritos = true;
+            favoritosBTN.setImageResource(R.drawable.corazonrojo);
+        }
+
+
+        // Refrescamos la base de datos si tenemos internet
+        if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
+            jugador.setActualizado(System.currentTimeMillis() + "");
+            userRef.setValue(jugador);
+        }
+
+    }
+
+
 }

@@ -56,7 +56,6 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
         // Sonidos
        sonidos = new Sonidos(this);
-       sonidos.play(Sonidos.Efectos.PLING);
 
         // recuperamos las Views
         linearBase = findViewById(R.id.tableroLL);
@@ -341,11 +340,13 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
     private void finTurno() {
 
+        sonidos.play(Sonidos.Efectos.PLING);
+
         if (partida.getGanador() == 0) {
 
             partida.turnoToggle();
             actualizarViewsCambioTurno();
-            sonidos.play(Sonidos.Efectos.PLING);
+
 
             if (partida.getTurno() == 2) {
                 Log.d(Constantes.TAG, "Turno del ordenador");
@@ -422,6 +423,8 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
                 // Eliminamos el palos seleccionados del Tablero
                 partida.getTablero().eliminarSeleccionados();
+
+                sonidos.play(Sonidos.Efectos.PLING);
 
                 Log.d(Constantes.TAG, "Palos que quedan: " + partida.getTablero().palosTotales() );
                 // Detectar si solo queda 1 palo, le queda al jugador y ...
@@ -585,7 +588,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
         jugador.setVictorias(1);
 
 
-        sonidos.play(Sonidos.Efectos.BGM);
+       // sonidos.play(Sonidos.Efectos.BGM);
 
         inicializarColores();
 

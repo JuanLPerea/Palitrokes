@@ -80,9 +80,11 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         okJ1 = findViewById(R.id.ok_J1_BTN);
         okJ2 = findViewById(R.id.ok_J2_BTN);
 
+        avatarJ2.setBackground(null);
+
         // Sonidos
         sonidos = new Sonidos(this);
-        sonidos.play(Sonidos.Efectos.UIIIIU);
+        sonidos.play(Sonidos.Efectos.PLING);
 
         okJ1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -238,7 +240,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 if (ultimoTurno != partida.getTurno()) {
                     actualizarViewsCambioTurno();
                     ultimoTurno = partida.getTurno();
-                    sonidos.play(Sonidos.Efectos.UIIIIU);
+                    sonidos.play(Sonidos.Efectos.PLING);
                 }
 
             }
@@ -530,7 +532,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
         Log.d(Constantes.TAG, "Ganador: " + partida.getGanador());
         if (partida.getGanador() == jugador.getNumeroJugador()) {
-            jugador.setVictorias(1);
+            jugador.setVictorias(10);
             resultado += "Has Ganado ¡Enhorabuena!";
             sonidos.play(Sonidos.Efectos.GANAR);
             SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);

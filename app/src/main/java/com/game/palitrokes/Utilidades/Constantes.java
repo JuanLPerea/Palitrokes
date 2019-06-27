@@ -22,4 +22,5 @@ public class Constantes {
     public static final String RECORDS_PREFS = "RECORDSPREFS";
     public static final String ARCHIVO_IMAGEN_RIVAL = "ARCHIVOIMAGENRIVAL";
     public static final String FIRST_RUN = "FIRSTRUN" ;
+    public static final String AMIGOS = "AMIGOS";
 }

@@ -29,7 +29,7 @@
             android:layout_width="128dp"
             android:layout_height="128dp"
             android:layout_gravity="center"
-            app:srcCompat="@drawable/camera" />
+            app:srcCompat="@drawable/search" />
 
         <ProgressBar
             android:id="@+id/progressBar2"
@@ -58,7 +58,7 @@
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:background="@color/rojo"
-            app:srcCompat="@drawable/ic_cached_black_24dp" />
+            app:srcCompat="@drawable/update" />
 
         <TextView
             android:id="@+id/estadoJugadorTV"
@@ -73,15 +73,34 @@
             android:layout_width="25dp"
             android:layout_height="25dp"
             android:background="@color/rojo"
-            app:srcCompat="@drawable/ic_cached_black_24dp" />
+            app:srcCompat="@drawable/update" />
     </LinearLayout>
 
-    <Button
-        android:id="@+id/readyBTN"
-        android:layout_width="wrap_content"
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:text="¡ Preparado !" />
+        android:orientation="horizontal"
+        android:gravity="center">
+
+
+        <Button
+            android:id="@+id/readyBTN"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+            android:text="¡ Preparado !" />
+
+        <ImageButton
+            android:id="@+id/dialog_favoritosBTN"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/corazon"
+            android:visibility="invisible"
+            android:scaleType="fitCenter" />
+
+    </LinearLayout>
+
 
     <TextView
         android:id="@+id/mensajeEstadoTV"
@@ -91,4 +110,10 @@
         android:maxLines="3"
         android:minLines="1"
         android:text="Mensaje Estado" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="5dp"
+        android:background="@color/celeste"
+        android:orientation="horizontal"></LinearLayout>
 </LinearLayout>
