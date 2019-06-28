@@ -56,7 +56,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
         getSupportActionBar().hide();
 
         // Sonidos
-       sonidos = new Sonidos(this);
+        sonidos = new Sonidos(this);
 
 
         // recuperamos las Views
@@ -134,7 +134,6 @@ public class JuegoVsComActivity extends AppCompatActivity {
         };
 
 
-
         // Creamos una nueva partida
         // El turno será aleatorio para que no haya ventajas
         partida = new Partida();
@@ -159,7 +158,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
     }
 
     private void actualizarVistaJugador() {
-        avatarJ1.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(),jugador.getJugadorId()));
+        avatarJ1.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId()));
         winsJ1.setText("Victorias: " + jugador.getVictorias());
         nickJ1.setText(jugador.getNickname());
     }
@@ -381,77 +380,104 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
         partida.getTablero().setMontonSeleccionado(montonEnJuego);
 
-        // Dejamos una pausa
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        pausa(500);
 
         // Simulamos que se seleccionan los palos y se quitan
         // Haciendo una pausa de medio segundo entre palo y palo
-        // TODO poner un sonido para que quede mas chulo
 
 
-        // Ponemos un cronómetro que nos vale como si fuera un AsyncTask
-        // Cada segundo seleccionamos un palo de los que nos hayan salido
-        // en el cálculo de la jugada.
-        //
-        // Cuando acaba el cronómetro, quitamos los palos y lo mostramos
-        // también cambiará el turno pasando al jugador
-        //
-        jugadaComTimer = new CountDownTimer(1100 * palosAQuitar, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                // Seleccionamos un palo del montón
-                // Y lo visualizamos
-                if (palosQuitados < palosAQuitar) {
-                    cambiarImagenPalitrokes();
-                    partida.getTablero().getMontones().get(montonEnJuego).getPalos().get(palosQuitados).setSeleccionado(true);
-                    palosQuitados++;
-                    sonidos.play(Sonidos.Efectos.TICK);
+        if (palosAQuitar == 1) {
+            // Si solo es un palo lo que va a quitar no hacemos lo del crono
+            cambiarImagenPalitrokes();
+            partida.getTablero().getMontones().get(montonEnJuego).getPalos().get(palosQuitados).setSeleccionado(true);
+            sonidos.play(Sonidos.Efectos.TICK);
+
+
+            CountDownTimer pausaVerJugada = new CountDownTimer(1000,1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
                     visualizarTablero(partida.getTablero());
                 }
 
+                @Override
+                public void onFinish() {
+                    finJugadaCom();
+                    this.cancel();
+                }
+            };
+            pausaVerJugada.start();
 
-            }
 
 
-            @Override
-            public void onFinish() {
-                // Paramos este crono
-                jugadaComTimer.cancel();
-                cronometro2.cancel();
 
-                // Eliminamos el palos seleccionados del Tablero
-                partida.getTablero().eliminarSeleccionados();
+        } else {
+            // Ponemos un cronómetro que nos vale como si fuera un AsyncTask
+            // Cada segundo seleccionamos un palo de los que nos hayan salido
+            // en el cálculo de la jugada.
+            //
+            // Cuando acaba el cronómetro, quitamos los palos y lo mostramos
+            // también cambiará el turno pasando al jugador
+            //
+            jugadaComTimer = new CountDownTimer(1100 * palosAQuitar, 1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    // Seleccionamos un palo del montón
+                    // Y lo visualizamos
+                    if (palosQuitados < palosAQuitar) {
+                        cambiarImagenPalitrokes();
+                        partida.getTablero().getMontones().get(montonEnJuego).getPalos().get(palosQuitados).setSeleccionado(true);
+                        palosQuitados++;
+                        sonidos.play(Sonidos.Efectos.TICK);
+                        visualizarTablero(partida.getTablero());
+                    }
 
-                sonidos.play(Sonidos.Efectos.PLING);
-
-                Log.d(Constantes.TAG, "Palos que quedan: " + partida.getTablero().palosTotales() );
-                // Detectar si solo queda 1 palo, le queda al jugador y ...
-                if (partida.getTablero().palosTotales() == 1) {
-                    // Solo queda un palo. Ha ganado el ordenador
-                    partida.setGanador(2);
-                    finTurno();
                 }
 
-                // Dejamos una pausa
-                try {
-                    Thread.sleep(500);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                @Override
+                public void onFinish() {
+                    finJugadaCom();
                 }
+            };
+            jugadaComTimer.start();
+        }
+    }
 
-                // Cambiamos el turno y Actualizamos el tablero y los views
-                visualizarTablero(partida.getTablero());
-                partida.turnoToggle();
-                actualizarViewsCambioTurno();
+    private void finJugadaCom() {
+        // Paramos este crono
+        if (jugadaComTimer != null) {
+            jugadaComTimer.cancel();
+        }
+        cronometro2.cancel();
 
-            }
-        };
-        jugadaComTimer.start();
 
+        // Eliminamos el palos seleccionados del Tablero
+        partida.getTablero().eliminarSeleccionados();
+
+        sonidos.play(Sonidos.Efectos.PLING);
+
+        Log.d(Constantes.TAG, "Palos que quedan: " + partida.getTablero().palosTotales());
+        // Detectar si solo queda 1 palo, le queda al jugador y ...
+        if (partida.getTablero().palosTotales() == 1) {
+            // Solo queda un palo. Ha ganado el ordenador
+            partida.setGanador(2);
+            finTurno();
+        }
+
+        pausa(500);
+
+        // Cambiamos el turno y Actualizamos el tablero y los views
+        visualizarTablero(partida.getTablero());
+        partida.turnoToggle();
+        actualizarViewsCambioTurno();
+    }
+
+    private void pausa(int i) {
+        // Dejamos una pausa
+        try {
+            Thread.sleep(i);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
 
@@ -485,7 +511,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
             sonidos.play(Sonidos.Efectos.PERDER);
             // Guardar record si hay internet, podemos mirar si hemos entrado en los records del juego
             // Si no hay internet, solo sumamos la victoria a nuestras estadísticas
-            if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)){
+            if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
                 UtilsFirebase.guardarRecords(getApplicationContext(), jugador, partida.getLevel());
             }
 
@@ -549,9 +575,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
     }
 
 
-
     private void mostrarLevel() {
-
 
 
         linearBase.setVisibility(View.INVISIBLE);
@@ -612,7 +636,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
     }
 
 
-    public void cambiarImagenPalitrokes () {
+    public void cambiarImagenPalitrokes() {
         Random rnd = new Random();
         String name = "pic" + (rnd.nextInt(116) + 34);
         int resource = getResources().getIdentifier(name, "drawable", "com.game.palitrokes");

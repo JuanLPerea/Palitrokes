@@ -10,7 +10,7 @@ public class Sonidos {
 
     private Context contexto;
     private SoundPool player;
-    public enum Efectos {TICK, GANAR, PERDER, BGM, UIIIIU, PLING, CUTE, START};
+    public enum Efectos {TICK, GANAR, PERDER, BGM, UIIIIU, PLING, CUTE, START}
     private int tick, ganar, perder, bgm, uiiiu, pling, cute, start;
 
 
@@ -24,7 +24,7 @@ public class Sonidos {
         uiiiu = player.load(contexto, R.raw.uiiiiu, 1);
         pling = player.load(contexto, R.raw.pling, 1);
         cute = player.load(contexto, R.raw.cute, 1);
-        start = player.load(contexto, R.raw.start, 1);
+        start = player.load(contexto, R.raw.fanfare, 1);
 
 
     }
@@ -52,6 +52,9 @@ public class Sonidos {
                 break;
             case CUTE:
                 player.play(cute,1,0,0,0,1);
+                break;
+            case START:
+                player.play(start,1,0,0,0,1);
                 break;
 
         }

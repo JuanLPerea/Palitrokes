@@ -101,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
     private String salaAnterior;
     private boolean soloFavoritos;
     private MediaPlayer mediaPlayer;
+    private Sonidos sonidos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -111,10 +112,8 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = getIntent();
         salaAnterior = intent.getStringExtra(Constantes.SALA_ANTERIOR);
 
-        // BGM
-
-
-
+        // Sonidos y BGM
+        sonidos = new Sonidos(this);
         Random rnd = new Random();
         switch (rnd.nextInt(3)){
             case 0:
@@ -132,12 +131,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-
-
-        /*
-        Sonidos sonidos = new Sonidos(this);
-        sonidos.play(Sonidos.Efectos.CUTE);
-*/
 
 
         // Referencias a las vistas
@@ -300,7 +293,6 @@ public class MainActivity extends AppCompatActivity {
                     favoritosBTN.setEnabled(true);
                 } else {
                     botonOnline.setEnabled(false);
-                    favoritosBTN.setEnabled(false);
                 }
                 botonOnline.setVisibility(View.VISIBLE);
                 favoritosBTN.setVisibility(View.VISIBLE);
@@ -518,6 +510,7 @@ public class MainActivity extends AppCompatActivity {
                                     animacionTitulo.cancel(true);
                                     mediaPlayer.stop();
                                     finish();
+                                    sonidos.play(Sonidos.Efectos.START);
                                     startActivity(jugar);
                                     jugarOnline.dismiss();
                                 }
@@ -556,6 +549,7 @@ public class MainActivity extends AppCompatActivity {
                                     animacionTitulo.cancel(true);
                                     mediaPlayer.stop();
                                     finish();
+                                    sonidos.play(Sonidos.Efectos.START);
                                     startActivity(jugar);
                                     jugarOnline.dismiss();
                                 }
@@ -660,7 +654,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStop() {
 
         if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
-            if (jugador != null) {
+            if (jugador != null && userRef != null) {
                 jugador.setOnline(false);
                 userRef.setValue(jugador);
             }
@@ -711,6 +705,7 @@ public class MainActivity extends AppCompatActivity {
         animacionTitulo.cancel(true);
         mediaPlayer.stop();
         finish();
+        sonidos.play(Sonidos.Efectos.START);
         startActivity(intentvscom);
 
 
@@ -797,12 +792,12 @@ public class MainActivity extends AppCompatActivity {
     public void crearSalas(View view) {
 
         //  resetearRecords();
-
+/*
         // Crear Salas en Firebase
-        for (int n = 0; n < 10; n++) {
+        for (int n = 0; n < 30; n++) {
             mDatabase.child("PARTIDAS").child("Sala " + n).setValue(new Partida("Sala " + n, n, "0", "0", new Tablero(0), 0));
         }
-
+*/
     }
 
 

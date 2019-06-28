@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.widget.VideoView;
 
 public class InfoActivity extends AppCompatActivity {
+    VideoView infoVideoView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -15,7 +16,7 @@ public class InfoActivity extends AppCompatActivity {
         setContentView(R.layout.activity_info);
         getSupportActionBar().hide();
 
-        VideoView infoVideoView = findViewById(R.id.videoView);
+        infoVideoView = findViewById(R.id.videoView);
         infoVideoView.setVideoURI(Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video));
         infoVideoView.start();
 
@@ -35,8 +36,9 @@ public class InfoActivity extends AppCompatActivity {
     }
 
     private void salir() {
-        Intent juegoIntent = new Intent(getApplicationContext(), MainActivity.class);
+        infoVideoView.stopPlayback();
         finish();
+        Intent juegoIntent = new Intent(getApplicationContext(), MainActivity.class);
         startActivity(juegoIntent);
 
 
