@@ -23,4 +23,5 @@ public class Constantes {
     public static final String ARCHIVO_IMAGEN_RIVAL = "ARCHIVOIMAGENRIVAL";
     public static final String FIRST_RUN = "FIRSTRUN" ;
     public static final String AMIGOS = "AMIGOS";
+    public static final String SALA_ANTERIOR = "SALA_ANTERIOR";
 }

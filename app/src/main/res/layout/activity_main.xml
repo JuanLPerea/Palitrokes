@@ -62,7 +62,7 @@
             android:textColor="@color/negro"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
-            android:text="Online: 0" />
+             />
 
 
 
@@ -95,7 +95,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:ems="10"
-                    android:hint="Nickname"
+                    android:hint="@string/nickname"
                     android:inputType="textPersonName"
                     android:maxLength="10"
                     android:textColor="@color/negro" />
@@ -104,7 +104,7 @@
                     android:id="@+id/victoriasET"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Victorias:"
+                    android:text="@string/victorias"
                     android:textColor="@color/negro" />
             </LinearLayout>
 
@@ -130,7 +130,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:onClick="jugar"
-                android:text="Jugar" />
+                android:text="@string/jugar" />
 
 
             <Button
@@ -140,7 +140,7 @@
                 android:alpha="1"
                 android:enabled="false"
                 android:onClick="jugarOnline"
-                android:text="Jugar Online"
+                android:text="@string/jugar_online"
                 android:visibility="invisible" />
 
             <ImageButton
@@ -164,7 +164,7 @@
         android:background="@color/gris"
         android:gravity="center"
         android:onClick="crearSalas"
-        android:text="Records Mundiales"
+        android:text="@string/records_mundiales"
         android:textColor="@color/blanco"
         android:textSize="24sp" />
 
@@ -188,7 +188,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="10"
             android:gravity="center"
-            android:text="Jugador"
+            android:text="@string/jugador"
             android:textSize="16sp" />
 
         <TextView
@@ -197,7 +197,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="5"
             android:gravity="center"
-            android:text="Nivel"
+            android:text="@string/nivel"
             android:textSize="16sp" />
 
         <TextView
@@ -206,7 +206,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="5"
             android:gravity="center"
-            android:text="Victorias"
+            android:text="@string/victorias"
             android:textSize="16sp" />
 
 

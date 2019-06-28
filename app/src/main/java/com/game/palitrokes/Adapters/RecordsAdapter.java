@@ -55,7 +55,7 @@ public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterV
         //Cargar imagen de los records siempre de los archivos guardados en memoria interna
         // Estos archivos se actualizan cuando se descargan de Firebase al producirse el evento OnDataChange en los Records
 
-        Bitmap imagenRecord = Utilidades.recuperarImagenMemoriaInterna(context, "RECORDIMG" + i );
+        Bitmap imagenRecord = Utilidades.recuperarImagenMemoriaInterna(context, recordRow.getIdJugador() );
         if (imagenRecord != null && recordRow.getIdJugador() != "idJugador") {
             holder.avatarRecord.setImageBitmap(imagenRecord);
         } else {

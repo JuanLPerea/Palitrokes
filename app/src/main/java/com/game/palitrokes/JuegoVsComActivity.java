@@ -20,6 +20,7 @@ import com.game.palitrokes.Modelos.Jugador;
 import com.game.palitrokes.Modelos.Monton;
 import com.game.palitrokes.Modelos.Palo;
 import com.game.palitrokes.Modelos.Partida;
+import com.game.palitrokes.Modelos.Records;
 import com.game.palitrokes.Modelos.Tablero;
 import com.game.palitrokes.Utilidades.Constantes;
 import com.game.palitrokes.Utilidades.SharedPrefs;
@@ -56,6 +57,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
         // Sonidos
        sonidos = new Sonidos(this);
+
 
         // recuperamos las Views
         linearBase = findViewById(R.id.tableroLL);
@@ -157,7 +159,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
     }
 
     private void actualizarVistaJugador() {
-        avatarJ1.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
+        avatarJ1.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(),jugador.getJugadorId()));
         winsJ1.setText("Victorias: " + jugador.getVictorias());
         nickJ1.setText(jugador.getNickname());
     }
@@ -487,6 +489,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
                 UtilsFirebase.guardarRecords(getApplicationContext(), jugador, partida.getLevel());
             }
 
+            SharedPrefs.updateRecordsPrefs(getApplicationContext(), new Records(jugador.getJugadorId(), jugador.getNickname(), jugador.getVictorias(), partida.getLevel()));
             SharedPrefs.saveJugadorPrefs(this, jugador);
             finish();
             // Lanzamos el intent del MainActivity
@@ -549,6 +552,8 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
     private void mostrarLevel() {
 
+
+
         linearBase.setVisibility(View.INVISIBLE);
         level.setVisibility(View.VISIBLE);
         level.setText("Nivel " + (partida.getLevel() + 1));
@@ -565,6 +570,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
                 linearBase.setVisibility(View.VISIBLE);
                 visualizarTablero(partida.getTablero());
                 actualizarViewsCambioTurno();
+                sonidos.play(Sonidos.Efectos.UIIIIU);
             }
         };
 
@@ -587,8 +593,6 @@ public class JuegoVsComActivity extends AppCompatActivity {
         partida.setTurno(1);
         jugador.setVictorias(1);
 
-
-       // sonidos.play(Sonidos.Efectos.BGM);
 
         inicializarColores();
 

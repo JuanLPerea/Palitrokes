@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="bottom|center_horizontal"
-        android:text="Buscar Rival"
+        android:text="@string/buscar_rival"
         android:textSize="24sp" />
 
     <FrameLayout
@@ -51,7 +51,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center_horizontal"
-            android:text="Rival OK?" />
+            android:text="@string/rival_ok" />
 
         <ImageView
             android:id="@+id/imageReadyRivalIV"
@@ -66,7 +66,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center_horizontal"
-            android:text="Tu OK?" />
+            android:text="@string/tu_ok" />
 
         <ImageView
             android:id="@+id/imageReadyJugadorTV"
@@ -89,7 +89,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="20dp"
-            android:text="¡ Preparado !" />
+            android:text="@string/preparado" />
 
         <ImageButton
             android:id="@+id/dialog_favoritosBTN"
@@ -109,10 +109,10 @@
         android:gravity="center_horizontal"
         android:maxLines="3"
         android:minLines="1"
-        android:text="Mensaje Estado" />
+        android:text="@string/mensaje_estado" />
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="600dp"
         android:layout_height="5dp"
         android:background="@color/celeste"
         android:orientation="horizontal"></LinearLayout>

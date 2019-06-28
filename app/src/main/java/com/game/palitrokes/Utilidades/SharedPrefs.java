@@ -3,10 +3,12 @@ package com.game.palitrokes.Utilidades;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.game.palitrokes.MainActivity;
 import com.game.palitrokes.Modelos.Jugador;
 import com.game.palitrokes.Modelos.Records;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -83,6 +85,22 @@ public class SharedPrefs {
             }
 
         return records;
+    }
+
+    public static void updateRecordsPrefs(Context context, Records record) {
+
+        List<Records> oldRecords = getRecordsPrefs(context);
+
+        oldRecords.add(record);
+        Collections.sort(oldRecords);
+
+        List<Records> newRecords = new ArrayList<>();
+        for (int n= 0 ; n< 10 ; n++) {
+            newRecords.add(oldRecords.get(n));
+            if (n == oldRecords.size()) break;
+        }
+        saveRecordsPrefs(context, newRecords);
+
     }
 
 

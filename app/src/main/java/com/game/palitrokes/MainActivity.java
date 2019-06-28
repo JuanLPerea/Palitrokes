@@ -100,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean permisosOK;
     private String salaAnterior;
     private boolean soloFavoritos;
+    private MediaPlayer mediaPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -108,13 +109,30 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().hide();
 
         Intent intent = getIntent();
-        salaAnterior = intent.getStringExtra("SALA_ANTERIOR");
+        salaAnterior = intent.getStringExtra(Constantes.SALA_ANTERIOR);
 
         // BGM
-/*
-        MediaPlayer mediaPlayer = MediaPlayer.create(this, R.raw.cutebgm);
-        if (!mediaPlayer.isPlaying())  mediaPlayer.start();
-*/
+
+
+
+        Random rnd = new Random();
+        switch (rnd.nextInt(3)){
+            case 0:
+                mediaPlayer = MediaPlayer.create(this, R.raw.cutebgm);
+                mediaPlayer.start();
+                break;
+            case 1:
+                mediaPlayer = MediaPlayer.create(this, R.raw.sunny);
+                mediaPlayer.start();
+                break;
+            case 2:
+                mediaPlayer = MediaPlayer.create(this, R.raw.ukelele);
+                mediaPlayer.start();
+                break;
+        }
+
+
+
 
         /*
         Sonidos sonidos = new Sonidos(this);
@@ -173,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
                             } else {
                                 // If sign in fails, display a message to the user.
                                 Log.w(Constantes.TAG, "signInAnonymously:failure", task.getException());
-                                Toast.makeText(MainActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.this, R.string.fallo_auth, Toast.LENGTH_SHORT).show();
                                 endSignIn(null);
                             }
                         }
@@ -209,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
                     // Si el jugador es nuevo lo creamos
                     String nickName = "";
                     if (nickET.getText() == null) {
-                        nickName = "Jugador";
+                        nickName = getString(R.string.jugador);
                     } else {
                         nickName = nickET.getText().toString();
                     }
@@ -272,7 +290,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // Mostramos en pantalla en número de jugadores disponibles online (o favoritos online)
                 if (soloFavoritos) {
-                    onlineTV.setText("Amigos Online: " + jugadores.size());
+                    onlineTV.setText("Amigos online: " + jugadores.size());
                 } else {
                     onlineTV.setText("Jugadores Online: " + jugadores.size());
                 }
@@ -315,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
                     records.add(recordTmp);
                     // Descargamos imagen de Firebase y la guardamos en el dispositivo para usarla mas tarde
                     Utilidades.eliminarArchivo(getApplicationContext(), "RECORDIMG" + n + ".jpg");
-                    UtilsFirebase.descargarImagenFirebaseYGuardarla(getApplicationContext(), recordTmp.getIdJugador(), "RECORDIMG" + n);
+                    UtilsFirebase.descargarImagenFirebaseYGuardarla(getApplicationContext(), recordTmp.getIdJugador());
                     n++;
                 }
                 adapter.notifyDataSetChanged();
@@ -342,7 +360,7 @@ public class MainActivity extends AppCompatActivity {
         userRef.removeEventListener(jugadoresListener);
 
         //Subimos nuestro avatar a Firebase (Aquí es seguro que tenemos internet)
-        UtilsFirebase.subirImagenFirebase(mAuth.getCurrentUser().getUid(), Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
+        UtilsFirebase.subirImagenFirebase(mAuth.getCurrentUser().getUid(), Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId()));
 
         // Establecer un listener para las partidas
         // Hay salas creadas previamente en Firebase (Partidas)
@@ -356,7 +374,7 @@ public class MainActivity extends AppCompatActivity {
 
         final Dialog jugarOnline = new Dialog(this);
         jugarOnline.setContentView(R.layout.dialog_jugar);
-        jugarOnline.setTitle("Jugar Online");
+        jugarOnline.setTitle(R.string.jugar_online);
         jugarOnline.show();
 
         //  Controlar si el usuario pulsa back en el dispositivo: cancelar los listener, cerrar el dialog y
@@ -395,7 +413,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // Actualizamos los views del Dialog
                 jugadorReady.setText(jugador.getNickname());
-                mensajeEstado.setText("Buscando Rival...");
+                mensajeEstado.setText(R.string.buscando);
                 avatarRival.setImageResource(R.drawable.search);
                 favoritoAdd.setVisibility(View.INVISIBLE);
 
@@ -463,7 +481,7 @@ public class MainActivity extends AppCompatActivity {
 
                     } else {
                         // No hay salas disponibles
-                        Toast.makeText(getApplicationContext(), "De momento no hay salas vacías", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getApplicationContext(), R.string.sin_salas, Toast.LENGTH_LONG).show();
                     }
 
                 } else {
@@ -475,7 +493,7 @@ public class MainActivity extends AppCompatActivity {
                         if (!salaSeleccionada.getJugador2ID().equals("0")) {
                             // Hay otro jugador que ha seleccionado esta sala
                             Log.d(Constantes.TAG, "Hay otro jugador en el hueco 2");
-                            mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
+                            mensajeEstado.setText(R.string.encontrado_rival);
                             // Descargamos la imagen del Rival y la visualizamos
                             UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), salaSeleccionada.getJugador2ID(), avatarRival);
                             pausa(1000);
@@ -497,8 +515,9 @@ public class MainActivity extends AppCompatActivity {
                                     jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador2ID());
-                                    finish();
                                     animacionTitulo.cancel(true);
+                                    mediaPlayer.stop();
+                                    finish();
                                     startActivity(jugar);
                                     jugarOnline.dismiss();
                                 }
@@ -515,7 +534,7 @@ public class MainActivity extends AppCompatActivity {
                         if (!salaSeleccionada.getJugador1ID().equals("0")) {
                             // Hay otro jugador que ha seleccionado esta sala
                             Log.d(Constantes.TAG, "Hay otro jugador en el hueco 1");
-                            mensajeEstado.setText("Encontrado Rival, esperando que esté preparado");
+                            mensajeEstado.setText(R.string.encontrado_rival);
                             // Descargamos la imagen del Rival y la visualizamos
                             UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), salaSeleccionada.getJugador1ID(), avatarRival);
                             pausa(1000);
@@ -526,7 +545,7 @@ public class MainActivity extends AppCompatActivity {
                                 Log.d(Constantes.TAG, "El jugador 1 está preparado");
                                 readyRivalIMG.setImageResource(R.drawable.tick);
                                 readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.verde));
-                                rivalReady.setText("¡Preparado!");
+                                rivalReady.setText(R.string.preparado);
                                 if (salaSeleccionada.isJugador2Ready()) {
                                     mDatabase.child("PARTIDAS").removeEventListener(partidasListener);
                                     // Los 2 estamos listos. Lanzar Intent de juego
@@ -535,6 +554,7 @@ public class MainActivity extends AppCompatActivity {
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador1ID());
                                     animacionTitulo.cancel(true);
+                                    mediaPlayer.stop();
                                     finish();
                                     startActivity(jugar);
                                     jugarOnline.dismiss();
@@ -565,8 +585,8 @@ public class MainActivity extends AppCompatActivity {
         botonReady.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mensajeEstado.setText("Preparado ... Esperando Rival ...");
-                jugadorReady.setText("¡Preparado!");
+                mensajeEstado.setText(R.string.preparado_esperando);
+                jugadorReady.setText(R.string.preparado);
                 readyJugadorIMG.setImageResource(R.drawable.tick);
                 readyJugadorIMG.setBackgroundColor(getResources().getColor(R.color.verde));
                 if (salaSeleccionada != null) {
@@ -597,12 +617,12 @@ public class MainActivity extends AppCompatActivity {
                         if (!jugador.getFavoritosID().contains(salaSeleccionada.getJugador2ID())) {
                             // Añadir el jugador encontrado como favorito
                             jugador.getFavoritosID().add(salaSeleccionada.getJugador2ID());
-                            Toast.makeText(MainActivity.this, "Añadido como Amigo", Toast.LENGTH_LONG).show();
+                            Toast.makeText(MainActivity.this, R.string.amigo_add, Toast.LENGTH_LONG).show();
                             favoritoAdd.setImageResource(R.drawable.corazonrojo);
                         } else {
                             // Borrar este jugador como favorito
                             jugador.getFavoritosID().remove(salaSeleccionada.getJugador2ID());
-                            Toast.makeText(MainActivity.this, "Eliminado como Amigo", Toast.LENGTH_LONG).show();
+                            Toast.makeText(MainActivity.this, R.string.amigo_del, Toast.LENGTH_LONG).show();
                             favoritoAdd.setImageResource(R.drawable.corazon);
 
                         }
@@ -610,12 +630,12 @@ public class MainActivity extends AppCompatActivity {
                         if (!jugador.getFavoritosID().contains(salaSeleccionada.getJugador1ID())) {
                             // Añadir el jugador encontrado como favorito
                             jugador.getFavoritosID().add(salaSeleccionada.getJugador1ID());
-                            Toast.makeText(MainActivity.this, "Añadido como Amigo", Toast.LENGTH_LONG).show();
+                            Toast.makeText(MainActivity.this, R.string.amigo_add, Toast.LENGTH_LONG).show();
                             favoritoAdd.setImageResource(R.drawable.corazonrojo);
                         } else {
                             // Borrar este jugador como favorito
                             jugador.getFavoritosID().remove(salaSeleccionada.getJugador1ID());
-                            Toast.makeText(MainActivity.this, "Eliminado como Amigo", Toast.LENGTH_LONG).show();
+                            Toast.makeText(MainActivity.this, R.string.amigo_del, Toast.LENGTH_LONG).show();
                             favoritoAdd.setImageResource(R.drawable.corazon);
                         }
                     }
@@ -648,6 +668,7 @@ public class MainActivity extends AppCompatActivity {
                 limpiarSala(salaSeleccionada.getPartidaID());
             }
         }
+        mediaPlayer.stop();
         animacionTitulo.cancel(true);
         super.onStop();
 
@@ -688,6 +709,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intentvscom = new Intent(this, JuegoVsComActivity.class);
         intentvscom.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
         animacionTitulo.cancel(true);
+        mediaPlayer.stop();
         finish();
         startActivity(intentvscom);
 
@@ -792,7 +814,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d("MIAPP", "ME ha concecido los permisos");
         } else {
             Log.d("MIAPP", "NO ME ha concecido los permisos");
-            Toast.makeText(this, "Hace falta que actives los permisos para Personalizar tu Avatar ...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.mensaje_permisos, Toast.LENGTH_SHORT).show();
             permisosOK = false;
         }
     }
@@ -805,6 +827,7 @@ public class MainActivity extends AppCompatActivity {
         intent_foto.putExtra(MediaStore.EXTRA_OUTPUT, this.photo_uri);
         Utilidades.desactivarModoEstricto();
         animacionTitulo.cancel(true);
+        mediaPlayer.stop();
         startActivityForResult(intent_foto, Constantes.CODIGO_PETICION_HACER_FOTO);
 
     }
@@ -816,6 +839,7 @@ public class MainActivity extends AppCompatActivity {
         //intent_pide_foto.setAction(Intent.ACTION_PICK);//seteo la acción para galeria
         intent_pide_foto.setAction(Intent.ACTION_GET_CONTENT);//seteo la acción
         intent_pide_foto.setType("image/*");//tipo mime
+        mediaPlayer.stop();
         startActivityForResult(intent_pide_foto, Constantes.CODIGO_PETICION_SELECCIONAR_FOTO);
 
     }
@@ -840,9 +864,6 @@ public class MainActivity extends AppCompatActivity {
 
                 this.avatarJugador.setImageBitmap(selectedImage);
 
-                // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
-                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR, Utilidades.bitmapToArrayBytes(selectedImage));
-
 
                 // De paso guardamos los datos del jugador (Nickname, id, victorias en el Shared Preferences)
                 if (jugador == null) {
@@ -852,6 +873,11 @@ public class MainActivity extends AppCompatActivity {
                     jugador.setNickname(nickET.getText().toString());
                 }
                 SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+
+                // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
+                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId(), Utilidades.bitmapToArrayBytes(selectedImage));
+
+
 
                 break;
 
@@ -873,12 +899,6 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
 
-                Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
-                selectedImage = Utilidades.getResizedBitmap(selectedImage, 128);// 400 is for example, replace with desired size
-                this.avatarJugador.setImageBitmap(selectedImage);
-
-                // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
-                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR, Utilidades.bitmapToArrayBytes(selectedImage));
 
                 // De paso guardamos los datos del jugador (Nickname, id, victorias en el Shared Preferences)
                 if (jugador == null) {
@@ -888,6 +908,15 @@ public class MainActivity extends AppCompatActivity {
                     jugador.setNickname(nickET.getText().toString());
                 }
                 SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+
+
+                Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+                selectedImage = Utilidades.getResizedBitmap(selectedImage, 128);// 400 is for example, replace with desired size
+                this.avatarJugador.setImageBitmap(selectedImage);
+
+                // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
+                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId(), Utilidades.bitmapToArrayBytes(selectedImage));
+
 
                 // Actualizamos la galería
                 sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, photo_uri));
@@ -955,6 +984,7 @@ public class MainActivity extends AppCompatActivity {
             SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
             animacionTitulo.cancel(true);
             Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
+            mediaPlayer.stop();
             finish();
             startActivity(infointent);
 
@@ -963,7 +993,12 @@ public class MainActivity extends AppCompatActivity {
 
         // Seteamos la imagen del avatar con el archivo guardado localmente en el dispositivo
         // Este archivo se actualiza cada vez que lo personalizamos con una imagen de la galería o la cámara
-        avatarJugador.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR));
+        Bitmap recuperaImagen = Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId());
+        if (recuperaImagen != null ) {
+            avatarJugador.setImageBitmap(recuperaImagen);
+        } else {
+            avatarJugador.setImageResource(R.drawable.picture);
+        }
         // Mostramos el nick del jugador y las victorias
         nickET.setText(jugador.getNickname());
         victoriasTV.setText("Victorias: " + jugador.getVictorias());
@@ -1025,6 +1060,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d(Constantes.TAG, "Tocado info");
         animacionTitulo.cancel(true);
         Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
+        mediaPlayer.stop();
         finish();
         startActivity(infointent);
 

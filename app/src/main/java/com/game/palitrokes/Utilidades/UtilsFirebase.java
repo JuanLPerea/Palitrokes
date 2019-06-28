@@ -63,7 +63,7 @@ public class UtilsFirebase {
     }
 
 
-    public static void descargarImagenFirebaseYGuardarla(final Context context, String jugadorID, final String nombreArchivo) {
+    public static void descargarImagenFirebaseYGuardarla(final Context context, final String jugadorID) {
 
         FirebaseStorage storage;
         StorageReference storageRef;
@@ -80,7 +80,7 @@ public class UtilsFirebase {
             public void onSuccess(byte[] bytes) {
                 // Data for "images/island.jpg" is returns, use this as needed
                // imagen[0] = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                Utilidades.guardarImagenMemoriaInterna(context, nombreArchivo, bytes);
+                Utilidades.guardarImagenMemoriaInterna(context, jugadorID, bytes);
 
             }
         }).addOnFailureListener(new OnFailureListener() {
@@ -133,7 +133,7 @@ public class UtilsFirebase {
         final DatabaseReference recordsRef = FirebaseDatabase.getInstance().getReference().child("RECORDS");
 
         //Subimos nuestro avatar a Firebase (Aquí es seguro que tenemos internet)
-        UtilsFirebase.subirImagenFirebase(jugador.getJugadorId(), Utilidades.recuperarImagenMemoriaInterna(context, Constantes.ARCHIVO_IMAGEN_JUGADOR));
+        UtilsFirebase.subirImagenFirebase(jugador.getJugadorId(), Utilidades.recuperarImagenMemoriaInterna(context, jugador.getJugadorId()));
 
         // Recuperar la lista de records guardada en Firebase
         // Cargar los records y mostrarlos en el Recycler

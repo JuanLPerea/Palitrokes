@@ -47,7 +47,7 @@
                 android:id="@+id/vitoriasJ1_TV"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Victorias" />
+                android:text="@string/victorias" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -125,7 +125,7 @@
                 android:id="@+id/vitoriasJ2_TV"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Victorias" />
+                android:text="@string/victorias" />
 
             <LinearLayout
                 android:layout_width="match_parent"
