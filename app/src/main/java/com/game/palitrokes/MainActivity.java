@@ -2,6 +2,7 @@ package com.game.palitrokes;
 
 import android.Manifest;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -62,6 +63,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -77,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView onlineTV, victoriasTV;
     private Button botonOnline;
     private ImageView avatarJugador;
-    private ImageView palitrokesIV;
+    private ImageView palitrokesIV , lemaIV;
     private ImageButton favoritosBTN;
     private Jugador jugador;
     private RecyclerView recordsRecycler;
@@ -102,7 +104,6 @@ public class MainActivity extends AppCompatActivity {
     private String salaAnterior;
     private boolean soloFavoritos;
     private MediaPlayer mediaPlayer;
-    private Sonidos sonidos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -144,9 +145,18 @@ public class MainActivity extends AppCompatActivity {
         recordsRecycler.setLayoutManager(layoutManager);
         botonOnline = findViewById(R.id.jugaronlineBTN);
         avatarJugador = findViewById(R.id.avatarIV);
+        lemaIV = findViewById(R.id.lemaIV);
         favoritosBTN = findViewById(R.id.favoritosBTN);
         fab = findViewById(R.id.fab);
         fab.bringToFront();
+
+
+        // Mirar si el idioma es Inglés para cambiar el ImageView del título
+        String idioma = Locale.getDefault().getLanguage(); // es
+        if (!idioma.equals("es")) {
+            lemaIV.setImageResource(R.drawable.lemaen);
+            Log.d(Constantes.TAG, "El idioma no es español");
+        }
 
         // Animacion del logo
         animacionPalitrokes();
@@ -1035,7 +1045,6 @@ public class MainActivity extends AppCompatActivity {
         avatarJugador.setBackground(null);
         avatarJugador.setImageDrawable(null);
         palitrokesIV.setImageDrawable(null);
-        sonidos = null;
         mediaPlayer = null;
         super.onDestroy();
     }

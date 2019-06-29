@@ -316,7 +316,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
                 if (partida.getTablero().palosTotales() == 1) {
                     //    Toast.makeText(this, "¡¡Has Ganado!!", Toast.LENGTH_LONG).show();
                     avatarJ2.setImageResource(R.drawable.pic109);
-                    Log.d(Constantes.TAG, "El ganador es: " + partida.getTurno());
+                    Log.d(Constantes.TAG, (getString(R.string.ganador)) + partida.getTurno());
                     partida.setGanador(partida.getTurno());
                 } else {
                     // Si aún quedan palos Cambiamos el turno y se lo pasamos al rival
@@ -324,7 +324,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
                 }
                 finTurno();
             } else {
-                Toast.makeText(this, "Selecciona al menos 1 palo", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.selecciona, Toast.LENGTH_LONG).show();
                 if (finTiempo) {
                     Log.d(Constantes.TAG, "Ha terminado el tiempo sin seleccionar ningun palo");
                     partida.setGanador(2);
@@ -333,7 +333,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
             }
 
         } else {
-            Toast.makeText(this, "Debes dejar al menos 1 palo y ganas!!!", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, (getString(R.string.unpalo)), Toast.LENGTH_LONG).show();
         }
         visualizarTablero(partida.getTablero());
     }
@@ -494,12 +494,12 @@ public class JuegoVsComActivity extends AppCompatActivity {
         String resultado = "";
 
         if (finTiempo) {
-            resultado = "Ha habido abandono ... \n";
+            resultado = getString(R.string.abandono);
         }
 
         Log.d(Constantes.TAG, "Ganador: " + partida.getGanador());
         if (partida.getGanador() == jugador.getNumeroJugador()) {
-            resultado += "Has Ganado ¡Enhorabuena!";
+            resultado += (getString(R.string.win));
             Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.GANAR);
 
             siguienteNivel();
@@ -507,7 +507,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
         } else {
             jugador.setDerrotas(1);
-            resultado += "Gana Palitrokes.\nHas alcanzado el nivel " + partida.getLevel();
+            resultado += (getString(R.string.resultado)) + partida.getLevel();
             Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PERDER);
             // Guardar record si hay internet, podemos mirar si hemos entrado en los records del juego
             // Si no hay internet, solo sumamos la victoria a nuestras estadísticas

@@ -14,14 +14,14 @@
     <string name="nomeganas">Are you able\\nto beat me?</string>
     <string name="sin_salas">There is no empty rooms</string>
     <string name="mensaje_permisos">Is necessary to allow permissions to customize your avatar</string>
-    <string name="jugador">Player</string>
+    <string name="jugador">"Player "</string>
     <string name="jugonline">"Online Players: "</string>
     <string name="jugadores_online">Online Players: 0</string>
     <string name="jugar">Play</string>
     <string name="jugar_online">Play Online</string>
     <string name="mensaje_estado">State message</string>
     <string name="nickname">Nickname</string>
-    <string name="nivel">Level</string>
+    <string name="nivel">"Level "</string>
     <string name="nombreprota">Woody</string>
     <string name="preparado_esperando">Ready ... Waiting for a rival</string>
     <string name="records_mundiales">World Records</string>
@@ -30,4 +30,10 @@
     <string name="victorias">Wins</string>
     <string name="victorias2">"Wins: "</string>
     <string name="victorias8">Wins: ∞</string>
+    <string name="ganador">"The winner is: "</string>
+    <string name="selecciona">Pick at least one stick</string>
+    <string name="unpalo">Leave only a stick and you win!!</string>
+    <string name="abandono">There has been abandonment</string>
+    <string name="resultado">"Woody wins. You earned level "</string>
+    <string name="win">You Win. Congratulations!!</string>
 </resources>

@@ -426,10 +426,10 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
 
             } else {
-                Toast.makeText(this, "Selecciona al menos 1 palo", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, (getString(R.string.selecciona)), Toast.LENGTH_LONG).show();
             }
         } else {
-            Toast.makeText(this, "Debes dejar al menos 1 palo y ganas!!!", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, (getString(R.string.unpalo)), Toast.LENGTH_LONG).show();
         }
     }
 
@@ -527,19 +527,19 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         String resultado = "";
 
         if (finTiempo) {
-            resultado = "Ha habido abandono ... \n";
+            resultado = getString(R.string.abandono);
         }
 
         Log.d(Constantes.TAG, "Ganador: " + partida.getGanador());
         if (partida.getGanador() == jugador.getNumeroJugador()) {
             jugador.setVictorias(10);
-            resultado += "Has Ganado ¡Enhorabuena!";
+            resultado += (getString(R.string.win));
             Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.GANAR);
             SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
 
         } else {
             jugador.setDerrotas(1);
-            resultado += "Lo siento ¡has perdido!";
+            resultado += (getString(R.string.resultado));
             Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PERDER);
         }
 

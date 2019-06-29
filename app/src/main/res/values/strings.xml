@@ -29,5 +29,11 @@
     <string name="victorias2">Victorias: </string>
     <string name="nombreprota">Palitrokes</string>
     <string name="victorias8">Victorias: ∞</string>
-    <string name="nivel">Nivel</string>
+    <string name="nivel">"Nivel "</string>
+    <string name="selecciona">Selecciona al menos 1 palo</string>
+    <string name="ganador">El ganador es:</string>
+    <string name="unpalo">Debes dejar al menos 1 palo y ganas!!!</string>
+    <string name="abandono">Ha habido abandono ...</string>
+    <string name="win">Has Ganado ¡Enhorabuena!</string>
+    <string name="resultado">"Gana Palitrokes. Has alcanzado el nivel "</string>
 </resources>

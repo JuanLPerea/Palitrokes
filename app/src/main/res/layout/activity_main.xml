@@ -14,29 +14,6 @@
         android:layout_weight="4"
         android:background="@drawable/nubes">
 
-        <ImageView
-            android:id="@+id/nube1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="invisible"
-            />
-
-
-        <ImageView
-            android:id="@+id/nube2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="invisible"
-            />
-
-
-        <ImageView
-            android:id="@+id/nube3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="invisible"
-            />
-
 
         <ImageView
             android:id="@+id/palitrokesIV"
@@ -46,6 +23,13 @@
             android:layout_alignParentBottom="true"
             />
 
+        <ImageView
+            android:id="@+id/lemaIV"
+            android:layout_width="250dp"
+            android:layout_height="200dp"
+            android:src="@drawable/lemaes"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"/>
 
         <ImageView
             android:id="@+id/imageView"
@@ -54,17 +38,6 @@
             android:background="@drawable/logo"
             tools:layout_editor_absoluteY="183dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/nomeganas"
-            android:textColor="@color/negro"
-            android:textSize="48dp"
-            android:layout_alignParentRight="true"
-            android:layout_centerInParent="true"
-            android:layout_marginRight="30dp"
-            android:fontFamily="sans-serif-condensed-medium"
-            android:textStyle="bold|italic"/>
 
         <TextView
             android:id="@+id/onlineTV"
@@ -75,8 +48,6 @@
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
              />
-
-
 
 
     </RelativeLayout>
