@@ -37,6 +37,7 @@ public class InfoActivity extends AppCompatActivity {
 
     private void salir() {
         infoVideoView.stopPlayback();
+        infoVideoView = null;
         finish();
         Intent juegoIntent = new Intent(getApplicationContext(), MainActivity.class);
         startActivity(juegoIntent);

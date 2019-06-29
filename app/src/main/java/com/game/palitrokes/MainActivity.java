@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView onlineTV, victoriasTV;
     private Button botonOnline;
     private ImageView avatarJugador;
+    private ImageView palitrokesIV;
     private ImageButton favoritosBTN;
     private Jugador jugador;
     private RecyclerView recordsRecycler;
@@ -113,7 +114,8 @@ public class MainActivity extends AppCompatActivity {
         salaAnterior = intent.getStringExtra(Constantes.SALA_ANTERIOR);
 
         // Sonidos y BGM
-        sonidos = new Sonidos(this);
+        Sonidos.getInstance(getApplicationContext());
+
         Random rnd = new Random();
         switch (rnd.nextInt(3)){
             case 0:
@@ -233,6 +235,7 @@ public class MainActivity extends AppCompatActivity {
                     Bitmap avatarNuevo = BitmapFactory.decodeResource(getApplicationContext().getResources(), R.drawable.picture);
                     UtilsFirebase.subirImagenFirebase(currentUser.getUid(), avatarNuevo);
                     Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), Constantes.ARCHIVO_IMAGEN_JUGADOR, Utilidades.bitmapToArrayBytes(avatarNuevo));
+                    Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId(), Utilidades.bitmapToArrayBytes(avatarNuevo));
                     avatarJugador.setImageBitmap(avatarNuevo);
                     SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
 
@@ -283,9 +286,9 @@ public class MainActivity extends AppCompatActivity {
 
                 // Mostramos en pantalla en número de jugadores disponibles online (o favoritos online)
                 if (soloFavoritos) {
-                    onlineTV.setText("Amigos online: " + jugadores.size());
+                    onlineTV.setText((getString(R.string.amigosonline)) + jugadores.size());
                 } else {
-                    onlineTV.setText("Jugadores Online: " + jugadores.size());
+                    onlineTV.setText((getString(R.string.jugonline)) + jugadores.size());
                 }
 
                 if (jugadores.size() > 0) {
@@ -310,7 +313,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void cargarRecords() {
-
 
         // Cargar los records y mostrarlos en el Recycler
         recordsRef = FirebaseDatabase.getInstance().getReference().child("RECORDS");
@@ -352,6 +354,7 @@ public class MainActivity extends AppCompatActivity {
         userRef.removeEventListener(jugadoresListener);
 
         //Subimos nuestro avatar a Firebase (Aquí es seguro que tenemos internet)
+        SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
         UtilsFirebase.subirImagenFirebase(mAuth.getCurrentUser().getUid(), Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId()));
 
         // Establecer un listener para las partidas
@@ -496,7 +499,7 @@ public class MainActivity extends AppCompatActivity {
                                 Log.d(Constantes.TAG, "El jugador 2 está preparado");
                                 readyRivalIMG.setImageResource(R.drawable.tick);
                                 readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.verde));
-                                rivalReady.setText("¡Preparado!");
+                                rivalReady.setText(R.string.preparado);
                                 if (salaSeleccionada.isJugador1Ready()) {
 
                                     // Los 2 estamos listos. Lanzar Intent de juego
@@ -508,16 +511,16 @@ public class MainActivity extends AppCompatActivity {
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador2ID());
                                     animacionTitulo.cancel(true);
-                                    mediaPlayer.stop();
                                     finish();
-                                    sonidos.play(Sonidos.Efectos.START);
+                                    Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.START);
+                                    mediaPlayer.stop();
                                     startActivity(jugar);
                                     jugarOnline.dismiss();
                                 }
                             } else {
                                 readyRivalIMG.setImageResource(R.drawable.update);
                                 readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
-                                rivalReady.setText("Esperando al rival");
+                                rivalReady.setText(R.string.esperandorival);
                             }
                         }
 
@@ -547,16 +550,16 @@ public class MainActivity extends AppCompatActivity {
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador1ID());
                                     animacionTitulo.cancel(true);
-                                    mediaPlayer.stop();
                                     finish();
-                                    sonidos.play(Sonidos.Efectos.START);
+                                    Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.START);
+                                    mediaPlayer.stop();
                                     startActivity(jugar);
                                     jugarOnline.dismiss();
                                 }
                             } else {
                                 readyRivalIMG.setImageResource(R.drawable.update);
                                 readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
-                                rivalReady.setText("Esperando al rival");
+                                rivalReady.setText(R.string.esperandorival);
                             }
                         }
                     }
@@ -662,8 +665,8 @@ public class MainActivity extends AppCompatActivity {
                 limpiarSala(salaSeleccionada.getPartidaID());
             }
         }
-        mediaPlayer.stop();
         animacionTitulo.cancel(true);
+        mediaPlayer.stop();
         super.onStop();
 
 
@@ -705,7 +708,7 @@ public class MainActivity extends AppCompatActivity {
         animacionTitulo.cancel(true);
         mediaPlayer.stop();
         finish();
-        sonidos.play(Sonidos.Efectos.START);
+        Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.START);
         startActivity(intentvscom);
 
 
@@ -977,6 +980,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d(Constantes.TAG, "Lanzar info");
             jugador.setFirstRun(false);
             SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+//            Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId(), Utilidades.bitmapToArrayBytes());
             animacionTitulo.cancel(true);
             Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
             mediaPlayer.stop();
@@ -996,7 +1000,7 @@ public class MainActivity extends AppCompatActivity {
         }
         // Mostramos el nick del jugador y las victorias
         nickET.setText(jugador.getNickname());
-        victoriasTV.setText("Victorias: " + jugador.getVictorias());
+        victoriasTV.setText((getString(R.string.victorias2)) + jugador.getVictorias());
 
         // Cargamos records y los mostramos
         records = SharedPrefs.getRecordsPrefs(getApplicationContext());
@@ -1009,19 +1013,31 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onPause() {
-        super.onPause();
+
         if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
             if (jugador != null && jugador.getJugadorId() != null && userRef != null) {
                 jugador.setOnline(false);
                 userRef.setValue(jugador);
             }
         }
+       // mediaPlayer.stop();
 
 
+        super.onPause();
         //  animacionTitulo.cancel(true);
 
         //   finish();
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        avatarJugador.setBackground(null);
+        avatarJugador.setImageDrawable(null);
+        palitrokesIV.setImageDrawable(null);
+        sonidos = null;
+        mediaPlayer = null;
+        super.onDestroy();
     }
 
     @Override
@@ -1079,7 +1095,7 @@ public class MainActivity extends AppCompatActivity {
         executorService = Executors.newFixedThreadPool(processors);
 
         // Cambiar la imagen del personaje cada tiempo en un asynctask
-        ImageView palitrokesIV = findViewById(R.id.palitrokesIV);
+        palitrokesIV = findViewById(R.id.palitrokesIV);
         animacionTitulo = new AnimacionTitulo();
         animacionTitulo.recuperarImageView(getApplicationContext(), palitrokesIV);
         animacionTitulo.executeOnExecutor(executorService);

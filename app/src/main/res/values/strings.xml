@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Palitrokes</string>
+    <string name="app_name" translatable="false">Palitrokes</string>
     <string name="explicacion">El que se quede con el último palo pierde!!</string>
     <string name="fallo_auth">Fallo en la autenticación</string>
     <string name="jugador">Jugador</string>
@@ -14,13 +14,20 @@
     <string name="amigo_del">Eliminado como Amigo</string>
     <string name="mensaje_permisos">Hace falta que actives los permisos para Personalizar tu Avatar ...</string>
     <string name="nickname">Nickname</string>
-    <string name="victorias">Victorias:</string>
+    <string name="victorias">Victorias</string>
     <string name="jugar">Jugar</string>
     <string name="records_mundiales">Records Mundiales</string>
-    <string name="nivel">Nivel</string>
     <string name="jugar_online">Jugar Online</string>
     <string name="buscar_rival">Buscar Rival</string>
     <string name="rival_ok">Rival OK?</string>
     <string name="tu_ok">Tu OK?</string>
     <string name="mensaje_estado">Mensaje Estado</string>
+    <string name="nomeganas">¿A que no\nme ganas?</string>
+    <string name="amigosonline">Amigos online:</string>
+    <string name="jugonline">Jugadores Online:</string>
+    <string name="esperandorival">Esperando al rival</string>
+    <string name="victorias2">Victorias: </string>
+    <string name="nombreprota">Palitrokes</string>
+    <string name="victorias8">Victorias: ∞</string>
+    <string name="nivel">Nivel</string>
 </resources>

@@ -56,7 +56,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
         getSupportActionBar().hide();
 
         // Sonidos
-        sonidos = new Sonidos(this);
+      //  if (sonidos == null) sonidos = new Sonidos(getApplicationContext());
 
 
         // recuperamos las Views
@@ -99,8 +99,8 @@ public class JuegoVsComActivity extends AppCompatActivity {
         actualizarVistaJugador();
 
 
-        nickJ2.setText("Palitrokes");
-        winsJ2.setText("Victorias: ∞");
+        nickJ2.setText(R.string.nombreprota);
+        winsJ2.setText(R.string.victorias8);
 
 
         // Cronometro para el jugador 1
@@ -159,7 +159,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
     private void actualizarVistaJugador() {
         avatarJ1.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId()));
-        winsJ1.setText("Victorias: " + jugador.getVictorias());
+        winsJ1.setText((getString(R.string.victorias2))+ jugador.getVictorias());
         nickJ1.setText(jugador.getNickname());
     }
 
@@ -251,7 +251,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
                     partida.getTablero().getMontones().get(montonTocado).setNumeroMonton(montonTocado);
                     partida.getTablero().setMontonSeleccionado(montonTocado);
                 }
-                sonidos.play(Sonidos.Efectos.TICK);
+                Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
             }
 
         }
@@ -341,7 +341,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
     private void finTurno() {
 
-        sonidos.play(Sonidos.Efectos.PLING);
+        Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PLING);
 
         if (partida.getGanador() == 0) {
 
@@ -390,7 +390,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
             // Si solo es un palo lo que va a quitar no hacemos lo del crono
             cambiarImagenPalitrokes();
             partida.getTablero().getMontones().get(montonEnJuego).getPalos().get(palosQuitados).setSeleccionado(true);
-            sonidos.play(Sonidos.Efectos.TICK);
+            Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
 
 
             CountDownTimer pausaVerJugada = new CountDownTimer(1000,1000) {
@@ -427,7 +427,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
                         cambiarImagenPalitrokes();
                         partida.getTablero().getMontones().get(montonEnJuego).getPalos().get(palosQuitados).setSeleccionado(true);
                         palosQuitados++;
-                        sonidos.play(Sonidos.Efectos.TICK);
+                        Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
                         visualizarTablero(partida.getTablero());
                     }
 
@@ -453,7 +453,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
         // Eliminamos el palos seleccionados del Tablero
         partida.getTablero().eliminarSeleccionados();
 
-        sonidos.play(Sonidos.Efectos.PLING);
+        Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PLING);
 
         Log.d(Constantes.TAG, "Palos que quedan: " + partida.getTablero().palosTotales());
         // Detectar si solo queda 1 palo, le queda al jugador y ...
@@ -500,7 +500,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
         Log.d(Constantes.TAG, "Ganador: " + partida.getGanador());
         if (partida.getGanador() == jugador.getNumeroJugador()) {
             resultado += "Has Ganado ¡Enhorabuena!";
-            sonidos.play(Sonidos.Efectos.GANAR);
+            Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.GANAR);
 
             siguienteNivel();
 
@@ -508,7 +508,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
         } else {
             jugador.setDerrotas(1);
             resultado += "Gana Palitrokes.\nHas alcanzado el nivel " + partida.getLevel();
-            sonidos.play(Sonidos.Efectos.PERDER);
+            Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PERDER);
             // Guardar record si hay internet, podemos mirar si hemos entrado en los records del juego
             // Si no hay internet, solo sumamos la victoria a nuestras estadísticas
             if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
@@ -516,7 +516,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
             }
 
             SharedPrefs.updateRecordsPrefs(getApplicationContext(), new Records(jugador.getJugadorId(), jugador.getNickname(), jugador.getVictorias(), partida.getLevel()));
-            SharedPrefs.saveJugadorPrefs(this, jugador);
+            SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
             finish();
             // Lanzamos el intent del MainActivity
             startActivity(volverIntent);
@@ -565,7 +565,6 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-
         cronometro1.cancel();
         cronometro2.cancel();
         if (jugadaComTimer != null) {
@@ -580,7 +579,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
         linearBase.setVisibility(View.INVISIBLE);
         level.setVisibility(View.VISIBLE);
-        level.setText("Nivel " + (partida.getLevel() + 1));
+        level.setText((getString(R.string.nivel)) + (partida.getLevel() + 1));
 
         final CountDownTimer levelCrono = new CountDownTimer(3000, 1000) {
             @Override
@@ -594,7 +593,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
                 linearBase.setVisibility(View.VISIBLE);
                 visualizarTablero(partida.getTablero());
                 actualizarViewsCambioTurno();
-                sonidos.play(Sonidos.Efectos.UIIIIU);
+                Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.UIIIIU);
             }
         };
 
@@ -643,4 +642,11 @@ public class JuegoVsComActivity extends AppCompatActivity {
         avatarJ2.setImageResource(resource);
     }
 
+    @Override
+    protected void onDestroy() {
+        avatarJ1.setImageDrawable(null);
+        avatarJ2.setImageDrawable(null);
+
+        super.onDestroy();
+    }
 }

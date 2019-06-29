@@ -83,8 +83,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         avatarJ2.setBackground(null);
 
         // Sonidos
-        sonidos = new Sonidos(this);
-        sonidos.play(Sonidos.Efectos.PLING);
+      //  if (sonidos == null) sonidos = new Sonidos(getApplicationContext());
+        Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PLING);
 
         okJ1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -200,11 +200,11 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         if (jugadorView.getNumeroJugador() == 1) {
             UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), jugadorView.getJugadorId(), avatarJ1);
             nickJ1.setText(jugadorView.getNickname());
-            winsJ1.setText("Victorias: " + jugadorView.getVictorias());
+            winsJ1.setText((getString(R.string.victorias2))+ jugadorView.getVictorias());
         } else {
             UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), jugadorView.getJugadorId(), avatarJ2);
             nickJ2.setText(jugadorView.getNickname());
-            winsJ2.setText("Victorias: " + jugadorView.getVictorias() + "");
+            winsJ2.setText((getString(R.string.victorias2)) + jugadorView.getVictorias() + "");
         }
     }
 
@@ -240,7 +240,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 if (ultimoTurno != partida.getTurno()) {
                     actualizarViewsCambioTurno();
                     ultimoTurno = partida.getTurno();
-                    sonidos.play(Sonidos.Efectos.PLING);
+                    Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PLING);
                 }
 
             }
@@ -343,7 +343,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                     partida.getTablero().getMontones().get(montonTocado).setNumeroMonton(montonTocado);
                     partida.getTablero().setMontonSeleccionado(montonTocado);
                 }
-                sonidos.play(Sonidos.Efectos.TICK);
+                Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
             }
 
             salaRef.setValue(partida);
@@ -534,13 +534,13 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         if (partida.getGanador() == jugador.getNumeroJugador()) {
             jugador.setVictorias(10);
             resultado += "Has Ganado ¡Enhorabuena!";
-            sonidos.play(Sonidos.Efectos.GANAR);
+            Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.GANAR);
             SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
 
         } else {
             jugador.setDerrotas(1);
             resultado += "Lo siento ¡has perdido!";
-            sonidos.play(Sonidos.Efectos.PERDER);
+            Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PERDER);
         }
 
         Toast.makeText(this, resultado, Toast.LENGTH_LONG).show();
@@ -557,6 +557,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
         finish();
         // Lanzamos el intent del MainActivity
         startActivity(volverIntent);

@@ -2,7 +2,6 @@ package com.game.palitrokes.Utilidades;
 
 import android.content.Context;
 import android.content.res.AssetManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -11,17 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StrictMode;
-import android.provider.MediaStore;
-import android.support.annotation.NonNull;
 import android.util.Log;
-import android.widget.ImageView;
-
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -31,7 +20,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.util.List;
 
 
 public class Utilidades {
@@ -119,6 +107,9 @@ public class Utilidades {
     public static Bitmap recuperarImagenMemoriaInterna(Context context, String archivo) {
         Bitmap bitmap = null;
 
+        if (archivo == null) {
+            archivo = Constantes.ARCHIVO_IMAGEN_JUGADOR;
+        }
 
         try {
             FileInputStream fileInputStream =
