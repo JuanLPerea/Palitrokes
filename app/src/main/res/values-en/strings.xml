@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Palitrokes</string>
+    <string name="abandono">There has been abandonment</string>
+    <string name="amigo_add">Added as friend</string>
+    <string name="amigo_del">Removed as friend</string>
+    <string name="amigos_online">"Online Friends: "</string>
+    <string name="amigosonline">"Online Friends: "</string>
+    <string name="buscando">Searching match</string>
+    <string name="buscar_rival">Search match</string>
+    <string name="encontrado_rival">Rival found</string>
+    <string name="esperandorival">Waiting for a rival</string>
+    <string name="explicacion">If you got the last stick, you loose!!</string>
+    <string name="fallo_auth">Authentication error.</string>
+    <string name="ganador">"The winner is: "</string>
+    <string name="jugador">Player</string>
+    <string name="jugadores_online">Online Players: 0</string>
+    <string name="jugar">Play</string>
+    <string name="jugar_online">Play Online</string>
+    <string name="jugonline">"Online Players: "</string>
+    <string name="mensaje_estado">State message</string>
+    <string name="mensaje_permisos">Is necessary to allow permissions to customize your avatar.</string>
+    <string name="nickname">Nickname</string>
+    <string name="nivel">Level</string>
+    <string name="nombreprota">Woody</string>
+    <string name="nomeganas">Are you able to beat me?</string>
+    <string name="preparado">Ready!!</string>
+    <string name="preparado_esperando">Ready ... Waiting for a rival</string>
+    <string name="records_mundiales">World Records</string>
+    <string name="resultado">"Woody wins. You earned level  "</string>
+    <string name="rival_ok">Rival OK?</string>
+    <string name="selecciona">Pick at least one stick</string>
+    <string name="sin_salas">There is no rooms available</string>
+    <string name="tu_ok">You OK?</string>
+    <string name="unpalo">Leave only a stick and you win!!</string>
+    <string name="victorias">Wins</string>
+    <string name="victorias2">"Wins: "</string>
+    <string name="victorias8">Wins: ∞</string>
+    <string name="win">You Win. Congratulations!!</string>
+</resources>

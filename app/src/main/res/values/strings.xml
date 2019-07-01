@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name" translatable="false">Palitrokes</string>
+    <string name="app_name">Palitrokes</string>
     <string name="explicacion">El que se quede con el último palo pierde!!</string>
     <string name="fallo_auth">Fallo en la autenticación</string>
     <string name="jugador">Jugador</string>

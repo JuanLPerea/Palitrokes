@@ -36,4 +36,5 @@
     <string name="abandono">There has been abandonment</string>
     <string name="resultado">"Woody wins. You earned level "</string>
     <string name="win">You Win. Congratulations!!</string>
+    <string name="app_name">Woody</string>
 </resources>

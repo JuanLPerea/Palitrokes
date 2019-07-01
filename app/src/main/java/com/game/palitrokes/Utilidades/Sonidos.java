@@ -11,8 +11,8 @@ public class Sonidos {
 
     private static Sonidos instance;
     private static SoundPool player;
-    public enum Efectos {TICK, GANAR, PERDER, BGM, UIIIIU, PLING, START}
-    private static int tick, ganar, perder, bgm, uiiiu, pling, start;
+    public enum Efectos {TICK, GANAR, PERDER, BGM, UIIIIU, PLING, START, MAGIA}
+    private static int tick, ganar, perder, bgm, uiiiu, pling, start, magia;
 
 
     public static Sonidos getInstance(Context contexto) {
@@ -30,6 +30,8 @@ public class Sonidos {
         uiiiu = player.load(contexto, R.raw.uiiiiu, 1);
         pling = player.load(contexto, R.raw.pling, 1);
         start = player.load(contexto, R.raw.fanfare, 1);
+        magia = player.load(contexto, R.raw.magia, 1);
+
     }
 
     public void play(Efectos efecto) {
@@ -56,6 +58,10 @@ public class Sonidos {
             case START:
                 player.play(start,1,0,0,0,1);
                 break;
+            case MAGIA:
+                player.play(magia,1,0,0,0,1);
+                break;
+
 
         }
     }

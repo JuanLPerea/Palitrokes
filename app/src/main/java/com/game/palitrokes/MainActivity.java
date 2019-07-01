@@ -2,7 +2,6 @@ package com.game.palitrokes;
 
 import android.Manifest;
 import android.app.Dialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -22,16 +21,14 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
-import android.view.animation.TranslateAnimation;
+import android.view.animation.RotateAnimation;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,7 +36,6 @@ import com.game.palitrokes.Adapters.RecordsAdapter;
 import com.game.palitrokes.Modelos.Jugador;
 import com.game.palitrokes.Modelos.Partida;
 import com.game.palitrokes.Modelos.Records;
-import com.game.palitrokes.Modelos.Tablero;
 import com.game.palitrokes.Utilidades.AnimacionTitulo;
 import com.game.palitrokes.Utilidades.Constantes;
 import com.game.palitrokes.Utilidades.SharedPrefs;
@@ -70,6 +66,11 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String[] PERMISOS = {
+            Manifest.permission.CAMERA,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+    AnimacionTitulo animacionTitulo;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private DatabaseReference userRef;
@@ -79,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView onlineTV, victoriasTV;
     private Button botonOnline;
     private ImageView avatarJugador;
-    private ImageView palitrokesIV , lemaIV;
+    private ImageView palitrokesIV , lemaIV, nombreIV;
     private ImageButton favoritosBTN;
     private Jugador jugador;
     private RecyclerView recordsRecycler;
@@ -93,17 +94,13 @@ public class MainActivity extends AppCompatActivity {
     private ValueEventListener recordsListener;
     private Partida salaSeleccionada;
     private ExecutorService executorService;
-    AnimacionTitulo animacionTitulo;
-    private static final String[] PERMISOS = {
-            Manifest.permission.CAMERA,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-    };
     private Uri photo_uri;//para almacenar la ruta de la imagen
     private String ruta_foto;//nombre fichero creado
     private boolean permisosOK;
     private String salaAnterior;
     private boolean soloFavoritos;
     private MediaPlayer mediaPlayer;
+    private int easterEgg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,9 +130,6 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
 
-
-
-
         // Referencias a las vistas
         nickET = findViewById(R.id.nickET);
         victoriasTV = findViewById(R.id.victoriasET);
@@ -147,6 +141,7 @@ public class MainActivity extends AppCompatActivity {
         avatarJugador = findViewById(R.id.avatarIV);
         lemaIV = findViewById(R.id.lemaIV);
         favoritosBTN = findViewById(R.id.favoritosBTN);
+        nombreIV = findViewById(R.id.nombreIV);
         fab = findViewById(R.id.fab);
         fab.bringToFront();
 
@@ -155,8 +150,12 @@ public class MainActivity extends AppCompatActivity {
         String idioma = Locale.getDefault().getLanguage(); // es
         if (!idioma.equals("es")) {
             lemaIV.setImageResource(R.drawable.lemaen);
+            nombreIV.setImageResource(R.drawable.logoen);
             Log.d(Constantes.TAG, "El idioma no es español");
         }
+
+        // EasterEgg
+        easterEgg=0;
 
         // Animacion del logo
         animacionPalitrokes();
@@ -679,14 +678,6 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer.stop();
         super.onStop();
 
-
-
-        /*
-        if (salaSeleccionada.getTurno() == 0){
-            borrarJugadorSalaFirebase();
-        }
-
-        */
     }
 
 
@@ -723,41 +714,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
-
-/*
-        salaSeleccionada = new Partida();
-        // Los 2 estamos listos. Lanzar Intent de juego
-        Intent jugar = new Intent(this, JuegoOnlineActivity.class);
-        jugar.putExtra(Constantes.PARTIDA, "Sala 0");
-        jugar.putExtra(Constantes.RIVALID, "DrKCdhn2a1Z4LAgX1DNeZks7F2u1");
-        startActivity(jugar);
-        finish();
-
-    }
-
-
-    */
-    //  Utilidades.descargarImagenFirebaseYGuardarla(getApplicationContext(), jugador.getJugadorId(), avatarJugador);
-
-/*
-        // Crear Salas en Firebase
-        for (int n = 0; n < 10; n++) {
-            mDatabase.child("PARTIDAS").child("Sala " + n).setValue(new Partida("Sala " + n, n , "0", "0", new Tablero()));
-        }
-
-    }
-*/
-
-/*
-        @Override
-        public void onStart() {
-            super.onStart();
-
-
-        }
-*/
-
 
     public void borrarJugadorSalaFirebase() {
         // Si el jugador ya tenía partida asignada, la borramos de Firebase
@@ -803,6 +759,27 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void crearSalas(View view) {
+
+        easterEgg++;
+        Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
+
+
+        if (easterEgg==10){
+
+            easterEgg=0;
+            Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.MAGIA);
+            palitrokesIV.setImageDrawable(null);
+            palitrokesIV.setImageResource(R.drawable.pic149);
+            RotateAnimation rotate = new RotateAnimation(0, 360,
+                    Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
+                    0.5f);
+
+            rotate.setDuration(2000);
+            rotate.setRepeatCount(0);
+            nombreIV.startAnimation(rotate);
+
+
+        }
 
         //  resetearRecords();
 /*
@@ -1111,66 +1088,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
-    public void nubeAdd(final ImageView nube) {
-
-        Random rnd = new Random();
-        String name = "nube" + (rnd.nextInt(7) + 1);
-        int resource = getApplicationContext().getResources().getIdentifier(name, "drawable", "com.game.palitrokes");
-        nube.setImageResource(resource);
-        nube.bringToFront();
-        nube.setVisibility(View.VISIBLE);
-        //  layoutTitulo.addView(nube1);
-
-
-        int inicio = 0;
-        int fin = 0;
-
-        int aleatorio = rnd.nextInt(2);
-
-        switch (aleatorio) {
-            case 0:
-                inicio = -200;
-                fin = 1000;
-                break;
-            case 1:
-                inicio = 1000;
-                fin = -200;
-                break;
-        }
-
-
-        Log.d(Constantes.TAG, "Aleat: " + aleatorio);
-        RelativeLayout.LayoutParams layoutParams = (RelativeLayout.LayoutParams) nube.getLayoutParams();
-        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-        layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
-        nube.setLayoutParams(layoutParams);
-
-        TranslateAnimation animation = new TranslateAnimation(inicio, fin, rnd.nextInt(200), rnd.nextInt(200));
-        animation.setDuration(rnd.nextInt(5000) + 7000);
-        animation.setInterpolator(new AccelerateInterpolator());
-        animation.setRepeatCount(0);
-        nube.startAnimation(animation);
-
-        animation.setAnimationListener(new Animation.AnimationListener() {
-            @Override
-            public void onAnimationStart(Animation animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
-                nubeAdd(nube);
-            }
-
-            @Override
-            public void onAnimationRepeat(Animation animation) {
-
-            }
-        });
-
-    }
-
 
     public void favoritosToggle(View view) {
         if (soloFavoritos) {
