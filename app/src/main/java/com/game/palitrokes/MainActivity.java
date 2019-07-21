@@ -9,6 +9,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.CountDownTimer;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -70,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.CAMERA,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
-    AnimacionTitulo animacionTitulo;
+  //  AnimacionTitulo animacionTitulo;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private DatabaseReference userRef;
@@ -80,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView onlineTV, victoriasTV;
     private Button botonOnline;
     private ImageView avatarJugador;
-    private ImageView palitrokesIV , lemaIV, nombreIV;
+    private ImageView palitrokesIV, lemaIV, nombreIV;
     private ImageButton favoritosBTN;
     private Jugador jugador;
     private RecyclerView recordsRecycler;
@@ -101,10 +102,12 @@ public class MainActivity extends AppCompatActivity {
     private boolean soloFavoritos;
     private MediaPlayer mediaPlayer;
     private int easterEgg;
+    private CountDownTimer animacionTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
 
@@ -113,22 +116,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Sonidos y BGM
         Sonidos.getInstance(getApplicationContext());
+        bgm();
 
-        Random rnd = new Random();
-        switch (rnd.nextInt(3)){
-            case 0:
-                mediaPlayer = MediaPlayer.create(this, R.raw.cutebgm);
-                mediaPlayer.start();
-                break;
-            case 1:
-                mediaPlayer = MediaPlayer.create(this, R.raw.sunny);
-                mediaPlayer.start();
-                break;
-            case 2:
-                mediaPlayer = MediaPlayer.create(this, R.raw.ukelele);
-                mediaPlayer.start();
-                break;
-        }
 
         // Referencias a las vistas
         nickET = findViewById(R.id.nickET);
@@ -155,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // EasterEgg
-        easterEgg=0;
+        easterEgg = 0;
 
         // Animacion del logo
         animacionPalitrokes();
@@ -177,6 +166,29 @@ public class MainActivity extends AppCompatActivity {
         // Recuperamos los datos del Shared Preferences
         recuperarDatosSharedPreferences();
 
+        // Autenticarnos
+        signIn();
+
+
+    }
+
+    private void bgm() {
+        Random rnd = new Random();
+        switch (rnd.nextInt(3)) {
+            case 0:
+                mediaPlayer = MediaPlayer.create(this, R.raw.cutebgm);
+                break;
+            case 1:
+                mediaPlayer = MediaPlayer.create(this, R.raw.sunny);
+                break;
+            case 2:
+                mediaPlayer = MediaPlayer.create(this, R.raw.ukelele);
+                break;
+        }
+
+    }
+
+    private void signIn() {
         // Comprobar si tenemos internet
         if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
 
@@ -201,8 +213,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
         }
-
-
     }
 
 
@@ -234,9 +244,14 @@ public class MainActivity extends AppCompatActivity {
                         nickName = getString(R.string.jugador);
                     } else {
                         nickName = nickET.getText().toString();
+                        if (Utilidades.eliminarPalabrotas(nickName)) {
+                            Toast.makeText(getApplicationContext(), (getString(R.string.palabrota)), Toast.LENGTH_LONG).show();
+                            nickName = getString(R.string.jugador);
+                        }
                     }
                     jugador = new Jugador(currentUser.getUid(), nickName);
                     jugador.setOnline(true);
+                    jugador.setActualizado(System.currentTimeMillis() + "");
                     userRef.setValue(jugador);
 
                     // Subimos una imagen a Firebase Storage con el nombre del ID del jugador
@@ -251,6 +266,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     jugador = SharedPrefs.getJugadorPrefs(getApplicationContext());
                     jugador.setOnline(true);
+                    jugador.setActualizado(System.currentTimeMillis() + "");
                     userRef.setValue(jugador);
                 }
             }
@@ -274,6 +290,19 @@ public class MainActivity extends AppCompatActivity {
 
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                     Jugador jugadorTMP = snapshot.getValue(Jugador.class);
+
+      /*              // chequear los jugadores por si se ha quedado pillado alguno 'online' por salir de la app mal, etc
+                    long tiempoonline = 0;
+                    if (jugadorTMP.getActualizado() != null){
+                        tiempoonline = System.currentTimeMillis() - Long.parseLong(jugadorTMP.getActualizado());
+                    }
+                    Log.d(Constantes.TAG, "Jugador que lleva " + (tiempoonline / 1000) + " segundos online");
+                    // si lleva mas de 10 minutos online, pero sin actualizar, cambiamos el estado a 'false'
+                    if (tiempoonline > (10 * 60 * 1000)) {
+                        jugadorTMP.setOnline(false);
+                        jugadoresRef.child(jugadorTMP.getJugadorId()).setValue(jugadorTMP);
+                    }*/
+
                     if (jugadorTMP.isOnline()) {
                         // Filtrar si solo queremos jugar con favoritos
                         if (!jugador.getJugadorId().equals(jugadorTMP.getJugadorId())) {
@@ -472,7 +501,16 @@ public class MainActivity extends AppCompatActivity {
                             salaSeleccionada.setJugador2ID(jugador.getJugadorId());
                         }
                         // Actualizamos Firebase y de paso limpiamos la sala por si hubiera quedado algo de la ultima partida
-                        jugador.setNickname(nickET.getText().toString());
+
+                        String nickName = nickET.getText().toString();
+                        if (Utilidades.eliminarPalabrotas(nickName)) {
+                            Toast.makeText(getApplicationContext(), (getString(R.string.palabrota)), Toast.LENGTH_LONG).show();
+                            nickET.setText(getString(R.string.jugador));
+                            nickName = getString(R.string.jugador);
+                        }
+
+                        jugador.setNickname(nickName);
+                        jugador.setActualizado(System.currentTimeMillis() + "");
                         userRef.setValue(jugador);
                         //     salaSeleccionada.setTablero(new Tablero());
                         salaSeleccionada.setGanador(0);
@@ -519,8 +557,9 @@ public class MainActivity extends AppCompatActivity {
                                     jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador2ID());
-                                    animacionTitulo.cancel(true);
-                                    finish();
+                                  //  animacionTitulo.cancel(true);
+                                    animacionTimer.cancel();
+                                  //  finish();
                                     Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.START);
                                     mediaPlayer.stop();
                                     startActivity(jugar);
@@ -558,8 +597,9 @@ public class MainActivity extends AppCompatActivity {
                                     jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                                     jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
                                     jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador1ID());
-                                    animacionTitulo.cancel(true);
-                                    finish();
+                                    //animacionTitulo.cancel(true);
+                                    animacionTimer.cancel();
+                                 //   finish();
                                     Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.START);
                                     mediaPlayer.stop();
                                     startActivity(jugar);
@@ -647,6 +687,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     // Actualizamos la BB.DD.
+                    jugador.setActualizado(System.currentTimeMillis() + "");
                     userRef.setValue(jugador);
 
 
@@ -668,14 +709,16 @@ public class MainActivity extends AppCompatActivity {
         if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
             if (jugador != null && userRef != null) {
                 jugador.setOnline(false);
+                jugador.setActualizado(System.currentTimeMillis() + "");
                 userRef.setValue(jugador);
             }
             if (salaSeleccionada != null) {
                 limpiarSala(salaSeleccionada.getPartidaID());
             }
         }
-        animacionTitulo.cancel(true);
+        //   animacionTitulo.cancel(true);
         mediaPlayer.stop();
+
         super.onStop();
 
     }
@@ -691,6 +734,7 @@ public class MainActivity extends AppCompatActivity {
         if (jugador != null) {
             if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
                 jugador.setOnline(false);
+                jugador.setActualizado(System.currentTimeMillis() + "");
                 userRef.setValue(jugador);
             }
         } else {
@@ -698,7 +742,15 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (nickET.getText() != null) {
-            jugador.setNickname(nickET.getText().toString());
+
+            String nickName = nickET.getText().toString();
+            if (Utilidades.eliminarPalabrotas(nickName)) {
+                Toast.makeText(getApplicationContext(), (getString(R.string.palabrota)), Toast.LENGTH_LONG).show();
+                nickET.setText(getString(R.string.jugador));
+                nickName = getString(R.string.jugador);
+            }
+
+            jugador.setNickname(nickName);
         }
 
 
@@ -706,9 +758,10 @@ public class MainActivity extends AppCompatActivity {
 
         Intent intentvscom = new Intent(this, JuegoVsComActivity.class);
         intentvscom.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        animacionTitulo.cancel(true);
+       // animacionTitulo.cancel(true);
+        animacionTimer.cancel();
         mediaPlayer.stop();
-        finish();
+       // finish();
         Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.START);
         startActivity(intentvscom);
 
@@ -764,9 +817,9 @@ public class MainActivity extends AppCompatActivity {
         Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
 
 
-        if (easterEgg==10){
+        if (easterEgg == 10) {
 
-            easterEgg=0;
+            easterEgg = 0;
             Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.MAGIA);
             palitrokesIV.setImageDrawable(null);
             palitrokesIV.setImageResource(R.drawable.pic149);
@@ -811,7 +864,8 @@ public class MainActivity extends AppCompatActivity {
         this.photo_uri = Utilidades.crearFicheroImagen();
         intent_foto.putExtra(MediaStore.EXTRA_OUTPUT, this.photo_uri);
         Utilidades.desactivarModoEstricto();
-        animacionTitulo.cancel(true);
+       // animacionTitulo.cancel(true);
+        animacionTimer.cancel();
         mediaPlayer.stop();
         startActivityForResult(intent_foto, Constantes.CODIGO_PETICION_HACER_FOTO);
 
@@ -819,7 +873,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void seleccionarFoto() {
         Log.d("MIAPP", "Quiere seleccionar una foto");
-        animacionTitulo.cancel(true);
+       // animacionTitulo.cancel(true);
+        animacionTimer.cancel();
         Intent intent_pide_foto = new Intent();
         //intent_pide_foto.setAction(Intent.ACTION_PICK);//seteo la acción para galeria
         intent_pide_foto.setAction(Intent.ACTION_GET_CONTENT);//seteo la acción
@@ -855,13 +910,19 @@ public class MainActivity extends AppCompatActivity {
                     jugador = new Jugador();
                 }
                 if (!nickET.getText().toString().equals("")) {
-                    jugador.setNickname(nickET.getText().toString());
+                    String nickName = nickET.getText().toString();
+                    if (Utilidades.eliminarPalabrotas(nickName)) {
+                        Toast.makeText(getApplicationContext(), (getString(R.string.palabrota)), Toast.LENGTH_LONG).show();
+                        nickET.setText(getString(R.string.jugador));
+                        nickName = getString(R.string.jugador);
+                    }
+
+                    jugador.setNickname(nickName);
                 }
                 SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
 
                 // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
                 Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId(), Utilidades.bitmapToArrayBytes(selectedImage));
-
 
 
                 break;
@@ -890,7 +951,14 @@ public class MainActivity extends AppCompatActivity {
                     jugador = new Jugador();
                 }
                 if (!nickET.getText().toString().equals("")) {
-                    jugador.setNickname(nickET.getText().toString());
+                    String nickName = nickET.getText().toString();
+                    if (Utilidades.eliminarPalabrotas(nickName)) {
+                        Toast.makeText(getApplicationContext(), (getString(R.string.palabrota)), Toast.LENGTH_LONG).show();
+                        nickET.setText(getString(R.string.jugador));
+                        nickName = getString(R.string.jugador);
+                    }
+
+                    jugador.setNickname(nickName);
                 }
                 SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
 
@@ -968,10 +1036,11 @@ public class MainActivity extends AppCompatActivity {
             jugador.setFirstRun(false);
             SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
 //            Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId(), Utilidades.bitmapToArrayBytes());
-            animacionTitulo.cancel(true);
+          //  animacionTitulo.cancel(true);
+            animacionTimer.cancel();
             Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
             mediaPlayer.stop();
-            finish();
+        //    finish();
             startActivity(infointent);
 
 
@@ -980,7 +1049,7 @@ public class MainActivity extends AppCompatActivity {
         // Seteamos la imagen del avatar con el archivo guardado localmente en el dispositivo
         // Este archivo se actualiza cada vez que lo personalizamos con una imagen de la galería o la cámara
         Bitmap recuperaImagen = Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId());
-        if (recuperaImagen != null ) {
+        if (recuperaImagen != null) {
             avatarJugador.setImageBitmap(recuperaImagen);
         } else {
             avatarJugador.setImageResource(R.drawable.picture);
@@ -1004,50 +1073,61 @@ public class MainActivity extends AppCompatActivity {
         if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
             if (jugador != null && jugador.getJugadorId() != null && userRef != null) {
                 jugador.setOnline(false);
+                jugador.setActualizado(System.currentTimeMillis() + "");
                 userRef.setValue(jugador);
             }
         }
-       // mediaPlayer.stop();
+     //   mediaPlayer.stop();
 
 
         super.onPause();
-        //  animacionTitulo.cancel(true);
+     //   animacionTitulo.cancel(true);
 
-        //   finish();
+      //    finish();
 
     }
 
     @Override
     protected void onDestroy() {
+
         avatarJugador.setBackground(null);
         avatarJugador.setImageDrawable(null);
-        palitrokesIV.setImageDrawable(null);
+//        palitrokesIV.setImageDrawable(null);
         mediaPlayer = null;
+        System.gc();
         super.onDestroy();
     }
 
     @Override
     protected void onResume() {
+        Log.d(Constantes.TAG, "On resume");
+
+        // Iniciar música
+        bgm();
+        mediaPlayer.start();
+        animacionTimer.start();
+    //    animacionTitulo.setRunning(true);
+       // if (animacionTitulo.isCancelled()) animacionTitulo.executeOnExecutor(executorService);
+
+        signIn();
         super.onResume();
-        if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
-            if (jugador != null && jugador.getJugadorId() != null && userRef != null) {
-                jugador.setOnline(true);
-                userRef.setValue(jugador);
-            }
-        }
-        // if (animacionTitulo.isCancelled()) animacionTitulo.executeOnExecutor(executorService);
+
     }
+
+
 
     @Override
     public void onBackPressed() {
         if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
             if (jugador != null && jugador.getJugadorId() != null && userRef != null) {
                 jugador.setOnline(true);
+                jugador.setActualizado(System.currentTimeMillis() + "");
                 userRef.setValue(jugador);
             }
         }
 
         //  changeImage.cancel();
+        mediaPlayer.stop();
         finish();
         // super.onBackPressed();
 
@@ -1055,10 +1135,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void infoButton(View view) {
         Log.d(Constantes.TAG, "Tocado info");
-        animacionTitulo.cancel(true);
+      //  animacionTitulo.cancel(true);
+        animacionTimer.cancel();
         Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
         mediaPlayer.stop();
-        finish();
+      //  finish();
         startActivity(infointent);
 
 
@@ -1075,17 +1156,40 @@ public class MainActivity extends AppCompatActivity {
         nubeAdd(nube2);
         nubeAdd(nube3);
 */
-
+/*
         // movidas para que ejecute todos los hilos simultaneamente
         int processors = Runtime.getRuntime().availableProcessors();
         executorService = Executors.newFixedThreadPool(processors);
-
+*/
         // Cambiar la imagen del personaje cada tiempo en un asynctask
         palitrokesIV = findViewById(R.id.palitrokesIV);
+
+
+         animacionTimer = new CountDownTimer(60000, 3000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                Random rnd = new Random();
+                String name = "pic" + (rnd.nextInt(116) + 34);
+                int resource = getResources().getIdentifier(name, "drawable", "com.game.palitrokes");
+                palitrokesIV.setImageDrawable(null);
+                palitrokesIV.setImageResource(resource);
+            }
+
+            @Override
+            public void onFinish() {
+                this.start();
+            }
+        };
+
+        animacionTimer.start();
+
+
+
+/*
         animacionTitulo = new AnimacionTitulo();
         animacionTitulo.recuperarImageView(getApplicationContext(), palitrokesIV);
         animacionTitulo.executeOnExecutor(executorService);
-
+*/
 
     }
 

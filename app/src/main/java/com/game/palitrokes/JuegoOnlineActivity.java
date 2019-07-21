@@ -231,6 +231,10 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 // Los palitrokes se actualizan en la pantalla cuando hay algún
                 // cambio en la BB.DD. y por lo tanto se lanza este Listener
                 visualizarTablero(partida.getTablero());
+                // Sonido cuando el rival selecciona un palo ...
+                if (partida.getTurno() != jugador.getNumeroJugador()) {
+                    Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
+                }
                 // Si no hay ganador, mirar de quien es el turno
                 if (partida.getGanador() != 0) {
                     // Aquí detectamos si hay ganador. La partida termina
@@ -478,15 +482,17 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         }
 
 
-
-
     }
 
 
     @Override
     protected void onStop() {
-        super.onStop();
         limpiarSala();
+      jugador.setOnline(false);
+        jugador.setActualizado(System.currentTimeMillis() + "");
+        jugadorRef.setValue(jugador);
+
+        super.onStop();
     }
 
     @Override
@@ -505,6 +511,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         //super.onBackPressed();
+        // si salimos, abandonamos la partida
         finTiempo = true;
         partida.setGanador(rival.getNumeroJugador());
         salaRef.setValue(partida);
@@ -539,7 +546,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
         } else {
             jugador.setDerrotas(1);
-            resultado += (getString(R.string.resultado));
+            resultado += (getString(R.string.perdido));
             Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PERDER);
         }
 
@@ -560,7 +567,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
         finish();
         // Lanzamos el intent del MainActivity
-        startActivity(volverIntent);
+     //   startActivity(volverIntent);
 
     }
 
@@ -575,6 +582,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         partida.setTablero(new Tablero(0));
         partida.setTurno(1);
         salaRef.setValue(partida);
+
     }
 
     private void actualizarJugadores() {
@@ -582,6 +590,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         jugador.setNumeroJugador(0);
         jugador.setPartida("0");
         jugador.setOnline(true);
+        jugador.setActualizado(System.currentTimeMillis() + "");
         jugadorRef.setValue(jugador);
     }
 
@@ -594,5 +603,14 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         return resultado;
     }
 
+    @Override
+    protected void onPause() {
+        // Si bloqueamos es como abandonar la partida
+        finTiempo = true;
+        partida.setGanador(rival.getNumeroJugador());
+        salaRef.setValue(partida);
+        finJuego();
 
+        super.onPause();
+    }
 }

@@ -36,4 +36,6 @@
     <string name="abandono">Ha habido abandono ...</string>
     <string name="win">Has Ganado ¡Enhorabuena!</string>
     <string name="resultado">"Gana Palitrokes. Has alcanzado el nivel "</string>
+    <string name="perdido">Lo siento has perdido!!</string>
+    <string name="palabrota">No puedes utilizar esta palabra!!</string>
 </resources>

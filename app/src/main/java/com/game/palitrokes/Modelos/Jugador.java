@@ -23,7 +23,7 @@ public class Jugador {
         this.victorias = 0;
         this.derrotas = 0;
         this.online = false;
-        this.actualizado = System.currentTimeMillis() + "*";
+        this.actualizado = System.currentTimeMillis() + "";
         this.numeroJugador = 0;
         this.firstRun = true;
         this.favoritosID = new ArrayList<>();

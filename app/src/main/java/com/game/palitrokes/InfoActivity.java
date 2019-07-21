@@ -39,8 +39,8 @@ public class InfoActivity extends AppCompatActivity {
         infoVideoView.stopPlayback();
         infoVideoView = null;
         finish();
-        Intent juegoIntent = new Intent(getApplicationContext(), MainActivity.class);
-        startActivity(juegoIntent);
+       // Intent juegoIntent = new Intent(getApplicationContext(), MainActivity.class);
+       //   startActivity(juegoIntent);
 
 
     }

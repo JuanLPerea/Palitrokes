@@ -37,4 +37,6 @@
     <string name="victorias2">"Wins: "</string>
     <string name="victorias8">Wins: ∞</string>
     <string name="win">You Win. Congratulations!!</string>
+    <string name="perdido">I\'m sorry, you loose</string>
+    <string name="palabrota">You can\'t use this word!!</string>
 </resources>

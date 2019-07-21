@@ -2,7 +2,6 @@ package com.game.palitrokes;
 
 import android.content.Intent;
 import android.graphics.Color;
-import android.net.Uri;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -52,11 +51,14 @@ public class JuegoVsComActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+
         setContentView(R.layout.activity_juego);
         getSupportActionBar().hide();
 
         // Sonidos
-      //  if (sonidos == null) sonidos = new Sonidos(getApplicationContext());
+        //  if (sonidos == null) sonidos = new Sonidos(getApplicationContext());
 
 
         // recuperamos las Views
@@ -159,7 +161,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
     private void actualizarVistaJugador() {
         avatarJ1.setImageBitmap(Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId()));
-        winsJ1.setText((getString(R.string.victorias2))+ jugador.getVictorias());
+        winsJ1.setText((getString(R.string.victorias2)) + jugador.getVictorias());
         nickJ1.setText(jugador.getNickname());
     }
 
@@ -393,7 +395,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
             Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
 
 
-            CountDownTimer pausaVerJugada = new CountDownTimer(1000,1000) {
+            CountDownTimer pausaVerJugada = new CountDownTimer(1000, 1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
                     visualizarTablero(partida.getTablero());
@@ -406,8 +408,6 @@ public class JuegoVsComActivity extends AppCompatActivity {
                 }
             };
             pausaVerJugada.start();
-
-
 
 
         } else {
@@ -488,8 +488,8 @@ public class JuegoVsComActivity extends AppCompatActivity {
         cronometro2.cancel();
 
 
-        Intent volverIntent = new Intent(this, MainActivity.class);
-        volverIntent.putExtra("SALA_ANTERIOR", partida.getPartidaID());
+     //   Intent volverIntent = new Intent(this, MainActivity.class);
+      //  volverIntent.putExtra("SALA_ANTERIOR", partida.getPartidaID());
 
         String resultado = "";
 
@@ -519,7 +519,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
             SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
             finish();
             // Lanzamos el intent del MainActivity
-            startActivity(volverIntent);
+          //  startActivity(volverIntent);
 
 
         }
@@ -567,15 +567,22 @@ public class JuegoVsComActivity extends AppCompatActivity {
     protected void onStop() {
         cronometro1.cancel();
         cronometro2.cancel();
+        cronometro1 = null;
+        cronometro2 = null;
+        avatarJ2.setImageDrawable(null);
+        avatarJ1.setImageDrawable(null);
+        linearBase = null;
+        System.gc();
+
         if (jugadaComTimer != null) {
             jugadaComTimer.cancel();
         }
+
         super.onStop();
     }
 
 
     private void mostrarLevel() {
-
 
         linearBase.setVisibility(View.INVISIBLE);
         level.setVisibility(View.VISIBLE);
@@ -648,5 +655,17 @@ public class JuegoVsComActivity extends AppCompatActivity {
         avatarJ2.setImageDrawable(null);
 
         super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+
+        if (partida.getTurno() == 1) {
+            cronometro1.start();
+        } else {
+            cronometro2.start();
+        }
+
+        super.onResume();
     }
 }

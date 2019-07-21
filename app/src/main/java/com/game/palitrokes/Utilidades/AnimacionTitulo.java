@@ -1,13 +1,9 @@
 package com.game.palitrokes.Utilidades;
 
 import android.content.Context;
-import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ImageView;
-
-import com.game.palitrokes.R;
-
 import java.util.Random;
 
 public class AnimacionTitulo extends AsyncTask<Void, String, Boolean> {
@@ -32,6 +28,7 @@ public class AnimacionTitulo extends AsyncTask<Void, String, Boolean> {
     protected void onProgressUpdate(String... values) {
         String imagen = values[0];
         int resource = context.getResources().getIdentifier(imagen, "drawable", "com.game.palitrokes");
+        imageView.setImageDrawable(null);
         imageView.setImageResource(resource);
       //  Log.d(Constantes.TAG, "Imagen cambiada");
     }
@@ -40,7 +37,7 @@ public class AnimacionTitulo extends AsyncTask<Void, String, Boolean> {
     protected Boolean doInBackground(Void... voids) {
 
         while (running) {
-
+            Log.d(Constantes.TAG, "Asynctask Running");
                 Random rnd = new Random();
                 String name = "pic" + (rnd.nextInt(116) + 34);
                 publishProgress(name);
@@ -55,6 +52,8 @@ public class AnimacionTitulo extends AsyncTask<Void, String, Boolean> {
     @Override
     protected void onCancelled(Boolean aBoolean) {
         running = false;
+        this.imageView = null;
+
     }
 
 
@@ -65,6 +64,10 @@ public class AnimacionTitulo extends AsyncTask<Void, String, Boolean> {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    public void setRunning(boolean estado) {
+        this.running = estado;
     }
 
 }

@@ -25,8 +25,8 @@ import java.util.Random;
 public class RecordsAdapter extends RecyclerView.Adapter<RecordsAdapter.AdapterViewHolder> {
 
 
-    List<Records> records;
-    Context context;
+    private List<Records> records;
+    private Context context;
 
     public RecordsAdapter(Context context, List<Records> records) {
         this.records = records;
