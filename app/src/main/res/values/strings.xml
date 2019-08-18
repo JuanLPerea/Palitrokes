@@ -5,7 +5,7 @@
     <string name="jugador">Jugador</string>
     <string name="buscando">Buscando Rival...</string>
     <string name="amigos_online">Amigos Online:</string>
-    <string name="jugadores_online">Jugadores Online: 0</string>
+    <string name="jugadores_online">Jugadores Online: </string>
     <string name="sin_salas">De momento no hay salas vacías</string>
     <string name="encontrado_rival">Encontrado Rival, esperando que esté preparado</string>
     <string name="preparado">¡Preparado!</string>
@@ -23,8 +23,8 @@
     <string name="tu_ok">Tu OK?</string>
     <string name="mensaje_estado">Mensaje Estado</string>
     <string name="nomeganas">¿A que no\nme ganas?</string>
-    <string name="amigosonline">Amigos online:</string>
-    <string name="jugonline">Jugadores Online:</string>
+    <string name="amigosonline">Amigos online: </string>
+    <string name="jugonline">Jugadores Online: </string>
     <string name="esperandorival">Esperando al rival</string>
     <string name="victorias2">Victorias: </string>
     <string name="nombreprota">Palitrokes</string>
@@ -38,4 +38,6 @@
     <string name="resultado">"Gana Palitrokes. Has alcanzado el nivel "</string>
     <string name="perdido">Lo siento has perdido!!</string>
     <string name="palabrota">No puedes utilizar esta palabra!!</string>
+    <string name="noplayers">No hay jugadores online disponibles para jugar</string>
+    <string name="rival">Rival</string>
 </resources>

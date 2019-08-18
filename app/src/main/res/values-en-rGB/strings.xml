@@ -16,7 +16,7 @@
     <string name="mensaje_permisos">Is necessary to allow permissions to customize your avatar</string>
     <string name="jugador">"Player "</string>
     <string name="jugonline">"Online Players: "</string>
-    <string name="jugadores_online">Online Players: 0</string>
+    <string name="jugadores_online">"Online Players: "</string>
     <string name="jugar">Play</string>
     <string name="jugar_online">Play Online</string>
     <string name="mensaje_estado">State message</string>
@@ -39,4 +39,6 @@
     <string name="app_name">Woody</string>
     <string name="perdido">I\'m sorry, you loose</string>
     <string name="palabrota">You can\'t use this word!!</string>
+    <string name="noplayers">There is no available online players</string>
+    <string name="rival">Rival</string>
 </resources>

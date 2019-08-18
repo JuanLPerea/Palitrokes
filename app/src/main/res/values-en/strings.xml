@@ -14,7 +14,7 @@
     <string name="fallo_auth">Authentication error.</string>
     <string name="ganador">"The winner is: "</string>
     <string name="jugador">Player</string>
-    <string name="jugadores_online">Online Players: 0</string>
+    <string name="jugadores_online">"Online Players: "</string>
     <string name="jugar">Play</string>
     <string name="jugar_online">Play Online</string>
     <string name="jugonline">"Online Players: "</string>
@@ -39,4 +39,6 @@
     <string name="win">You Win. Congratulations!!</string>
     <string name="perdido">I\'m sorry, you loose</string>
     <string name="palabrota">You can\'t use this word!!</string>
+    <string name="noplayers">There is no available online players</string>
+    <string name="rival">Rival</string>
 </resources>

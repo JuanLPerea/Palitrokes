@@ -24,4 +24,5 @@ public class Constantes {
     public static final String FIRST_RUN = "FIRSTRUN" ;
     public static final String AMIGOS = "AMIGOS";
     public static final String SALA_ANTERIOR = "SALA_ANTERIOR";
+    public static final String JUGADORID = "JUGADORID";
 }

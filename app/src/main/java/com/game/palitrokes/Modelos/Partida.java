@@ -19,7 +19,7 @@ public class Partida {
         this.jugador1ID = jugador1ID;
         this.jugador2ID = jugador2ID;
         this.tablero = tablero;
-        this.turno = 0;
+        this.turno = 1;
         this.ganador = 0;
         this.jugando = false;
         this.jugador1Ready = false;
@@ -33,7 +33,7 @@ public class Partida {
         this.jugador1ID = null;
         this.jugador2ID = null;
         this.tablero = new Tablero(8);
-        this.turno = 0;
+        this.turno = 1;
         this.ganador = 0;
         this.jugando = false;
         this.jugador1Ready = false;

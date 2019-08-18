@@ -556,13 +556,13 @@ public class JuegoVsComActivity extends AppCompatActivity {
     }
 
 
-/*    @Override
+    @Override
     protected void onPause() {
         super.onPause();
         finTiempo = true;
         finJuego();
 
-    }*/
+    }
 
     @Override
     protected void onStop() {

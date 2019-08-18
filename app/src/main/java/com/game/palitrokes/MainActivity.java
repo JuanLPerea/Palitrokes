@@ -37,7 +37,7 @@ import com.game.palitrokes.Adapters.RecordsAdapter;
 import com.game.palitrokes.Modelos.Jugador;
 import com.game.palitrokes.Modelos.Partida;
 import com.game.palitrokes.Modelos.Records;
-import com.game.palitrokes.Utilidades.AnimacionTitulo;
+import com.game.palitrokes.Modelos.Tablero;
 import com.game.palitrokes.Utilidades.Constantes;
 import com.game.palitrokes.Utilidades.SharedPrefs;
 import com.game.palitrokes.Utilidades.Sonidos;
@@ -63,7 +63,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
+/* TODO Adaptar logo en el título a pantallas grandes
+        El avatar no se cambia correctamente cuando ya hemos elegido uno
+        Error al bloquear el dispositivo
+        Juego online, no reconoce salas al volver de otro juego online
+
+*/
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -71,11 +78,12 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.CAMERA,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
     };
-  //  AnimacionTitulo animacionTitulo;
+    //  AnimacionTitulo animacionTitulo;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
     private DatabaseReference userRef;
     private DatabaseReference jugadoresRef;
+    private DatabaseReference partidasRef;
     private DatabaseReference recordsRef;
     private EditText nickET;
     private TextView onlineTV, victoriasTV;
@@ -90,10 +98,11 @@ public class MainActivity extends AppCompatActivity {
     private FloatingActionButton fab;
     private List<Jugador> jugadores;
     private List<Records> records;
-    private ValueEventListener jugadoresListener;
+    private List<Partida> partidas;
+    private Partida partida;
+    private ValueEventListener salaListener;
     private ValueEventListener partidasListener;
     private ValueEventListener recordsListener;
-    private Partida salaSeleccionada;
     private ExecutorService executorService;
     private Uri photo_uri;//para almacenar la ruta de la imagen
     private String ruta_foto;//nombre fichero creado
@@ -103,6 +112,17 @@ public class MainActivity extends AppCompatActivity {
     private MediaPlayer mediaPlayer;
     private int easterEgg;
     private CountDownTimer animacionTimer;
+    private Dialog jugarOnline;
+    private TextView rivalReady;
+    private TextView jugadorReady;
+    private ImageView readyJugadorIMG;
+    private ImageView readyRivalIMG;
+    private TextView mensajeEstado;
+    private ProgressBar progressBar;
+    private ImageView avatarRival;
+    private ImageButton favoritoAdd;
+    private Button readyBTN;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,8 +136,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Sonidos y BGM
         Sonidos.getInstance(getApplicationContext());
-    //    bgm();
-
+        //    bgm();
 
         // Referencias a las vistas
         nickET = findViewById(R.id.nickET);
@@ -134,6 +153,8 @@ public class MainActivity extends AppCompatActivity {
         fab = findViewById(R.id.fab);
         fab.bringToFront();
 
+        // Lanzamos el diálogo para esperar a que los 2 jugadores estén preparados
+        dialogoJuegoOnline();
 
         // Mirar si el idioma es Inglés para cambiar el ImageView del título
         String idioma = Locale.getDefault().getLanguage(); // es
@@ -149,8 +170,9 @@ public class MainActivity extends AppCompatActivity {
         // Animacion del logo
         animacionPalitrokes();
 
-        //Lista de jugadores online
-        jugadores = new ArrayList<>();
+        //Lista de partidas disponibles
+        partidas = new ArrayList<>();
+        partida = null;
 
         // Recycler View para los Records
         records = new ArrayList<>();
@@ -165,8 +187,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Recuperamos los datos del Shared Preferences
         recuperarDatosSharedPreferences();
-
-
 
 
     }
@@ -221,15 +241,19 @@ public class MainActivity extends AppCompatActivity {
     private void endSignIn(final FirebaseUser currentUser) {
         mDatabase = FirebaseDatabase.getInstance().getReference();
         userRef = mDatabase.child("USUARIOS").child(currentUser.getUid());
+        partidasRef = mDatabase.child("PARTIDAS");
         jugadoresRef = mDatabase.child("USUARIOS");
 
+        /*
         // Si volvemos de jugar online limpiamos la sala por si acaso
         if (salaAnterior != null) {
             Log.d(Constantes.TAG, "Ha vuelto de otro intent " + salaAnterior);
             pausa(1000);
-            limpiarSala(salaAnterior);
+            //limpiarSala(salaAnterior);
             pausa(1000);
         }
+*/
+
 
         // Cargamos los datos del usuario o los creamos si no existen (La primera vez que instalamos la APP)
         ValueEventListener userListener = new ValueEventListener() {
@@ -280,60 +304,59 @@ public class MainActivity extends AppCompatActivity {
         cargarRecords();
 
 
-        // Cargar la lista de jugadores online
-        jugadoresListener = new ValueEventListener() {
+        // Hacemos una lista con las partidas existentes
+        // (La partida se crea cuando un jugador da al botón jugar online)
+        // y se destruye al terminar de jugar la partida o al abandonar el dialogo de esperar rival
+        // Ponemos un listener que llenará la lista actualizando cada vez que los datos cambien en Firebase
+        //
+        partidasListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
-                jugadores.removeAll(jugadores);
-
+                partidas.removeAll(partidas);
+                int n = 0;
                 for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Jugador jugadorTMP = snapshot.getValue(Jugador.class);
+                    Partida partidaTmp = snapshot.getValue(Partida.class);
+                    partidaTmp.setNumeroSala(n);
 
-      /*              // chequear los jugadores por si se ha quedado pillado alguno 'online' por salir de la app mal, etc
-                    long tiempoonline = 0;
-                    if (jugadorTMP.getActualizado() != null){
-                        tiempoonline = System.currentTimeMillis() - Long.parseLong(jugadorTMP.getActualizado());
-                    }
-                    Log.d(Constantes.TAG, "Jugador que lleva " + (tiempoonline / 1000) + " segundos online");
-                    // si lleva mas de 10 minutos online, pero sin actualizar, cambiamos el estado a 'false'
-                    if (tiempoonline > (10 * 60 * 1000)) {
-                        jugadorTMP.setOnline(false);
-                        jugadoresRef.child(jugadorTMP.getJugadorId()).setValue(jugadorTMP);
-                    }*/
-
-                    if (jugadorTMP.isOnline()) {
-                        // Filtrar si solo queremos jugar con favoritos
-                        if (!jugador.getJugadorId().equals(jugadorTMP.getJugadorId())) {
-                            if (!soloFavoritos) {
-                                jugadores.add(jugadorTMP);
-                            } else {
-                                if (jugador.getFavoritosID() != null) {
-                                    for (String favorito : jugador.getFavoritosID()) {
-                                        if (favorito.equals(jugadorTMP.getJugadorId())) {
-                                            jugadores.add(jugadorTMP);
-                                        }
-                                    }
-                                }
-                            }
+                    // Si el jugador tiene una partida creada o seleccionada, aquí hacemos
+                    // lo que corresponda si hay cambios en su estado
+                    if (jugador.getPartida() != null) {
+                        // Si esta es nuestra partida...
+                        if (jugador.getPartida().equals(partidaTmp.getPartidaID())) {
+                            partida = partidaTmp;
+                            actualizarDialogOnline();
                         }
-
                     }
+
+
+                    // Mirar si hay un hueco disponible en la sala
+                    if (partidaTmp.getJugador1ID().equals("0") || partidaTmp.getJugador2ID().equals("0")) {
+                        // Mirar si solo queremos jugar con amigos
+                        if (soloFavoritos) {
+                            // si está en nuestra lista de favoritos lo añadimos a la lista
+                            if (jugador.getFavoritosID().contains(partidaTmp.getJugador1ID()) || jugador.getFavoritosID().contains(partidaTmp.getJugador2ID())) {
+                                partidas.add(partidaTmp);
+                            }
+                        } else {
+                            // Si queremos jugar con cualquiera que esté disponible sea amigo o no, lo añadimos aquí
+                            partidas.add(partidaTmp);
+                        }
+                    }
+                    n++;
                 }
 
-                // Mostramos en pantalla en número de jugadores disponibles online (o favoritos online)
+                // Mostrar las partidas disponibles, distinguiendo si queremos solo amigos o todos
+                String textopartidas = "";
                 if (soloFavoritos) {
-                    onlineTV.setText((getString(R.string.amigosonline)) + jugadores.size());
+                    textopartidas = getString(R.string.amigos_online);
                 } else {
-                    onlineTV.setText((getString(R.string.jugonline)) + jugadores.size());
-                }
+                    textopartidas = getString(R.string.jugadores_online);
 
-                if (jugadores.size() > 0) {
-                    botonOnline.setEnabled(true);
-                    favoritosBTN.setEnabled(true);
-                } else {
-                    botonOnline.setEnabled(false);
                 }
+                onlineTV.setText(textopartidas + partidas.size());
+
+                botonOnline.setEnabled(true);
+                favoritosBTN.setEnabled(true);
                 botonOnline.setVisibility(View.VISIBLE);
                 favoritosBTN.setVisibility(View.VISIBLE);
 
@@ -341,11 +364,741 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
             }
         };
-        jugadoresRef.addValueEventListener(jugadoresListener);
+        partidasRef.addValueEventListener(partidasListener);
 
+    }
+
+    private void actualizarDialogOnline() {
+
+        if (partida != null) {
+
+            // Si los dos huecos están ocupados, cargamos la imagen del rival
+            // También actualizamos nuestro estado 'ready'
+            if (!partida.getJugador1ID().equals("0") && !partida.getJugador2ID().equals("0")) {
+                // Encontrado rival, desactivamos progressbar
+                progressBar.setVisibility(View.INVISIBLE);
+                // Y descargamos imagen
+                if (jugador.getNumeroJugador() == 1) {
+                    UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), partida.getJugador2ID(), avatarRival);
+                } else {
+                    UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), partida.getJugador1ID(), avatarRival);
+                }
+            }
+
+            // Actualizar imagen 'preparado' y mensajes
+            if (jugador.getNumeroJugador() == 1) {
+                if (partida.isJugador1Ready()) {
+                    readyJugadorIMG.setImageResource(R.drawable.tick);
+                    readyJugadorIMG.setBackgroundColor(getResources().getColor(R.color.verde));
+                    jugadorReady.setText(R.string.preparado);
+                } else {
+                    readyJugadorIMG.setImageResource(R.drawable.update);
+                    readyJugadorIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
+                    jugadorReady.setText(R.string.buscando);
+                }
+                if (partida.isJugador2Ready()) {
+                    readyRivalIMG.setImageResource(R.drawable.tick);
+                    readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.verde));
+                    rivalReady.setText(R.string.preparado);
+                } else {
+                    readyRivalIMG.setImageResource(R.drawable.update);
+                    readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
+                    rivalReady.setText(R.string.buscando);
+                }
+            } else {
+                if (partida.isJugador2Ready()) {
+                    readyJugadorIMG.setImageResource(R.drawable.tick);
+                    readyJugadorIMG.setBackgroundColor(getResources().getColor(R.color.verde));
+                    jugadorReady.setText(R.string.preparado);
+                } else {
+                    readyJugadorIMG.setImageResource(R.drawable.update);
+                    readyJugadorIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
+                    jugadorReady.setText(R.string.buscando);
+                }
+                if (partida.isJugador1Ready()) {
+                    readyRivalIMG.setImageResource(R.drawable.tick);
+                    readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.verde));
+                    rivalReady.setText(R.string.preparado);
+                } else {
+                    readyRivalIMG.setImageResource(R.drawable.update);
+                    readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
+                    rivalReady.setText(R.string.buscando);
+                }
+            }
+
+            // Si los 2 jugadores están preparados, lanzamos el juego
+            if (partida.isJugador1Ready() && partida.isJugador2Ready()) {
+              //  partida.setJugando(true);
+              //  partida.setGanador(0);
+              //  partidasRef.child(partida.getPartidaID()).setValue(partida);
+
+                // Los 2 estamos listos. Lanzar Intent de juego
+                Intent jugar = new Intent(jugarOnline.getContext(), JuegoOnlineActivity.class);
+                jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+                jugar.putExtra(Constantes.PARTIDA, partida.getPartidaID());
+
+                if (jugador.getNumeroJugador() == 2) {
+                    jugar.putExtra(Constantes.RIVALID, partida.getJugador1ID());
+                    jugar.putExtra(Constantes.JUGADORID, partida.getJugador2ID());
+                } else {
+                    jugar.putExtra(Constantes.RIVALID, partida.getJugador2ID());
+                    jugar.putExtra(Constantes.JUGADORID, partida.getJugador1ID());
+                }
+
+                //animacionTitulo.cancel(true);
+                animacionTimer.cancel();
+                //   finish();
+                Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.START);
+                mediaPlayer.stop();
+                startActivity(jugar);
+                jugarOnline.dismiss();
+            }
+
+        }
+    }
+
+
+    // ------------------------------------------------------------------------------------------------------------------
+    // Cuando pulsamos el botón de Jugar Online hacemos esto ...
+    public void jugarOnline(View view) {
+
+        // Tenemos un listener que apunte a las salas siempre escuchando
+        // Creamos la sala cuando el jugador da al botón de jugar online
+        // O si hay otra persona esperando rival (Ya hay sala creada con hueco libre), lo ocupamos
+
+        jugarOnline.show();
+
+        // Limitar a 20 partidas simultáneas
+        if (partidas.size() > 20) {
+            Toast.makeText(MainActivity.this, R.string.sin_salas, Toast.LENGTH_LONG).show();
+        } else {
+            // Si no hay mas jugadores esperando partida, lo avisamos
+            // Y creamos una sala con un hueco disponible
+            if (partidas.size() == 0) {
+                Toast.makeText(MainActivity.this, R.string.noplayers, Toast.LENGTH_LONG).show();
+                // Creamos partida con hueco vacío
+                partida = new Partida("SALA" + System.currentTimeMillis(), 0, jugador.getJugadorId(), "0", new Tablero(12), 12);
+                // Añadimos a Firebase la nueva partida
+                partidasRef.child(partida.getPartidaID()).setValue(partida);
+                // En nuestro jugador indicamos que tenemos partida
+                jugador.setPartida(partida.getPartidaID());
+                jugador.setNumeroJugador(1);
+
+            } else {
+                // Hay jugadores disponibles online, ocupamos un hueco libre en la primera sala que encontremos
+                // Seleccionamos una partida y llenamos el hueco disponible con nuestro id (La primera disponible)
+                partida = partidas.get(0);
+                // Mirar si el hueco disponible es el 1 o el 2
+                if (partida.getJugador1ID().equals("0")) {
+                    partida.setJugador1ID(jugador.getJugadorId());
+                    jugador.setNumeroJugador(1);
+                } else {
+                    partida.setJugador2ID(jugador.getJugadorId());
+                    jugador.setNumeroJugador(2);
+                }
+                // Actualizamos a Firebase con la nueva partida
+                partidasRef.child(partida.getPartidaID()).setValue(partida);
+                // En nuestro jugador indicamos que tenemos partida
+                jugador.setPartida(partida.getPartidaID());
+
+            }
+
+        }
+
+    }
+
+    private void dialogoJuegoOnline() {
+        // Dialog jugar online
+        jugarOnline = new Dialog(this);
+        jugarOnline.setContentView(R.layout.dialog_jugar);
+        jugarOnline.setTitle(R.string.jugar_online);
+
+        rivalReady = jugarOnline.findViewById(R.id.estadoRivalTV);
+        jugadorReady = jugarOnline.findViewById(R.id.estadoJugadorTV);
+        readyJugadorIMG = jugarOnline.findViewById(R.id.imageReadyJugadorTV);
+        readyRivalIMG = jugarOnline.findViewById(R.id.imageReadyRivalIV);
+        mensajeEstado = jugarOnline.findViewById(R.id.mensajeEstadoTV);
+        progressBar = jugarOnline.findViewById(R.id.progressBar2);
+        avatarRival = jugarOnline.findViewById(R.id.rivalImageIV);
+        favoritoAdd = jugarOnline.findViewById(R.id.dialog_favoritosBTN);
+        readyBTN = jugarOnline.findViewById(R.id.readyBTN);
+
+        // Inicializamos vistas
+        mensajeEstado.setText(R.string.buscando);
+        jugadorReady.setText(R.string.jugador);
+        readyJugadorIMG.setImageResource(R.drawable.update);
+        readyJugadorIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
+        rivalReady.setText(R.string.rival);
+        readyRivalIMG.setImageResource(R.drawable.update);
+        readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
+
+        //  Controlar si el usuario pulsa back en el dispositivo:
+        //  Actualizar Firebase para notificar los cambios y cerrar el diálogo
+        jugarOnline.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                Log.d(Constantes.TAG, "Cancelado Dialog");
+
+                if (partida != null) {
+                    // borramos nuestro id de jugador de  la partida y actualizamos Firebase
+                    if (jugador.getNumeroJugador() == 1) {
+                        partida.setJugador1ID("0");
+                        partida.setJugador1Ready(false);
+                    } else {
+                        partida.setJugador2ID("0");
+                        partida.setJugador2Ready(false);
+                    }
+                    partidasRef.child(partida.getPartidaID()).setValue(partida);
+                }
+
+                limpiarSala();
+
+                jugarOnline.dismiss();
+            }
+        });
+
+
+        // Si hacemos click en el botón 'Preparado' notificamos a Firebase,
+        // para que salte el evento correspondiente
+        readyBTN.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (jugador.getNumeroJugador() == 1) {
+                    partida.setJugador1Ready(true);
+                    partidasRef.child(partida.getPartidaID()).setValue(partida);
+                } else {
+                    partida.setJugador2Ready(true);
+                    partidasRef.child(partida.getPartidaID()).setValue(partida);
+                }
+
+            }
+        });
+
+
+    }
+
+
+    // ------------------------------------------------------------------------------------------------------------------
+
+    // Controlar que si cerramos la aplicación y el jugador tiene
+    //  asignado una sala, borrarlo de Firebase para que no se quede pillada la sala
+
+    @Override
+    protected void onStop() {
+
+        if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
+            if (jugador != null && userRef != null) {
+                jugador.setOnline(false);
+                jugador.setActualizado(System.currentTimeMillis() + "");
+                userRef.setValue(jugador);
+            }
+     /*       if (salaSeleccionada != null) {
+                limpiarSala(salaSeleccionada.getPartidaID());
+            }*/
+        }
+        //   animacionTitulo.cancel(true);
+        mediaPlayer.stop();
+
+        super.onStop();
+
+    }
+
+
+    //
+    // Aquí lanzamos el juego contra el ordenador (Móvil en este caso)
+    //
+    public void jugar(View view) {
+
+
+        // Ponemos al false el que el jugador está online para que no le tengan en cuenta para jugar en este modo
+        if (jugador != null) {
+            if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
+                jugador.setOnline(false);
+                jugador.setActualizado(System.currentTimeMillis() + "");
+                userRef.setValue(jugador);
+            }
+        } else {
+            jugador = new Jugador();
+        }
+
+        if (nickET.getText() != null) {
+
+            String nickName = nickET.getText().toString();
+            if (Utilidades.eliminarPalabrotas(nickName)) {
+                Toast.makeText(getApplicationContext(), (getString(R.string.palabrota)), Toast.LENGTH_LONG).show();
+                nickET.setText(getString(R.string.jugador));
+                nickName = getString(R.string.jugador);
+            }
+
+            jugador.setNickname(nickName);
+        }
+
+
+        SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+
+        Intent intentvscom = new Intent(this, JuegoVsComActivity.class);
+        intentvscom.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+        // animacionTitulo.cancel(true);
+        animacionTimer.cancel();
+        mediaPlayer.stop();
+        // finish();
+        Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.START);
+        startActivity(intentvscom);
+
+    }
+
+    public void borrarJugadorSalaFirebase() {
+        // Si el jugador ya tenía partida asignada, la borramos de Firebase
+        if (!jugador.getPartida().equals("0")) {
+            if (jugador.getNumeroJugador() == 1) {
+                mDatabase.child("PARTIDAS").child(jugador.getPartida()).child("jugador1ID").setValue("0");
+                mDatabase.child("PARTIDAS").child(jugador.getPartida()).child("jugador1Ready").setValue(false);
+            } else {
+
+                mDatabase.child("PARTIDAS").child(jugador.getPartida()).child("jugador2ID").setValue("0");
+                mDatabase.child("PARTIDAS").child(jugador.getPartida()).child("jugador2Ready").setValue(false);
+            }
+
+        }
+    }
+
+
+    public void personalizarAvatar(View view) {
+
+        PopupMenu popup = new PopupMenu(this, view);
+        //Inflating the Popup using xml file
+        popup.getMenuInflater().inflate(R.menu.personaliza_avatar_menu, popup.getMenu());
+
+        //registering popup with OnMenuItemClickListener
+        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            public boolean onMenuItemClick(MenuItem item) {
+                switch (item.getItemId()) {
+                    case R.id.foto_camara:
+                        tomarFoto();
+                        return true;
+                    case R.id.foto_galeria:
+                        seleccionarFoto();
+                        return true;
+                }
+                return true;
+            }
+        });
+
+        popup.show();//showing popup menu
+
+
+    }
+
+
+    public void crearSalas(View view) {
+
+        easterEgg++;
+        Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
+
+
+        if (easterEgg == 10) {
+
+            easterEgg = 0;
+            Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.MAGIA);
+            palitrokesIV.setImageDrawable(null);
+            palitrokesIV.setImageResource(R.drawable.pic149);
+            RotateAnimation rotate = new RotateAnimation(0, 360,
+                    Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
+                    0.5f);
+
+            rotate.setDuration(2000);
+            rotate.setRepeatCount(0);
+            nombreIV.startAnimation(rotate);
+
+
+        }
+
+        //  resetearRecords();
+/*
+        // Crear Salas en Firebase
+        for (int n = 0; n < 5; n++) {
+            mDatabase.child("PARTIDAS").child("Sala " + n).setValue(new Partida("Sala " + n, n, "0", "0", new Tablero(0), 0));
+        }
+*/
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        //super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if ((grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                && (grantResults[1] == PackageManager.PERMISSION_GRANTED)) {
+            Log.d("MIAPP", "ME ha concecido los permisos");
+        } else {
+            Log.d("MIAPP", "NO ME ha concecido los permisos");
+            Toast.makeText(this, R.string.mensaje_permisos, Toast.LENGTH_SHORT).show();
+            permisosOK = false;
+        }
+    }
+
+    public void tomarFoto() {
+
+        Log.d("MIAPP", "Quiere hacer una foto");
+        Intent intent_foto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        this.photo_uri = Utilidades.crearFicheroImagen();
+        intent_foto.putExtra(MediaStore.EXTRA_OUTPUT, this.photo_uri);
+        Utilidades.desactivarModoEstricto();
+        // animacionTitulo.cancel(true);
+        animacionTimer.cancel();
+        mediaPlayer.stop();
+        startActivityForResult(intent_foto, Constantes.CODIGO_PETICION_HACER_FOTO);
+
+    }
+
+    public void seleccionarFoto() {
+        Log.d("MIAPP", "Quiere seleccionar una foto");
+        // animacionTitulo.cancel(true);
+        animacionTimer.cancel();
+        Intent intent_pide_foto = new Intent();
+        //intent_pide_foto.setAction(Intent.ACTION_PICK);//seteo la acción para galeria
+        intent_pide_foto.setAction(Intent.ACTION_GET_CONTENT);//seteo la acción
+        intent_pide_foto.setType("image/*");//tipo mime
+        mediaPlayer.stop();
+        startActivityForResult(intent_pide_foto, Constantes.CODIGO_PETICION_SELECCIONAR_FOTO);
+
+    }
+
+    private void setearImagenDesdeArchivo(int resultado, Intent data) {
+        switch (resultado) {
+            case RESULT_OK:
+                Log.d("MIAPP", "La foto ha sido seleccionada");
+
+                this.photo_uri = data.getData();//obtenemos la uri de la foto seleccionada
+                Log.d(Constantes.TAG, photo_uri.getPath());
+
+                InputStream imageStream = null;
+                try {
+                    imageStream = getContentResolver().openInputStream(this.photo_uri);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+
+                selectedImage = Utilidades.getResizedBitmap(selectedImage, 128);// 400 is for example, replace with desired size
+
+                this.avatarJugador.setImageBitmap(selectedImage);
+
+
+                // De paso guardamos los datos del jugador (Nickname, id, victorias en el Shared Preferences)
+                if (jugador == null) {
+                    jugador = new Jugador();
+                }
+                if (!nickET.getText().toString().equals("")) {
+                    String nickName = nickET.getText().toString();
+                    if (Utilidades.eliminarPalabrotas(nickName)) {
+                        Toast.makeText(getApplicationContext(), (getString(R.string.palabrota)), Toast.LENGTH_LONG).show();
+                        nickET.setText(getString(R.string.jugador));
+                        nickName = getString(R.string.jugador);
+                    }
+
+                    jugador.setNickname(nickName);
+                }
+                SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+
+                // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
+                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId(), Utilidades.bitmapToArrayBytes(selectedImage));
+
+
+                break;
+
+            case RESULT_CANCELED:
+                Log.d("MIAPP", "La foto NO ha sido seleccionada canceló");
+                break;
+        }
+    }
+
+    private void setearImagenDesdeCamara(int resultado, Intent intent) {
+        switch (resultado) {
+            case RESULT_OK:
+                Log.d("MIAPP", "Tiró la foto bien");
+
+                InputStream imageStream = null;
+                try {
+                    imageStream = getContentResolver().openInputStream(this.photo_uri);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+
+
+                // De paso guardamos los datos del jugador (Nickname, id, victorias en el Shared Preferences)
+                if (jugador == null) {
+                    jugador = new Jugador();
+                }
+                if (!nickET.getText().toString().equals("")) {
+                    String nickName = nickET.getText().toString();
+                    if (Utilidades.eliminarPalabrotas(nickName)) {
+                        Toast.makeText(getApplicationContext(), (getString(R.string.palabrota)), Toast.LENGTH_LONG).show();
+                        nickET.setText(getString(R.string.jugador));
+                        nickName = getString(R.string.jugador);
+                    }
+
+                    jugador.setNickname(nickName);
+                }
+                SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+
+
+                Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+                selectedImage = Utilidades.getResizedBitmap(selectedImage, 128);// 400 is for example, replace with desired size
+                this.avatarJugador.setImageBitmap(selectedImage);
+
+                // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
+                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId(), Utilidades.bitmapToArrayBytes(selectedImage));
+
+
+                // Actualizamos la galería
+                sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, photo_uri));
+                break;
+            case RESULT_CANCELED:
+                Log.d("MIAPP", "Canceló la foto");
+                break;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        //super.onActivityResult(requestCode, resultCode, data);//no llamamos al padre
+        if (requestCode == Constantes.CODIGO_PETICION_SELECCIONAR_FOTO) {
+            setearImagenDesdeArchivo(resultCode, data);
+        } else if (requestCode == Constantes.CODIGO_PETICION_HACER_FOTO) {
+            setearImagenDesdeCamara(resultCode, data);
+        }
+    }
+
+
+    private void resetearRecords() {
+        // Crear Records en Firebase
+        for (int n = 0; n < 10; n++) {
+            mDatabase.child("RECORDS").child("" + n).setValue(new Records("adfadfadfasdfadf", "Jugador " + n, 0, n));
+        }
+    }
+
+    private void limpiarSala() {
+
+        if (partida.getJugador2ID().equals("0") && partida.getJugador1ID().equals("0")) {
+            partidasRef.child(partida.getPartidaID()).removeValue();
+        }
+
+
+        /*
+        // Dejamos la sala vacía para poder reusarla
+        Partida partida = new Partida();
+        partida.setPartidaID(sala);
+        partida.setJugador1ID("0");
+        partida.setJugador2ID("0");
+        partida.setGanador(0);
+        partida.setJugador2Ready(false);
+        partida.setJugador1Ready(false);
+        partida.setJugando(false);
+
+        partida.setTurno(1);
+        mDatabase.child("PARTIDAS").child(sala).setValue(partida);
+        */
+    }
+
+
+    private void pausa(int tiempo) {
+        // Dejamos una pausa para que se actualice la sala
+        try {
+            Thread.sleep(tiempo);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    private void recuperarDatosSharedPreferences() {
+        // Recuperamos datos del Shared Preferences
+        // Cargamos datos del jugador
+        jugador = SharedPrefs.getJugadorPrefs(getApplicationContext());
+
+        if (jugador.isFirstRun()) {
+            // La primera vez que instalamos la aplicación lanzamos la actividad de Info
+            // Para explicar el juego
+            Log.d(Constantes.TAG, "Lanzar info");
+            jugador.setFirstRun(false);
+            SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+//            Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId(), Utilidades.bitmapToArrayBytes());
+            //  animacionTitulo.cancel(true);
+            animacionTimer.cancel();
+            Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
+            //mediaPlayer.stop();
+            //    finish();
+            startActivity(infointent);
+
+
+        }
+
+        // Seteamos la imagen del avatar con el archivo guardado localmente en el dispositivo
+        // Este archivo se actualiza cada vez que lo personalizamos con una imagen de la galería o la cámara
+        Bitmap recuperaImagen = Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId());
+        if (recuperaImagen != null) {
+            avatarJugador.setImageBitmap(recuperaImagen);
+        } else {
+            avatarJugador.setImageResource(R.drawable.picture);
+        }
+        // Mostramos el nick del jugador y las victorias
+        nickET.setText(jugador.getNickname());
+        victoriasTV.setText((getString(R.string.victorias2)) + jugador.getVictorias());
+
+        // Cargamos records y los mostramos
+        records = SharedPrefs.getRecordsPrefs(getApplicationContext());
+        adapter = new RecordsAdapter(getApplicationContext(), records);
+        recordsRecycler.setAdapter(adapter);
+        adapter.notifyDataSetChanged();
+
+    }
+
+
+    @Override
+    protected void onPause() {
+
+        if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
+            if (jugador != null && jugador.getJugadorId() != null && userRef != null) {
+                jugador.setOnline(false);
+                jugador.setActualizado(System.currentTimeMillis() + "");
+                userRef.setValue(jugador);
+            }
+        }
+        mediaPlayer.stop();
+
+
+        super.onPause();
+        //   animacionTitulo.cancel(true);
+
+        //    finish();
+
+    }
+
+    @Override
+    protected void onDestroy() {
+
+        avatarJugador.setBackground(null);
+        avatarJugador.setImageDrawable(null);
+//        palitrokesIV.setImageDrawable(null);
+        mediaPlayer = null;
+        System.gc();
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        Log.d(Constantes.TAG, "On resume");
+
+        // Iniciar música
+        bgm();
+        mediaPlayer.start();
+        animacionTimer.start();
+        //    animacionTitulo.setRunning(true);
+        // if (animacionTitulo.isCancelled()) animacionTitulo.executeOnExecutor(executorService);
+
+
+        signIn();
+
+        super.onResume();
+
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
+            if (jugador != null && jugador.getJugadorId() != null && userRef != null) {
+                jugador.setOnline(true);
+                jugador.setActualizado(System.currentTimeMillis() + "");
+                userRef.setValue(jugador);
+            }
+        }
+
+        //  changeImage.cancel();
+        mediaPlayer.stop();
+        finish();
+        // super.onBackPressed();
+
+    }
+
+    public void infoButton(View view) {
+        Log.d(Constantes.TAG, "Tocado info");
+        //  animacionTitulo.cancel(true);
+        animacionTimer.cancel();
+        Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
+        mediaPlayer.stop();
+        //  finish();
+        startActivity(infointent);
+
+
+    }
+
+
+    public void animacionPalitrokes() {
+/*  Quito esto porque come muchos recursos
+        // Añadir nubes en un Asynctask al layout del título
+        ImageView nube1 = findViewById(R.id.nube1);
+        ImageView nube2 = findViewById(R.id.nube2);
+        ImageView nube3 = findViewById(R.id.nube3);
+        nubeAdd(nube1);
+        nubeAdd(nube2);
+        nubeAdd(nube3);
+*/
+/*
+        // movidas para que ejecute todos los hilos simultaneamente
+        int processors = Runtime.getRuntime().availableProcessors();
+        executorService = Executors.newFixedThreadPool(processors);
+*/
+        // Cambiar la imagen del personaje cada tiempo en un asynctask
+        palitrokesIV = findViewById(R.id.palitrokesIV);
+
+
+        animacionTimer = new CountDownTimer(60000, 3000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                Random rnd = new Random();
+                String name = "pic" + (rnd.nextInt(116) + 34);
+                int resource = getResources().getIdentifier(name, "drawable", "com.game.palitrokes");
+                palitrokesIV.setImageDrawable(null);
+                palitrokesIV.setImageResource(resource);
+            }
+
+            @Override
+            public void onFinish() {
+                this.start();
+            }
+        };
+
+        animacionTimer.start();
+
+
+
+/*
+        animacionTitulo = new AnimacionTitulo();
+        animacionTitulo.recuperarImageView(getApplicationContext(), palitrokesIV);
+        animacionTitulo.executeOnExecutor(executorService);
+*/
+
+    }
+
+    public void favoritosToggle(View view) {
+        if (soloFavoritos) {
+            soloFavoritos = false;
+            favoritosBTN.setImageResource(R.drawable.corazon);
+        } else {
+            soloFavoritos = true;
+            favoritosBTN.setImageResource(R.drawable.corazonrojo);
+        }
+
+/*
+        // Refrescamos la base de datos si tenemos internet
+        if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
+            jugador.setActualizado(System.currentTimeMillis() + "");
+            userRef.setValue(jugador);
+        }
+*/
 
     }
 
@@ -383,11 +1136,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    // Cuando pulsamos el botón de Jugar Online hacemos esto ...
-    public void jugarOnline(View view) {
-
-
-        // Quitar el listener de los jugadores
+}
+/*
+      // Quitar el listener de los jugadores
       //  userRef.removeEventListener(jugadoresListener);
 
         //Subimos nuestro avatar a Firebase (Aquí es seguro que tenemos internet)
@@ -696,521 +1447,75 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-    }
 
+   // Cargar la lista de jugadores online
+        jugadoresListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
-    // Controlar que si cerramos la aplicación y el juegador tiene
-    //  asignado una sala, borrarlo de Firebase para que no se quede pillada la sala
+                jugadores.removeAll(jugadores);
 
-    @Override
-    protected void onStop() {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    Jugador jugadorTMP = snapshot.getValue(Jugador.class);
 
-        if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
-            if (jugador != null && userRef != null) {
-                jugador.setOnline(false);
-                jugador.setActualizado(System.currentTimeMillis() + "");
-                userRef.setValue(jugador);
-            }
-     /*       if (salaSeleccionada != null) {
-                limpiarSala(salaSeleccionada.getPartidaID());
-            }*/
-        }
-        //   animacionTitulo.cancel(true);
-        mediaPlayer.stop();
-
-        super.onStop();
-
-    }
-
-
-    //
-    // Aquí lanzamos el juego contra el ordenador (Móvil en este caso)
-    //
-    public void jugar(View view) {
-
-
-        // Ponemos al false el que el jugador está online para que no le tengan en cuenta para jugar en este modo
-        if (jugador != null) {
-            if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
-                jugador.setOnline(false);
-                jugador.setActualizado(System.currentTimeMillis() + "");
-                userRef.setValue(jugador);
-            }
-        } else {
-            jugador = new Jugador();
-        }
-
-        if (nickET.getText() != null) {
-
-            String nickName = nickET.getText().toString();
-            if (Utilidades.eliminarPalabrotas(nickName)) {
-                Toast.makeText(getApplicationContext(), (getString(R.string.palabrota)), Toast.LENGTH_LONG).show();
-                nickET.setText(getString(R.string.jugador));
-                nickName = getString(R.string.jugador);
-            }
-
-            jugador.setNickname(nickName);
-        }
-
-
-        SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
-
-        Intent intentvscom = new Intent(this, JuegoVsComActivity.class);
-        intentvscom.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-       // animacionTitulo.cancel(true);
-        animacionTimer.cancel();
-        mediaPlayer.stop();
-       // finish();
-        Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.START);
-        startActivity(intentvscom);
-
-
-    }
-
-    public void borrarJugadorSalaFirebase() {
-        // Si el jugador ya tenía partida asignada, la borramos de Firebase
-        if (!jugador.getPartida().equals("0")) {
-            if (jugador.getNumeroJugador() == 1) {
-                mDatabase.child("PARTIDAS").child(jugador.getPartida()).child("jugador1ID").setValue("0");
-                mDatabase.child("PARTIDAS").child(jugador.getPartida()).child("jugador1Ready").setValue(false);
-            } else {
-
-                mDatabase.child("PARTIDAS").child(jugador.getPartida()).child("jugador2ID").setValue("0");
-                mDatabase.child("PARTIDAS").child(jugador.getPartida()).child("jugador2Ready").setValue(false);
-            }
-
-        }
-    }
-
-
-    public void personalizarAvatar(View view) {
-
-        PopupMenu popup = new PopupMenu(this, view);
-        //Inflating the Popup using xml file
-        popup.getMenuInflater().inflate(R.menu.personaliza_avatar_menu, popup.getMenu());
-
-        //registering popup with OnMenuItemClickListener
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            public boolean onMenuItemClick(MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.foto_camara:
-                        tomarFoto();
-                        return true;
-                    case R.id.foto_galeria:
-                        seleccionarFoto();
-                        return true;
-                }
-                return true;
-            }
-        });
-
-        popup.show();//showing popup menu
-
-
-    }
-
-
-    public void crearSalas(View view) {
-
-        easterEgg++;
-        Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
-
-
-        if (easterEgg == 10) {
-
-            easterEgg = 0;
-            Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.MAGIA);
-            palitrokesIV.setImageDrawable(null);
-            palitrokesIV.setImageResource(R.drawable.pic149);
-            RotateAnimation rotate = new RotateAnimation(0, 360,
-                    Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
-                    0.5f);
-
-            rotate.setDuration(2000);
-            rotate.setRepeatCount(0);
-            nombreIV.startAnimation(rotate);
-
-
-        }
-
-        //  resetearRecords();
-/*
-        // Crear Salas en Firebase
-        for (int n = 0; n < 30; n++) {
-            mDatabase.child("PARTIDAS").child("Sala " + n).setValue(new Partida("Sala " + n, n, "0", "0", new Tablero(0), 0));
-        }
-*/
-    }
-
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        //super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if ((grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                && (grantResults[1] == PackageManager.PERMISSION_GRANTED)) {
-            Log.d("MIAPP", "ME ha concecido los permisos");
-        } else {
-            Log.d("MIAPP", "NO ME ha concecido los permisos");
-            Toast.makeText(this, R.string.mensaje_permisos, Toast.LENGTH_SHORT).show();
-            permisosOK = false;
-        }
-    }
-
-    public void tomarFoto() {
-
-        Log.d("MIAPP", "Quiere hacer una foto");
-        Intent intent_foto = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        this.photo_uri = Utilidades.crearFicheroImagen();
-        intent_foto.putExtra(MediaStore.EXTRA_OUTPUT, this.photo_uri);
-        Utilidades.desactivarModoEstricto();
-       // animacionTitulo.cancel(true);
-        animacionTimer.cancel();
-        mediaPlayer.stop();
-        startActivityForResult(intent_foto, Constantes.CODIGO_PETICION_HACER_FOTO);
-
-    }
-
-    public void seleccionarFoto() {
-        Log.d("MIAPP", "Quiere seleccionar una foto");
-       // animacionTitulo.cancel(true);
-        animacionTimer.cancel();
-        Intent intent_pide_foto = new Intent();
-        //intent_pide_foto.setAction(Intent.ACTION_PICK);//seteo la acción para galeria
-        intent_pide_foto.setAction(Intent.ACTION_GET_CONTENT);//seteo la acción
-        intent_pide_foto.setType("image/*");//tipo mime
-        mediaPlayer.stop();
-        startActivityForResult(intent_pide_foto, Constantes.CODIGO_PETICION_SELECCIONAR_FOTO);
-
-    }
-
-    private void setearImagenDesdeArchivo(int resultado, Intent data) {
-        switch (resultado) {
-            case RESULT_OK:
-                Log.d("MIAPP", "La foto ha sido seleccionada");
-
-                this.photo_uri = data.getData();//obtenemos la uri de la foto seleccionada
-                Log.d(Constantes.TAG, photo_uri.getPath());
-
-                InputStream imageStream = null;
-                try {
-                    imageStream = getContentResolver().openInputStream(this.photo_uri);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
-
-                selectedImage = Utilidades.getResizedBitmap(selectedImage, 128);// 400 is for example, replace with desired size
-
-                this.avatarJugador.setImageBitmap(selectedImage);
-
-
-                // De paso guardamos los datos del jugador (Nickname, id, victorias en el Shared Preferences)
-                if (jugador == null) {
-                    jugador = new Jugador();
-                }
-                if (!nickET.getText().toString().equals("")) {
-                    String nickName = nickET.getText().toString();
-                    if (Utilidades.eliminarPalabrotas(nickName)) {
-                        Toast.makeText(getApplicationContext(), (getString(R.string.palabrota)), Toast.LENGTH_LONG).show();
-                        nickET.setText(getString(R.string.jugador));
-                        nickName = getString(R.string.jugador);
+                   // chequear los jugadores por si se ha quedado pillado alguno 'online' por salir de la app mal, etc
+                    long tiempoonline = 0;
+                    if (jugadorTMP.getActualizado() != null){
+                        tiempoonline = System.currentTimeMillis() - Long.parseLong(jugadorTMP.getActualizado());
+                    }
+                    Log.d(Constantes.TAG, "Jugador que lleva " + (tiempoonline / 1000) + " segundos online");
+                    // si lleva mas de 10 minutos online, pero sin actualizar, cambiamos el estado a 'false'
+                    if (tiempoonline > (10 * 60 * 1000)) {
+                        jugadorTMP.setOnline(false);
+                        jugadoresRef.child(jugadorTMP.getJugadorId()).setValue(jugadorTMP);
                     }
 
-                    jugador.setNickname(nickName);
-                }
-                SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+                    if (jugadorTMP.isOnline()) {
+                            // Filtrar si solo queremos jugar con favoritos
+                            if (!jugador.getJugadorId().equals(jugadorTMP.getJugadorId())) {
+                            if (!soloFavoritos) {
+                            jugadores.add(jugadorTMP);
+                            } else {
+                            if (jugador.getFavoritosID() != null) {
+                            for (String favorito : jugador.getFavoritosID()) {
+                            if (favorito.equals(jugadorTMP.getJugadorId())) {
+                            jugadores.add(jugadorTMP);
+                            }
+                            }
+                            }
+                            }
+                            }
 
-                // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
-                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId(), Utilidades.bitmapToArrayBytes(selectedImage));
+                            }
+                            }
 
+                            // Mostramos en pantalla en número de jugadores disponibles online (o favoritos online)
+                            if (soloFavoritos) {
+                            onlineTV.setText((getString(R.string.amigosonline)) + jugadores.size());
+                            } else {
+                            onlineTV.setText((getString(R.string.jugonline)) + jugadores.size());
+                            }
 
-                break;
+                            if (jugadores.size() > 0) {
+                            botonOnline.setEnabled(true);
+                            favoritosBTN.setEnabled(true);
+                            } else {
+                            botonOnline.setEnabled(false);
+                            }
+                            botonOnline.setVisibility(View.VISIBLE);
+                            favoritosBTN.setVisibility(View.VISIBLE);
 
-            case RESULT_CANCELED:
-                Log.d("MIAPP", "La foto NO ha sido seleccionada canceló");
-                break;
-        }
-    }
+                            }
 
-    private void setearImagenDesdeCamara(int resultado, Intent intent) {
-        switch (resultado) {
-            case RESULT_OK:
-                Log.d("MIAPP", "Tiró la foto bien");
-
-                InputStream imageStream = null;
-                try {
-                    imageStream = getContentResolver().openInputStream(this.photo_uri);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-
-
-                // De paso guardamos los datos del jugador (Nickname, id, victorias en el Shared Preferences)
-                if (jugador == null) {
-                    jugador = new Jugador();
-                }
-                if (!nickET.getText().toString().equals("")) {
-                    String nickName = nickET.getText().toString();
-                    if (Utilidades.eliminarPalabrotas(nickName)) {
-                        Toast.makeText(getApplicationContext(), (getString(R.string.palabrota)), Toast.LENGTH_LONG).show();
-                        nickET.setText(getString(R.string.jugador));
-                        nickName = getString(R.string.jugador);
-                    }
-
-                    jugador.setNickname(nickName);
-                }
-                SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
-
-
-                Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
-                selectedImage = Utilidades.getResizedBitmap(selectedImage, 128);// 400 is for example, replace with desired size
-                this.avatarJugador.setImageBitmap(selectedImage);
-
-                // Guardamos una copia del archivo en el dispositivo para utilizarlo mas tarde
-                Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId(), Utilidades.bitmapToArrayBytes(selectedImage));
-
-
-                // Actualizamos la galería
-                sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, photo_uri));
-                break;
-            case RESULT_CANCELED:
-                Log.d("MIAPP", "Canceló la foto");
-                break;
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        //super.onActivityResult(requestCode, resultCode, data);//no llamamos al padre
-        if (requestCode == Constantes.CODIGO_PETICION_SELECCIONAR_FOTO) {
-            setearImagenDesdeArchivo(resultCode, data);
-        } else if (requestCode == Constantes.CODIGO_PETICION_HACER_FOTO) {
-            setearImagenDesdeCamara(resultCode, data);
-        }
-    }
-
-
-    private void resetearRecords() {
-        // Crear Records en Firebase
-        for (int n = 0; n < 10; n++) {
-            mDatabase.child("RECORDS").child("" + n).setValue(new Records("adfadfadfasdfadf", "Jugador " + n, 0, n));
-        }
-    }
-
-    private void limpiarSala(String sala) {
-        // Dejamos la sala vacía para poder reusarla
-        Partida partida = new Partida();
-        partida.setPartidaID(sala);
-        partida.setJugador1ID("0");
-        partida.setJugador2ID("0");
-        partida.setGanador(0);
-        partida.setJugador2Ready(false);
-        partida.setJugador1Ready(false);
-        partida.setJugando(false);
-
-        partida.setTurno(1);
-        mDatabase.child("PARTIDAS").child(sala).setValue(partida);
-    }
-
-
-    private void pausa(int tiempo) {
-        // Dejamos una pausa para que se actualice la sala
-        try {
-            Thread.sleep(tiempo);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    private void recuperarDatosSharedPreferences() {
-        // Recuperamos datos del Shared Preferences
-        // Cargamos datos del jugador
-        jugador = SharedPrefs.getJugadorPrefs(getApplicationContext());
-
-        if (jugador.isFirstRun()) {
-            // La primera vez que instalamos la aplicación lanzamos la actividad de Info
-            // Para explicar el juego
-            Log.d(Constantes.TAG, "Lanzar info");
-            jugador.setFirstRun(false);
-            SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
-//            Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId(), Utilidades.bitmapToArrayBytes());
-          //  animacionTitulo.cancel(true);
-            animacionTimer.cancel();
-            Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
-            //mediaPlayer.stop();
-        //    finish();
-            startActivity(infointent);
-
+@Override
+public void onCancelled(@NonNull DatabaseError databaseError) {
 
         }
-
-        // Seteamos la imagen del avatar con el archivo guardado localmente en el dispositivo
-        // Este archivo se actualiza cada vez que lo personalizamos con una imagen de la galería o la cámara
-        Bitmap recuperaImagen = Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId());
-        if (recuperaImagen != null) {
-            avatarJugador.setImageBitmap(recuperaImagen);
-        } else {
-            avatarJugador.setImageResource(R.drawable.picture);
-        }
-        // Mostramos el nick del jugador y las victorias
-        nickET.setText(jugador.getNickname());
-        victoriasTV.setText((getString(R.string.victorias2)) + jugador.getVictorias());
-
-        // Cargamos records y los mostramos
-        records = SharedPrefs.getRecordsPrefs(getApplicationContext());
-        adapter = new RecordsAdapter(getApplicationContext(), records);
-        recordsRecycler.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
-
-    }
-
-
-    @Override
-    protected void onPause() {
-
-        if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
-            if (jugador != null && jugador.getJugadorId() != null && userRef != null) {
-                jugador.setOnline(false);
-                jugador.setActualizado(System.currentTimeMillis() + "");
-                userRef.setValue(jugador);
-            }
-        }
-        mediaPlayer.stop();
-
-
-        super.onPause();
-     //   animacionTitulo.cancel(true);
-
-      //    finish();
-
-    }
-
-    @Override
-    protected void onDestroy() {
-
-        avatarJugador.setBackground(null);
-        avatarJugador.setImageDrawable(null);
-//        palitrokesIV.setImageDrawable(null);
-        mediaPlayer = null;
-        System.gc();
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onResume() {
-        Log.d(Constantes.TAG, "On resume");
-
-        // Iniciar música
-        bgm();
-        mediaPlayer.start();
-        animacionTimer.start();
-    //    animacionTitulo.setRunning(true);
-       // if (animacionTitulo.isCancelled()) animacionTitulo.executeOnExecutor(executorService);
-
-
-        signIn();
-
-        super.onResume();
-
-    }
-
-
-
-    @Override
-    public void onBackPressed() {
-        if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
-            if (jugador != null && jugador.getJugadorId() != null && userRef != null) {
-                jugador.setOnline(true);
-                jugador.setActualizado(System.currentTimeMillis() + "");
-                userRef.setValue(jugador);
-            }
-        }
-
-        //  changeImage.cancel();
-        mediaPlayer.stop();
-        finish();
-        // super.onBackPressed();
-
-    }
-
-    public void infoButton(View view) {
-        Log.d(Constantes.TAG, "Tocado info");
-      //  animacionTitulo.cancel(true);
-        animacionTimer.cancel();
-        Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
-        mediaPlayer.stop();
-      //  finish();
-        startActivity(infointent);
-
-
-    }
-
-
-    public void animacionPalitrokes() {
-/*  Quito esto porque come muchos recursos
-        // Añadir nubes en un Asynctask al layout del título
-        ImageView nube1 = findViewById(R.id.nube1);
-        ImageView nube2 = findViewById(R.id.nube2);
-        ImageView nube3 = findViewById(R.id.nube3);
-        nubeAdd(nube1);
-        nubeAdd(nube2);
-        nubeAdd(nube3);
-*/
-/*
-        // movidas para que ejecute todos los hilos simultaneamente
-        int processors = Runtime.getRuntime().availableProcessors();
-        executorService = Executors.newFixedThreadPool(processors);
-*/
-        // Cambiar la imagen del personaje cada tiempo en un asynctask
-        palitrokesIV = findViewById(R.id.palitrokesIV);
-
-
-         animacionTimer = new CountDownTimer(60000, 3000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                Random rnd = new Random();
-                String name = "pic" + (rnd.nextInt(116) + 34);
-                int resource = getResources().getIdentifier(name, "drawable", "com.game.palitrokes");
-                palitrokesIV.setImageDrawable(null);
-                palitrokesIV.setImageResource(resource);
-            }
-
-            @Override
-            public void onFinish() {
-                this.start();
-            }
         };
-
-        animacionTimer.start();
-
+        jugadoresRef.addValueEventListener(jugadoresListener);
 
 
-/*
-        animacionTitulo = new AnimacionTitulo();
-        animacionTitulo.recuperarImageView(getApplicationContext(), palitrokesIV);
-        animacionTitulo.executeOnExecutor(executorService);
-*/
-
-    }
-
-    public void favoritosToggle(View view) {
-        if (soloFavoritos) {
-            soloFavoritos = false;
-            favoritosBTN.setImageResource(R.drawable.corazon);
-        } else {
-            soloFavoritos = true;
-            favoritosBTN.setImageResource(R.drawable.corazonrojo);
-        }
 
 
-        // Refrescamos la base de datos si tenemos internet
-        if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
-            jugador.setActualizado(System.currentTimeMillis() + "");
-            userRef.setValue(jugador);
-        }
 
-    }
-
-
-}
+ */
