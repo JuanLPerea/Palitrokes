@@ -349,7 +349,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 }
                 Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
             }
-
+            partida.setJugador1ID("OCUPADA");
+            partida.setJugador2ID("OCUPADA");
             salaRef.setValue(partida);
         }
 
@@ -412,6 +413,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
                 // Eliminamos los palos seleccionados del Tablero
                 partida.getTablero().eliminarSeleccionados();
+                partida.setJugador1ID("OCUPADA");
+                partida.setJugador2ID("OCUPADA");
                 salaRef.setValue(partida);
                 Log.d(Constantes.TAG, "Aceptar jugada");
 
@@ -420,6 +423,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
                     //    Toast.makeText(this, "¡¡Has Ganado!!", Toast.LENGTH_LONG).show();
                     partida.setGanador(jugador.getNumeroJugador());
+                    partida.setJugador1ID("OCUPADA");
+                    partida.setJugador2ID("OCUPADA");
                     salaRef.setValue(partida);
 
                 } else {
@@ -462,6 +467,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                     // Toast.makeText(this, "Lo siento, si no haces ninguna jugada, pierdes" , Toast.LENGTH_LONG).show();
                     partida.setGanador(rival.getNumeroJugador());
                     // Notificamos el ganador
+                    partida.setJugador1ID("OCUPADA");
+                    partida.setJugador2ID("OCUPADA");
                     salaRef.setValue(partida);
                 } else {
                     okJugada(null);
@@ -470,6 +477,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 actualizarViewsCambioTurno();
 
                 // Cambiamos el turno en Firebase
+                partida.setJugador1ID("OCUPADA");
+                partida.setJugador2ID("OCUPADA");
                 salaRef.setValue(partida);
 
             }
@@ -478,6 +487,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             partida.turnoToggle();
             actualizarViewsCambioTurno();
             // Cambiamos el turno en Firebase
+            partida.setJugador1ID("OCUPADA");
+            partida.setJugador2ID("OCUPADA");
             salaRef.setValue(partida);
         }
 
@@ -488,7 +499,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         limpiarSala();
-      jugador.setOnline(false);
+        jugador.setOnline(true);
         jugador.setActualizado(System.currentTimeMillis() + "");
         jugadorRef.setValue(jugador);
 
@@ -514,6 +525,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         // si salimos, abandonamos la partida
         finTiempo = true;
         partida.setGanador(rival.getNumeroJugador());
+        partida.setJugador1ID("OCUPADA");
+        partida.setJugador2ID("OCUPADA");
         salaRef.setValue(partida);
         finJuego();
     }
@@ -608,6 +621,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         // Si bloqueamos es como abandonar la partida
         finTiempo = true;
         partida.setGanador(rival.getNumeroJugador());
+        partida.setJugador1ID("OCUPADA");
+        partida.setJugador2ID("OCUPADA");
         salaRef.setValue(partida);
         finJuego();
 

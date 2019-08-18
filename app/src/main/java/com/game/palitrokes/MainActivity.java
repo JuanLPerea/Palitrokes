@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Sonidos y BGM
         Sonidos.getInstance(getApplicationContext());
-        bgm();
+    //    bgm();
 
 
         // Referencias a las vistas
@@ -166,8 +166,7 @@ public class MainActivity extends AppCompatActivity {
         // Recuperamos los datos del Shared Preferences
         recuperarDatosSharedPreferences();
 
-        // Autenticarnos
-        signIn();
+
 
 
     }
@@ -389,7 +388,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         // Quitar el listener de los jugadores
-        userRef.removeEventListener(jugadoresListener);
+      //  userRef.removeEventListener(jugadoresListener);
 
         //Subimos nuestro avatar a Firebase (Aquí es seguro que tenemos internet)
         SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
@@ -712,9 +711,9 @@ public class MainActivity extends AppCompatActivity {
                 jugador.setActualizado(System.currentTimeMillis() + "");
                 userRef.setValue(jugador);
             }
-            if (salaSeleccionada != null) {
+     /*       if (salaSeleccionada != null) {
                 limpiarSala(salaSeleccionada.getPartidaID());
-            }
+            }*/
         }
         //   animacionTitulo.cancel(true);
         mediaPlayer.stop();
@@ -1039,7 +1038,7 @@ public class MainActivity extends AppCompatActivity {
           //  animacionTitulo.cancel(true);
             animacionTimer.cancel();
             Intent infointent = new Intent(getApplicationContext(), InfoActivity.class);
-            mediaPlayer.stop();
+            //mediaPlayer.stop();
         //    finish();
             startActivity(infointent);
 
@@ -1077,7 +1076,7 @@ public class MainActivity extends AppCompatActivity {
                 userRef.setValue(jugador);
             }
         }
-     //   mediaPlayer.stop();
+        mediaPlayer.stop();
 
 
         super.onPause();
@@ -1109,7 +1108,9 @@ public class MainActivity extends AppCompatActivity {
     //    animacionTitulo.setRunning(true);
        // if (animacionTitulo.isCancelled()) animacionTitulo.executeOnExecutor(executorService);
 
+
         signIn();
+
         super.onResume();
 
     }

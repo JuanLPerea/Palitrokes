@@ -517,6 +517,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
             SharedPrefs.updateRecordsPrefs(getApplicationContext(), new Records(jugador.getJugadorId(), jugador.getNickname(), jugador.getVictorias(), partida.getLevel()));
             SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+
             finish();
             // Lanzamos el intent del MainActivity
           //  startActivity(volverIntent);
@@ -567,12 +568,11 @@ public class JuegoVsComActivity extends AppCompatActivity {
     protected void onStop() {
         cronometro1.cancel();
         cronometro2.cancel();
-        cronometro1 = null;
-        cronometro2 = null;
+      //  cronometro1 = null;
+      //  cronometro2 = null;
         avatarJ2.setImageDrawable(null);
         avatarJ1.setImageDrawable(null);
         linearBase = null;
-        System.gc();
 
         if (jugadaComTimer != null) {
             jugadaComTimer.cancel();

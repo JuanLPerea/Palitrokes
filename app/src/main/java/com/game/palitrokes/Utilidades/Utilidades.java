@@ -114,12 +114,13 @@ public class Utilidades {
             FileInputStream fileInputStream =
                     new FileInputStream(context.getFilesDir().getPath() + "/" + archivo + ".jpg");
 
+            /*
             BitmapFactory.Options options = new BitmapFactory.Options();
             options.inSampleSize = 3;
             options.inTempStorage = new byte[16 * 1024];
             options.inPurgeable = true;
-
-            bitmap = BitmapFactory.decodeStream(fileInputStream, null, options);
+*/
+            bitmap = BitmapFactory.decodeStream(fileInputStream);
         } catch (IOException io) {
             io.printStackTrace();
         }
