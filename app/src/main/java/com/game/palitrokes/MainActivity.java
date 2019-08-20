@@ -67,7 +67,6 @@ import java.util.concurrent.ExecutorService;
 /* TODO Adaptar logo en el título a pantallas grandes
         El avatar no se cambia correctamente cuando ya hemos elegido uno
         Error al bloquear el dispositivo
-        Juego online, no reconoce salas al volver de otro juego online
 
 */
 
@@ -100,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
     private List<Records> records;
     private List<Partida> partidas;
     private Partida partida;
-    private ValueEventListener salaListener;
     private ValueEventListener partidasListener;
     private ValueEventListener recordsListener;
     private ExecutorService executorService;
@@ -122,6 +120,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageView avatarRival;
     private ImageButton favoritoAdd;
     private Button readyBTN;
+    private boolean rivalEncontrado;
+    private Partida partidaActualizacion;
 
 
     @Override
@@ -167,12 +167,16 @@ public class MainActivity extends AppCompatActivity {
         // EasterEgg
         easterEgg = 0;
 
+        // Flag para detectar si tenemos rival
+        rivalEncontrado = false;
+
         // Animacion del logo
         animacionPalitrokes();
 
         //Lista de partidas disponibles
         partidas = new ArrayList<>();
         partida = null;
+        partidaActualizacion = new Partida();
 
         // Recycler View para los Records
         records = new ArrayList<>();
@@ -243,17 +247,6 @@ public class MainActivity extends AppCompatActivity {
         userRef = mDatabase.child("USUARIOS").child(currentUser.getUid());
         partidasRef = mDatabase.child("PARTIDAS");
         jugadoresRef = mDatabase.child("USUARIOS");
-
-        /*
-        // Si volvemos de jugar online limpiamos la sala por si acaso
-        if (salaAnterior != null) {
-            Log.d(Constantes.TAG, "Ha vuelto de otro intent " + salaAnterior);
-            pausa(1000);
-            //limpiarSala(salaAnterior);
-            pausa(1000);
-        }
-*/
-
 
         // Cargamos los datos del usuario o los creamos si no existen (La primera vez que instalamos la APP)
         ValueEventListener userListener = new ValueEventListener() {
@@ -379,6 +372,20 @@ public class MainActivity extends AppCompatActivity {
             if (!partida.getJugador1ID().equals("0") && !partida.getJugador2ID().equals("0")) {
                 // Encontrado rival, desactivamos progressbar
                 progressBar.setVisibility(View.INVISIBLE);
+                rivalEncontrado = true;
+                // Seteamos el botón del corazón dependiendo si es amigo o no
+                favoritoAdd.setVisibility(View.VISIBLE);
+                if (jugador.getNumeroJugador() == 1) {
+                    if (jugador.getFavoritosID().contains(partida.getJugador2ID())) {
+                        favoritoAdd.setImageResource(R.drawable.corazonrojo);
+                    }
+                } else {
+                    if (jugador.getFavoritosID().contains(partida.getJugador1ID())) {
+                        favoritoAdd.setImageResource(R.drawable.corazonrojo);
+                    }
+                }
+
+
                 // Y descargamos imagen
                 if (jugador.getNumeroJugador() == 1) {
                     UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), partida.getJugador2ID(), avatarRival);
@@ -388,6 +395,8 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 avatarRival.setImageResource(R.drawable.search);
                 progressBar.setVisibility(View.VISIBLE);
+                rivalEncontrado = false;
+                favoritoAdd.setVisibility(View.INVISIBLE);
             }
 
             // Actualizar imagen 'preparado' y mensajes
@@ -588,8 +597,56 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        favoritoAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (rivalEncontrado) {
+                    amigosSwitch();
+                }
+            }
+        });
+
     }
 
+    private void amigosSwitch() {
+
+        Log.d(Constantes.TAG, "Favoritos");
+        if (jugador.getFavoritosID() == null)
+            jugador.setFavoritosID(new ArrayList<String>());
+
+
+        if (jugador.getNumeroJugador() == 1) {
+            // Si el rival encontrado ya lo teníamos como favorito, lo borramos
+            if (jugador.getFavoritosID().contains(partida.getJugador2ID())) {
+                jugador.getFavoritosID().remove(partida.getJugador2ID());
+                Toast.makeText(MainActivity.this, R.string.amigo_del, Toast.LENGTH_LONG).show();
+                favoritoAdd.setImageResource(R.drawable.corazon);
+            } else {
+                // Si no era nuestro amigo, lo añadimos
+                jugador.getFavoritosID().add(partida.getJugador2ID());
+                Toast.makeText(MainActivity.this, R.string.amigo_add, Toast.LENGTH_LONG).show();
+                favoritoAdd.setImageResource(R.drawable.corazonrojo);
+            }
+        } else {
+            // Si el rival encontrado ya lo teníamos como favorito, lo borramos
+            if (jugador.getFavoritosID().contains(partida.getJugador1ID())) {
+                jugador.getFavoritosID().remove(partida.getJugador1ID());
+                Toast.makeText(MainActivity.this, R.string.amigo_del, Toast.LENGTH_LONG).show();
+                favoritoAdd.setImageResource(R.drawable.corazon);
+            } else {
+                // Si no era nuestro amigo, lo añadimos
+                jugador.getFavoritosID().add(partida.getJugador1ID());
+                Toast.makeText(MainActivity.this, R.string.amigo_add, Toast.LENGTH_LONG).show();
+                favoritoAdd.setImageResource(R.drawable.corazonrojo);
+            }
+        }
+
+        // Actualizamos la BB.DD.
+        jugador.setActualizado(System.currentTimeMillis() + "");
+        userRef.setValue(jugador);
+
+
+    }
 
     // ------------------------------------------------------------------------------------------------------------------
 
@@ -1103,13 +1160,14 @@ public class MainActivity extends AppCompatActivity {
             favoritosBTN.setImageResource(R.drawable.corazonrojo);
         }
 
-/*
         // Refrescamos la base de datos si tenemos internet
         if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
-            jugador.setActualizado(System.currentTimeMillis() + "");
-            userRef.setValue(jugador);
+            partidaActualizacion.setPartidaID(System.currentTimeMillis() + "");
+            partidaActualizacion.setJugador1ID("SALA ACTUALIZACIONES");
+            partidaActualizacion.setJugador2ID("SALA ACTUALIZACIONES");
+            partidasRef.child("SALA1566320669253").setValue(partidaActualizacion);
         }
-*/
+
 
     }
 

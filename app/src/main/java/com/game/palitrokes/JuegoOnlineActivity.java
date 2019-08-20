@@ -58,6 +58,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
     private CountDownTimer cronometro1;
     private CountDownTimer cronometro2;
     private boolean finTiempo;
+    private boolean abandono;
     private Sonidos sonidos;
     private int ultimoTurno = 0;
 
@@ -101,6 +102,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         });
 
         finTiempo = false;
+        abandono = false;
 
         // Cronometro para el jugador 1
         cronometro1 = new CountDownTimer(Constantes.TIEMPOTURNO, Constantes.TIEMPOACTUALIZACRONO) {
@@ -144,7 +146,6 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         jugador = new Jugador();
         partida = new Partida();
 
-
         // referencias Firebase
         mDatabase = FirebaseDatabase.getInstance().getReference();
         mAuth = FirebaseAuth.getInstance();
@@ -166,6 +167,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 rival.setVictorias(rivalTMP.getVictorias());
                 rival.setNickname(rivalTMP.getNickname());
                 rival.setNumeroJugador(rivalTMP.getNumeroJugador());
+                rival.setJugadorId(rivalTMP.getJugadorId());
+                rival.setFavoritosID(rivalTMP.getFavoritosID());
                 actualizarVistaJugador(rival);
 
                 if (rival.getNumeroJugador() == 1) {
@@ -195,6 +198,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 jugador.setVictorias(jugadorTMP2.getVictorias());
                 jugador.setNickname(jugadorTMP2.getNickname());
                 jugador.setNumeroJugador(jugadorTMP2.getNumeroJugador());
+                jugador.setJugadorId(jugadorTMP2.getJugadorId());
+                jugador.setFavoritosID(jugadorTMP2.getFavoritosID());
 
                 Log.d(Constantes.TAG, "Jugador: " + jugador.getNickname() + " " + jugador.getJugadorId());
                 actualizarVistaJugador(jugador);
@@ -546,7 +551,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
     public void onBackPressed() {
         //super.onBackPressed();
         // si salimos, abandonamos la partida
-        finTiempo = true;
+        abandono = true;
         partida.setGanador(rival.getNumeroJugador());
         Log.d(Constantes.TAG, "SET ON BACK PRESSED");
         salaRef.setValue(partida);
@@ -568,7 +573,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
         String resultado = "";
 
-        if (finTiempo) {
+        if (finTiempo || abandono) {
             resultado = getString(R.string.abandono);
         }
 
@@ -633,7 +638,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         // Si bloqueamos es como abandonar la partida
-        finTiempo = true;
+        abandono = true;
         partida.setGanador(rival.getNumeroJugador());
         Log.d(Constantes.TAG, "SET ON PAUSE");
         salaRef.setValue(partida);
