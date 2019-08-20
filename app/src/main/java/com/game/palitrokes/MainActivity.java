@@ -385,6 +385,9 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), partida.getJugador1ID(), avatarRival);
                 }
+            } else {
+                avatarRival.setImageResource(R.drawable.search);
+                progressBar.setVisibility(View.VISIBLE);
             }
 
             // Actualizar imagen 'preparado' y mensajes
@@ -430,21 +433,25 @@ public class MainActivity extends AppCompatActivity {
 
             // Si los 2 jugadores están preparados, lanzamos el juego
             if (partida.isJugador1Ready() && partida.isJugador2Ready()) {
-              //  partida.setJugando(true);
-              //  partida.setGanador(0);
-              //  partidasRef.child(partida.getPartidaID()).setValue(partida);
+             /*   partida.setJugando(true);
+                partida.setGanador(0);
+                partidasRef.child(partida.getPartidaID()).setValue(partida);
+             */
+
+                // Quitar el listener de las partidas
+                partidasRef.removeEventListener(partidasListener);
 
                 // Los 2 estamos listos. Lanzar Intent de juego
                 Intent jugar = new Intent(jugarOnline.getContext(), JuegoOnlineActivity.class);
                 jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                 jugar.putExtra(Constantes.PARTIDA, partida.getPartidaID());
 
-                if (jugador.getNumeroJugador() == 2) {
-                    jugar.putExtra(Constantes.RIVALID, partida.getJugador1ID());
-                    jugar.putExtra(Constantes.JUGADORID, partida.getJugador2ID());
-                } else {
+                if (jugador.getNumeroJugador() == 1) {
                     jugar.putExtra(Constantes.RIVALID, partida.getJugador2ID());
                     jugar.putExtra(Constantes.JUGADORID, partida.getJugador1ID());
+                } else {
+                    jugar.putExtra(Constantes.RIVALID, partida.getJugador1ID());
+                    jugar.putExtra(Constantes.JUGADORID, partida.getJugador2ID());
                 }
 
                 //animacionTitulo.cancel(true);
@@ -467,6 +474,9 @@ public class MainActivity extends AppCompatActivity {
         // Tenemos un listener que apunte a las salas siempre escuchando
         // Creamos la sala cuando el jugador da al botón de jugar online
         // O si hay otra persona esperando rival (Ya hay sala creada con hueco libre), lo ocupamos
+        //Subimos nuestro avatar a Firebase (Aquí es seguro que tenemos internet)
+        SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+        UtilsFirebase.subirImagenFirebase(mAuth.getCurrentUser().getUid(), Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId()));
 
         jugarOnline.show();
 
@@ -510,6 +520,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void dialogoJuegoOnline() {
+
         // Dialog jugar online
         jugarOnline = new Dialog(this);
         jugarOnline.setContentView(R.layout.dialog_jugar);

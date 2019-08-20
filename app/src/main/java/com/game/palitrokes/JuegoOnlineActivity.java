@@ -139,10 +139,11 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             colores[n] = Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256));
         }
 
-        // creamos un rival vacío
+        // creamos objetos
         rival = new Jugador();
         jugador = new Jugador();
         partida = new Partida();
+
 
         // referencias Firebase
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -161,7 +162,10 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         rivalListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                rival = dataSnapshot.getValue(Jugador.class);
+                Jugador rivalTMP = dataSnapshot.getValue(Jugador.class);
+                rival.setVictorias(rivalTMP.getVictorias());
+                rival.setNickname(rivalTMP.getNickname());
+                rival.setNumeroJugador(rivalTMP.getNumeroJugador());
                 actualizarVistaJugador(rival);
 
                 if (rival.getNumeroJugador() == 1) {
@@ -171,24 +175,6 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 }
                 Log.d(Constantes.TAG, "Rival: " + rival.getNickname() + " " + rival.getJugadorId());
 
-                // Recuperar datos del jugador
-                // Y jugar
-                jugadorRef = mDatabase.child("USUARIOS").child(jugador.getJugadorId());
-                jugadorListener = new ValueEventListener() {
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                        jugador = dataSnapshot.getValue(Jugador.class);
-                        Log.d(Constantes.TAG, "Jugador: " + jugador.getNickname() + " " + jugador.getJugadorId());
-                        actualizarVistaJugador(jugador);
-                        jugar(salaJuego);
-                    }
-
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError databaseError) {
-                        Log.d(Constantes.TAG, "No se ha podido recuperar el jugador de la BBDD " + databaseError);
-                    }
-                };
-                jugadorRef.addListenerForSingleValueEvent(jugadorListener);
 
             }
 
@@ -199,7 +185,29 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         };
         rivalRef.addListenerForSingleValueEvent(rivalListener);
 
+        // Recuperar datos del jugador
+        // Y jugar
+        jugadorRef = mDatabase.child("USUARIOS").child(jugador.getJugadorId());
+        jugadorListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                Jugador jugadorTMP2 = dataSnapshot.getValue(Jugador.class);
+                jugador.setVictorias(jugadorTMP2.getVictorias());
+                jugador.setNickname(jugadorTMP2.getNickname());
+                jugador.setNumeroJugador(jugadorTMP2.getNumeroJugador());
 
+                Log.d(Constantes.TAG, "Jugador: " + jugador.getNickname() + " " + jugador.getJugadorId());
+                actualizarVistaJugador(jugador);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.d(Constantes.TAG, "No se ha podido recuperar el jugador de la BBDD " + databaseError);
+            }
+        };
+        jugadorRef.addListenerForSingleValueEvent(jugadorListener);
+
+        jugar();
 
     }
 
@@ -214,11 +222,13 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 nickJ2.setText(jugadorView.getNickname());
                 winsJ2.setText((getString(R.string.victorias2)) + jugadorView.getVictorias() + "");
             }
+        } else {
+            Log.d(Constantes.TAG, "Actualizar vista jugador null");
         }
 
     }
 
-    private void jugar(String salaJuego) {
+    private void jugar() {
         // Recuperar la partida
         // Establecemos un listener para la sala de juego
         // La pantalla se actualizará de acuerdo con los datos recuperados de Firebase
@@ -226,7 +236,6 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         // gestionaremos el juego de acuerdo con esto.
         // Cada vez que hay un cambio en la BBDD se lanza este evento...
         //
-
         cronometro1.start();
        // partida = null;
         ultimoTurno = 0;
@@ -235,7 +244,14 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         salaListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                partida = dataSnapshot.getValue(Partida.class);
+                Partida partidaTMP = dataSnapshot.getValue(Partida.class);
+                partida.setGanador(partidaTMP.getGanador());
+                partida.setTurno(partidaTMP.getTurno());
+                partida.setJugador1ID(partidaTMP.getJugador1ID());
+                partida.setJugador2ID(partidaTMP.getJugador2ID());
+                partida.setNumeroSala(partidaTMP.getNumeroSala());
+                partida.setPartidaID(partidaTMP.getPartidaID());
+                partida.setTablero(partidaTMP.getTablero());
                 // Los palitrokes se actualizan en la pantalla cuando hay algún
                 // cambio en la BB.DD. y por lo tanto se lanza este Listener
                 Log.d(Constantes.TAG, "DataChange Jugador: " + jugador.getNickname());
@@ -362,8 +378,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 }
                 Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
             }
-            partida.setJugador1ID("OCUPADA");
-            partida.setJugador2ID("OCUPADA");
+
+            Log.d(Constantes.TAG, "SET SELECCIONAR PALO");
             salaRef.setValue(partida);
         }
 
@@ -389,7 +405,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 tiempoJ1.setVisibility(View.VISIBLE);        //Tiempo del jugador 1 visible
                 tiempoJ2.setVisibility(View.INVISIBLE);      //Tiempo del jugador 2 invisible
                 // Seamos el jugador 1 o el 2 el crono lo tiene el jugador 1, porque es su turno
-                cronometro2.cancel();
+              //  cronometro2.cancel();
                 cronometro1.start();
                 break;
             case 2:
@@ -407,7 +423,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 tiempoJ1.setVisibility(View.INVISIBLE);        //Tiempo del jugador 1 INvisible
                 tiempoJ2.setVisibility(View.VISIBLE);      //Tiempo del jugador 2 invisible
                 // Seamos el jugador 1 o el 2 el crono lo tiene el jugador 1, porque es su turno
-                cronometro1.cancel();
+             //  cronometro1.cancel();
                 cronometro2.start();
                 break;
         }
@@ -426,18 +442,15 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
                 // Eliminamos los palos seleccionados del Tablero
                 partida.getTablero().eliminarSeleccionados();
-                partida.setJugador1ID("OCUPADA");
-                partida.setJugador2ID("OCUPADA");
+                Log.d(Constantes.TAG, "SET OK JUGADA");
                 salaRef.setValue(partida);
-                Log.d(Constantes.TAG, "Aceptar jugada");
 
                 // comprobamos, si solo queda uno, hemos ganado!!
                 if (partida.getTablero().palosTotales() == 1) {
 
                     //    Toast.makeText(this, "¡¡Has Ganado!!", Toast.LENGTH_LONG).show();
                     partida.setGanador(jugador.getNumeroJugador());
-                    partida.setJugador1ID("OCUPADA");
-                    partida.setJugador2ID("OCUPADA");
+                    Log.d(Constantes.TAG, "SET HAS GANADO");
                     salaRef.setValue(partida);
 
                 } else {
@@ -480,8 +493,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                     // Toast.makeText(this, "Lo siento, si no haces ninguna jugada, pierdes" , Toast.LENGTH_LONG).show();
                     partida.setGanador(rival.getNumeroJugador());
                     // Notificamos el ganador
-                    partida.setJugador1ID("OCUPADA");
-                    partida.setJugador2ID("OCUPADA");
+                    Log.d(Constantes.TAG, "SET NO HA SELECCIONADO NADA");
                     salaRef.setValue(partida);
                 } else {
                     okJugada(null);
@@ -490,8 +502,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 actualizarViewsCambioTurno();
 
                 // Cambiamos el turno en Firebase
-                partida.setJugador1ID("OCUPADA");
-                partida.setJugador2ID("OCUPADA");
+                Log.d(Constantes.TAG, "SET CAMBIO DE TURNO 1");
                 salaRef.setValue(partida);
 
             }
@@ -500,8 +511,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             partida.turnoToggle();
             actualizarViewsCambioTurno();
             // Cambiamos el turno en Firebase
-            partida.setJugador1ID("OCUPADA");
-            partida.setJugador2ID("OCUPADA");
+            Log.d(Constantes.TAG, "SET CAMBIO DE TURNO 2");
             salaRef.setValue(partida);
         }
 
@@ -538,8 +548,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         // si salimos, abandonamos la partida
         finTiempo = true;
         partida.setGanador(rival.getNumeroJugador());
-        partida.setJugador1ID("OCUPADA");
-        partida.setJugador2ID("OCUPADA");
+        Log.d(Constantes.TAG, "SET ON BACK PRESSED");
         salaRef.setValue(partida);
         finJuego();
     }
@@ -554,8 +563,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         cronometro1.cancel();
         cronometro2.cancel();
 
-        Intent volverIntent = new Intent(this, MainActivity.class);
-        volverIntent.putExtra("SALA_ANTERIOR", partida.getPartidaID());
+     //   Intent volverIntent = new Intent(this, MainActivity.class);
+    //    volverIntent.putExtra("SALA_ANTERIOR", partida.getPartidaID());
 
         String resultado = "";
 
@@ -598,16 +607,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
     }
 
     private void limpiarSala() {
-        // Dejamos la sala vacía para poder reusarla
-        partida.setJugador1ID("0");
-        partida.setJugador2ID("0");
-        partida.setGanador(0);
-        partida.setJugador2Ready(false);
-        partida.setJugador1Ready(false);
-        partida.setJugando(false);
-        partida.setTablero(new Tablero(0));
-        partida.setTurno(1);
-        salaRef.setValue(partida);
+        // eliminamos la partida
+        salaRef.removeValue();
 
     }
 
@@ -628,19 +629,18 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         } while (findViewById(resultado) != null);
         return resultado;
     }
-/*
+
     @Override
     protected void onPause() {
         // Si bloqueamos es como abandonar la partida
         finTiempo = true;
         partida.setGanador(rival.getNumeroJugador());
-        partida.setJugador1ID("OCUPADA");
-        partida.setJugador2ID("OCUPADA");
+        Log.d(Constantes.TAG, "SET ON PAUSE");
         salaRef.setValue(partida);
         finJuego();
 
         super.onPause();
     }
 
-   */
+
 }
