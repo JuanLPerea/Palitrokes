@@ -64,13 +64,6 @@ import java.util.Locale;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 
-/* TODO Adaptar logo en el título a pantallas grandes
-        El avatar no se cambia correctamente cuando ya hemos elegido uno
-        Error al bloquear el dispositivo
-
-*/
-
-
 public class MainActivity extends AppCompatActivity {
 
     private static final String[] PERMISOS = {
@@ -95,7 +88,6 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager layoutManager;
     private FloatingActionButton fab;
-    private List<Jugador> jugadores;
     private List<Records> records;
     private List<Partida> partidas;
     private Partida partida;
@@ -105,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
     private Uri photo_uri;//para almacenar la ruta de la imagen
     private String ruta_foto;//nombre fichero creado
     private boolean permisosOK;
-    private String salaAnterior;
     private boolean soloFavoritos;
     private MediaPlayer mediaPlayer;
     private int easterEgg;
@@ -130,9 +121,6 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
         getSupportActionBar().hide();
-
-        Intent intent = getIntent();
-        salaAnterior = intent.getStringExtra(Constantes.SALA_ANTERIOR);
 
         // Sonidos y BGM
         Sonidos.getInstance(getApplicationContext());
@@ -191,7 +179,6 @@ public class MainActivity extends AppCompatActivity {
 
         // Recuperamos los datos del Shared Preferences
         recuperarDatosSharedPreferences();
-
 
     }
 
@@ -948,26 +935,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void limpiarSala() {
-
         if (partida.getJugador2ID().equals("0") && partida.getJugador1ID().equals("0")) {
             partidasRef.child(partida.getPartidaID()).removeValue();
         }
-
-
-        /*
-        // Dejamos la sala vacía para poder reusarla
-        Partida partida = new Partida();
-        partida.setPartidaID(sala);
-        partida.setJugador1ID("0");
-        partida.setJugador2ID("0");
-        partida.setGanador(0);
-        partida.setJugador2Ready(false);
-        partida.setJugador1Ready(false);
-        partida.setJugando(false);
-
-        partida.setTurno(1);
-        mDatabase.child("PARTIDAS").child(sala).setValue(partida);
-        */
     }
 
 
@@ -1058,17 +1028,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         Log.d(Constantes.TAG, "On resume");
-
+        recuperarDatosSharedPreferences();
         // Iniciar música
         bgm();
         mediaPlayer.start();
         animacionTimer.start();
-        //    animacionTitulo.setRunning(true);
-        // if (animacionTitulo.isCancelled()) animacionTitulo.executeOnExecutor(executorService);
-
-
         signIn();
-
         super.onResume();
 
     }
@@ -1206,385 +1171,3 @@ public class MainActivity extends AppCompatActivity {
 
 
 }
-/*
-      // Quitar el listener de los jugadores
-      //  userRef.removeEventListener(jugadoresListener);
-
-        //Subimos nuestro avatar a Firebase (Aquí es seguro que tenemos internet)
-        SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
-        UtilsFirebase.subirImagenFirebase(mAuth.getCurrentUser().getUid(), Utilidades.recuperarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId()));
-
-        // Establecer un listener para las partidas
-        // Hay salas creadas previamente en Firebase (Partidas)
-        // Mirar si hay alguna sala con espacio disponible para el jugador
-        // Esperamos hasta que haya dos jugadores en la sala y
-        // Los 2 hayan pulsado el botón de 'Preparado'
-        // Cuando esto se cumpla, lanzar el intent de la actividad de Juego
-
-        // lanzar un dialog para encontrar un rival
-        //
-
-        final Dialog jugarOnline = new Dialog(this);
-        jugarOnline.setContentView(R.layout.dialog_jugar);
-        jugarOnline.setTitle(R.string.jugar_online);
-        jugarOnline.show();
-
-        //  Controlar si el usuario pulsa back en el dispositivo: cancelar los listener, cerrar el dialog y
-        //  volver a poner el listener de Usuarios/Jugadores
-        jugarOnline.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                Log.d(Constantes.TAG, "Cancelado Dialog");
-
-                // Quitar el listener
-                mDatabase.child("PARTIDAS").removeEventListener(partidasListener);
-                borrarJugadorSalaFirebase();
-                jugador.setPartida("0");
-                salaSeleccionada = null;
-                mDatabase.child("USUARIOS").addValueEventListener(jugadoresListener);
-                jugarOnline.dismiss();
-            }
-        });
-
-        final TextView rivalReady = jugarOnline.findViewById(R.id.estadoRivalTV);
-        final TextView jugadorReady = jugarOnline.findViewById(R.id.estadoJugadorTV);
-        final ImageView readyJugadorIMG = jugarOnline.findViewById(R.id.imageReadyJugadorTV);
-        final ImageView readyRivalIMG = jugarOnline.findViewById(R.id.imageReadyRivalIV);
-        final TextView mensajeEstado = jugarOnline.findViewById(R.id.mensajeEstadoTV);
-        final ProgressBar progressBar = jugarOnline.findViewById(R.id.progressBar2);
-        final ImageView avatarRival = jugarOnline.findViewById(R.id.rivalImageIV);
-        final ImageButton favoritoAdd = jugarOnline.findViewById(R.id.dialog_favoritosBTN);
-
-        // Hacemos una lista con las salas disponibles en Firebase
-        partidasListener = new ValueEventListener() {
-            List<Partida> salasDisponibles = new ArrayList<>();
-
-
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
-                // Actualizamos los views del Dialog
-                jugadorReady.setText(jugador.getNickname());
-                mensajeEstado.setText(R.string.buscando);
-                avatarRival.setImageResource(R.drawable.search);
-                favoritoAdd.setVisibility(View.INVISIBLE);
-
-                progressBar.setVisibility(View.VISIBLE);
-                // Actualizamos los datos de las salas
-                // Tenemos una lista con todas las salas
-                // y otra con las salas que tienen sitio disponible
-                // Log.d(Constantes.TAG, "Buscando sala");
-                salasDisponibles.removeAll(salasDisponibles);
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Partida salaTMP = snapshot.getValue(Partida.class);
-
-                    // si ya tenemos la sala seleccionada, actualizamos los datos
-                    // con los cambios que ha habido en Firebase
-                    if (salaSeleccionada != null) {
-                        if (salaTMP.getNumeroSala() == salaSeleccionada.getNumeroSala()) {
-                            salaSeleccionada = salaTMP;
-                            break;
-                        }
-                    } else {
-                        // si no tenemos sala seleccionada, buscamos una añadiendo las disponibles a la lista
-                        if (salaTMP.getJugador1ID().equals("0") || salaTMP.getJugador2ID().equals("0")) {
-                            salasDisponibles.add(salaTMP);
-                        }
-                    }
-                }
-
-                Log.d(Constantes.TAG, "Hay " + salasDisponibles.size() + " salas disponibles");
-
-
-                // si no tenemos una sala seleccionada, buscamos una libre
-                // TODO puede pasar que una sala se reserve justo en el tiempo que tardamos
-                //  hasta que actualizamos (en ese caso se machacarían los datos en Firebase
-                //  y podría haber poblemas)
-                if (salaSeleccionada == null) {
-                    if (salasDisponibles.size() > 0) {
-                        // Seleccionamos una sala para jugar de las disponibles
-                        //   int salaAleatoria = new Random().nextInt(salasDisponibles.size());
-                        salaSeleccionada = salasDisponibles.get(0);
-                        // Reservamos el hueco
-                        if (salaSeleccionada.getJugador1ID().equals("0")) {
-                            // Nos quedamos con el hueco 1
-                            Log.d(Constantes.TAG, "Encontrado hueco 1");
-                            jugador.setNumeroJugador(1);
-                            jugador.setPartida(salaSeleccionada.getPartidaID());
-                            salaSeleccionada.setJugador1ID(jugador.getJugadorId());
-                        } else if (salaSeleccionada.getJugador2ID().equals("0")) {
-                            // Si el hueco 1 está ocupado, usamos el hueco 2 que está vacío
-                            Log.d(Constantes.TAG, "Encontrado hueco 2");
-                            jugador.setNumeroJugador(2);
-                            jugador.setPartida(salaSeleccionada.getPartidaID());
-                            salaSeleccionada.setJugador2ID(jugador.getJugadorId());
-                        }
-                        // Actualizamos Firebase y de paso limpiamos la sala por si hubiera quedado algo de la ultima partida
-
-                        String nickName = nickET.getText().toString();
-                        if (Utilidades.eliminarPalabrotas(nickName)) {
-                            Toast.makeText(getApplicationContext(), (getString(R.string.palabrota)), Toast.LENGTH_LONG).show();
-                            nickET.setText(getString(R.string.jugador));
-                            nickName = getString(R.string.jugador);
-                        }
-
-                        jugador.setNickname(nickName);
-                        jugador.setActualizado(System.currentTimeMillis() + "");
-                        userRef.setValue(jugador);
-                        //     salaSeleccionada.setTablero(new Tablero());
-                        salaSeleccionada.setGanador(0);
-                        salaSeleccionada.setJugando(false);
-                        salaSeleccionada.setJugador1Ready(false);
-                        salaSeleccionada.setJugador2Ready(false);
-                        salaSeleccionada.setTurno(1);
-                        mDatabase.child("PARTIDAS").child(salaSeleccionada.getPartidaID()).setValue(salaSeleccionada);
-
-
-                    } else {
-                        // No hay salas disponibles
-                        Toast.makeText(getApplicationContext(), R.string.sin_salas, Toast.LENGTH_LONG).show();
-                    }
-
-                } else {
-
-                    // si ya tenemos una sala seleccionada, miramos que haya rival y que los 2 estén preparados
-                    // Si nosotros estamos en el hueco 1 esperamos a que el hueco 2 esté ocupado
-                    if (jugador.getNumeroJugador() == 1) {
-                        Log.d(Constantes.TAG, "Estamos en el hueco 1 de la " + salaSeleccionada.getPartidaID());
-                        if (!salaSeleccionada.getJugador2ID().equals("0")) {
-                            // Hay otro jugador que ha seleccionado esta sala
-                            Log.d(Constantes.TAG, "Hay otro jugador en el hueco 2");
-                            mensajeEstado.setText(R.string.encontrado_rival);
-                            // Descargamos la imagen del Rival y la visualizamos
-                            UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), salaSeleccionada.getJugador2ID(), avatarRival);
-                            pausa(1000);
-                            progressBar.setVisibility(View.INVISIBLE);
-                            favoritoAdd.setVisibility(View.VISIBLE);
-                            if (salaSeleccionada.isJugador2Ready()) {
-                                // El otro jugador está listo
-                                Log.d(Constantes.TAG, "El jugador 2 está preparado");
-                                readyRivalIMG.setImageResource(R.drawable.tick);
-                                readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.verde));
-                                rivalReady.setText(R.string.preparado);
-                                if (salaSeleccionada.isJugador1Ready()) {
-
-                                    // Los 2 estamos listos. Lanzar Intent de juego
-                                    // Como somos el jugador 1 tenemos el turno (Estas son mis reglas)
-                                    mDatabase.child("PARTIDAS").removeEventListener(partidasListener);
-                                    Log.d(Constantes.TAG, "Lanzar Juego");
-                                    Intent jugar = new Intent(jugarOnline.getContext(), JuegoOnlineActivity.class);
-                                    jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-                                    jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
-                                    jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador2ID());
-                                  //  animacionTitulo.cancel(true);
-                                    animacionTimer.cancel();
-                                  //  finish();
-                                    Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.START);
-                                    mediaPlayer.stop();
-                                    startActivity(jugar);
-                                    jugarOnline.dismiss();
-                                }
-                            } else {
-                                readyRivalIMG.setImageResource(R.drawable.update);
-                                readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
-                                rivalReady.setText(R.string.esperandorival);
-                            }
-                        }
-
-                    } else {
-                        // si estamos en el hueco 2 hacemos lo mismo que antes, pero para este hueco
-                        Log.d(Constantes.TAG, "Estamos en el hueco 2 de la " + salaSeleccionada.getPartidaID());
-                        if (!salaSeleccionada.getJugador1ID().equals("0")) {
-                            // Hay otro jugador que ha seleccionado esta sala
-                            Log.d(Constantes.TAG, "Hay otro jugador en el hueco 1");
-                            mensajeEstado.setText(R.string.encontrado_rival);
-                            // Descargamos la imagen del Rival y la visualizamos
-                            UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), salaSeleccionada.getJugador1ID(), avatarRival);
-                            pausa(1000);
-                            progressBar.setVisibility(View.INVISIBLE);
-                            favoritoAdd.setVisibility(View.VISIBLE);
-                            if (salaSeleccionada.isJugador1Ready()) {
-                                // El otro jugador está listo
-                                Log.d(Constantes.TAG, "El jugador 1 está preparado");
-                                readyRivalIMG.setImageResource(R.drawable.tick);
-                                readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.verde));
-                                rivalReady.setText(R.string.preparado);
-                                if (salaSeleccionada.isJugador2Ready()) {
-                                    mDatabase.child("PARTIDAS").removeEventListener(partidasListener);
-                                    // Los 2 estamos listos. Lanzar Intent de juego
-                                    Intent jugar = new Intent(jugarOnline.getContext(), JuegoOnlineActivity.class);
-                                    jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-                                    jugar.putExtra("PARTIDA", salaSeleccionada.getPartidaID());
-                                    jugar.putExtra(Constantes.RIVALID, salaSeleccionada.getJugador1ID());
-                                    //animacionTitulo.cancel(true);
-                                    animacionTimer.cancel();
-                                 //   finish();
-                                    Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.START);
-                                    mediaPlayer.stop();
-                                    startActivity(jugar);
-                                    jugarOnline.dismiss();
-                                }
-                            } else {
-                                readyRivalIMG.setImageResource(R.drawable.update);
-                                readyRivalIMG.setBackgroundColor(getResources().getColor(R.color.rojo));
-                                rivalReady.setText(R.string.esperandorival);
-                            }
-                        }
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-
-            }
-        };
-        mDatabase.child("PARTIDAS").addValueEventListener(partidasListener);
-
-
-        // Listener para el botón
-        // Cuando pulsamos es que estamos preparados para jugar
-        // Actualizamos Firebase para notificarlo
-        Button botonReady = jugarOnline.findViewById(R.id.readyBTN);
-        botonReady.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mensajeEstado.setText(R.string.preparado_esperando);
-                jugadorReady.setText(R.string.preparado);
-                readyJugadorIMG.setImageResource(R.drawable.tick);
-                readyJugadorIMG.setBackgroundColor(getResources().getColor(R.color.verde));
-                if (salaSeleccionada != null) {
-                    if (jugador.getNumeroJugador() == 1) {
-                        salaSeleccionada.setJugador1Ready(true);
-                    } else {
-                        salaSeleccionada.setJugador2Ready(true);
-                    }
-                    mDatabase.child("PARTIDAS").child(salaSeleccionada.getPartidaID()).setValue(salaSeleccionada);
-                }
-
-            }
-        });
-
-
-        // Botón añadir jugador a favoritos
-        favoritoAdd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d(Constantes.TAG, "Favoritos");
-                if (jugador.getFavoritosID() == null)
-                    jugador.setFavoritosID(new ArrayList<String>());
-
-                if (salaSeleccionada != null) {
-
-
-                    if (jugador.getNumeroJugador() == 1) {
-                        if (!jugador.getFavoritosID().contains(salaSeleccionada.getJugador2ID())) {
-                            // Añadir el jugador encontrado como favorito
-                            jugador.getFavoritosID().add(salaSeleccionada.getJugador2ID());
-                            Toast.makeText(MainActivity.this, R.string.amigo_add, Toast.LENGTH_LONG).show();
-                            favoritoAdd.setImageResource(R.drawable.corazonrojo);
-                        } else {
-                            // Borrar este jugador como favorito
-                            jugador.getFavoritosID().remove(salaSeleccionada.getJugador2ID());
-                            Toast.makeText(MainActivity.this, R.string.amigo_del, Toast.LENGTH_LONG).show();
-                            favoritoAdd.setImageResource(R.drawable.corazon);
-
-                        }
-                    } else if (jugador.getNumeroJugador() == 2) {
-                        if (!jugador.getFavoritosID().contains(salaSeleccionada.getJugador1ID())) {
-                            // Añadir el jugador encontrado como favorito
-                            jugador.getFavoritosID().add(salaSeleccionada.getJugador1ID());
-                            Toast.makeText(MainActivity.this, R.string.amigo_add, Toast.LENGTH_LONG).show();
-                            favoritoAdd.setImageResource(R.drawable.corazonrojo);
-                        } else {
-                            // Borrar este jugador como favorito
-                            jugador.getFavoritosID().remove(salaSeleccionada.getJugador1ID());
-                            Toast.makeText(MainActivity.this, R.string.amigo_del, Toast.LENGTH_LONG).show();
-                            favoritoAdd.setImageResource(R.drawable.corazon);
-                        }
-                    }
-
-                    // Actualizamos la BB.DD.
-                    jugador.setActualizado(System.currentTimeMillis() + "");
-                    userRef.setValue(jugador);
-
-
-                }
-
-            }
-        });
-
-
-
-   // Cargar la lista de jugadores online
-        jugadoresListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-
-                jugadores.removeAll(jugadores);
-
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Jugador jugadorTMP = snapshot.getValue(Jugador.class);
-
-                   // chequear los jugadores por si se ha quedado pillado alguno 'online' por salir de la app mal, etc
-                    long tiempoonline = 0;
-                    if (jugadorTMP.getActualizado() != null){
-                        tiempoonline = System.currentTimeMillis() - Long.parseLong(jugadorTMP.getActualizado());
-                    }
-                    Log.d(Constantes.TAG, "Jugador que lleva " + (tiempoonline / 1000) + " segundos online");
-                    // si lleva mas de 10 minutos online, pero sin actualizar, cambiamos el estado a 'false'
-                    if (tiempoonline > (10 * 60 * 1000)) {
-                        jugadorTMP.setOnline(false);
-                        jugadoresRef.child(jugadorTMP.getJugadorId()).setValue(jugadorTMP);
-                    }
-
-                    if (jugadorTMP.isOnline()) {
-                            // Filtrar si solo queremos jugar con favoritos
-                            if (!jugador.getJugadorId().equals(jugadorTMP.getJugadorId())) {
-                            if (!soloFavoritos) {
-                            jugadores.add(jugadorTMP);
-                            } else {
-                            if (jugador.getFavoritosID() != null) {
-                            for (String favorito : jugador.getFavoritosID()) {
-                            if (favorito.equals(jugadorTMP.getJugadorId())) {
-                            jugadores.add(jugadorTMP);
-                            }
-                            }
-                            }
-                            }
-                            }
-
-                            }
-                            }
-
-                            // Mostramos en pantalla en número de jugadores disponibles online (o favoritos online)
-                            if (soloFavoritos) {
-                            onlineTV.setText((getString(R.string.amigosonline)) + jugadores.size());
-                            } else {
-                            onlineTV.setText((getString(R.string.jugonline)) + jugadores.size());
-                            }
-
-                            if (jugadores.size() > 0) {
-                            botonOnline.setEnabled(true);
-                            favoritosBTN.setEnabled(true);
-                            } else {
-                            botonOnline.setEnabled(false);
-                            }
-                            botonOnline.setVisibility(View.VISIBLE);
-                            favoritosBTN.setVisibility(View.VISIBLE);
-
-                            }
-
-@Override
-public void onCancelled(@NonNull DatabaseError databaseError) {
-
-        }
-        };
-        jugadoresRef.addValueEventListener(jugadoresListener);
-
-
-
-
-
- */

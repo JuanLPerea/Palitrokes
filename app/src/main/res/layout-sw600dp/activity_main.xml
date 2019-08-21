@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <RelativeLayout
+        android:id="@+id/frameTitulo"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="4"
+        android:background="@drawable/nubes">
+
+
+        <ImageView
+            android:id="@+id/palitrokesIV"
+            android:layout_width="344dp"
+            android:layout_height="312dp"
+            android:layout_alignParentBottom="true"
+            android:src="@drawable/pic34" />
+
+        <ImageView
+            android:id="@+id/lemaIV"
+            android:layout_width="400dp"
+            android:layout_height="400dp"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:src="@drawable/lemaes" />
+
+        <ImageView
+            android:id="@+id/nombreIV"
+            android:layout_width="400dp"
+            android:layout_height="150dp"
+            android:src="@drawable/logo"
+            tools:layout_editor_absoluteY="183dp" />
+
+
+        <TextView
+            android:id="@+id/onlineTV"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="30dp"
+            android:textColor="@color/negro"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:textSize="24dp"
+             />
+
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="3"
+        android:background="@color/verde"
+        android:gravity="center_horizontal|center_vertical"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="3"
+            android:gravity="center_horizontal|center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/nickET"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ems="10"
+                    android:hint="@string/nickname"
+                    android:inputType="textPersonName"
+                    android:maxLength="10"
+                    android:textColor="@color/negro"
+                    android:textSize="36sp" />
+
+                <TextView
+                    android:id="@+id/victoriasET"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/victorias"
+                    android:textColor="@color/negro"
+                    android:textSize="30sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/avatarIV"
+                android:layout_width="128dp"
+                android:layout_height="128dp"
+                android:onClick="personalizarAvatar"
+                android:src="@drawable/picture" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingHorizontal="20dp">
+
+            <Button
+                android:id="@+id/jugarBTN"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="jugar"
+                android:text="@string/jugar"
+                android:textSize="36sp" />
+
+
+            <Button
+                android:id="@+id/jugaronlineBTN"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="1"
+                android:enabled="false"
+                android:onClick="jugarOnline"
+                android:text="@string/jugar_online"
+                android:textSize="36sp"
+                android:visibility="invisible" />
+
+            <ImageButton
+                android:id="@+id/favoritosBTN"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:src="@drawable/corazon"
+                android:visibility="invisible"
+                android:scaleType="fitCenter"
+                android:onClick="favoritosToggle"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/recordsTV"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.7"
+        android:background="@color/gris"
+        android:gravity="center"
+        android:onClick="crearSalas"
+        android:text="@string/records_mundiales"
+        android:textColor="@color/blanco"
+        android:textSize="24sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.5"
+        android:background="@color/common_google_signin_btn_text_light_disabled"
+        android:gravity="center">
+
+        <ImageView
+            android:id="@+id/cabecera1"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginLeft="20dp"
+            android:src="@drawable/picture" />
+
+        <TextView
+            android:id="@+id/cabecera2"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="10"
+            android:gravity="center"
+            android:text="@string/jugador"
+            android:textSize="30sp" />
+
+        <TextView
+            android:id="@+id/cabecera3"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="5"
+            android:gravity="center"
+            android:text="@string/nivel"
+            android:textSize="30sp" />
+
+        <TextView
+            android:id="@+id/cabecera4"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="5"
+            android:gravity="center"
+            android:text="@string/victorias"
+            android:textSize="30sp" />
+
+
+    </LinearLayout>
+
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="5"
+        android:background="@color/marron">
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="10dp"
+            android:onClick="infoButton"
+            android:src="@drawable/info"
+            app:backgroundTint="@color/celeste"
+            app:elevation="12dp"
+            app:maxImageSize="48dp" />
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recordsRecycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+    </FrameLayout>
+
+
+</LinearLayout>

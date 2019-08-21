@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -53,7 +54,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
     private String salaJuego;
     private ImageView avatarJ1, avatarJ2;
     private TextView nickJ1, nickJ2, winsJ1, winsJ2, tiempoJ1, tiempoJ2;
-    private Button okJ1, okJ2;
+    private ImageButton okJ1, okJ2;
     private int[] colores;
     private CountDownTimer cronometro1;
     private CountDownTimer cronometro2;
@@ -84,7 +85,6 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         avatarJ2.setBackground(null);
 
         // Sonidos
-      //  if (sonidos == null) sonidos = new Sonidos(getApplicationContext());
         Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PLING);
 
         okJ1.setOnClickListener(new View.OnClickListener() {
@@ -145,6 +145,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         rival = new Jugador();
         jugador = new Jugador();
         partida = new Partida();
+        partida.setTurno(1);
 
         // referencias Firebase
         mDatabase = FirebaseDatabase.getInstance().getReference();
@@ -156,7 +157,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         Intent intent = getIntent();
         salaJuego = intent.getStringExtra(Constantes.PARTIDA);
         rival.setJugadorId(intent.getStringExtra(Constantes.RIVALID));
-        jugador.setJugadorId(intent.getStringExtra(Constantes.JUGADORID));
+        jugador.setJugadorId(mAuth.getUid());
+        Log.d(Constantes.TAG, "Auth Jugador ID " + jugador.getJugadorId());
 
         // Recuperar datos del rival
         rivalRef = mDatabase.child("USUARIOS").child(rival.getJugadorId());
@@ -250,36 +252,50 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 Partida partidaTMP = dataSnapshot.getValue(Partida.class);
-                partida.setGanador(partidaTMP.getGanador());
-                partida.setTurno(partidaTMP.getTurno());
-                partida.setJugador1ID(partidaTMP.getJugador1ID());
-                partida.setJugador2ID(partidaTMP.getJugador2ID());
-                partida.setNumeroSala(partidaTMP.getNumeroSala());
-                partida.setPartidaID(partidaTMP.getPartidaID());
-                partida.setTablero(partidaTMP.getTablero());
-                // Los palitrokes se actualizan en la pantalla cuando hay algún
-                // cambio en la BB.DD. y por lo tanto se lanza este Listener
-                Log.d(Constantes.TAG, "DataChange Jugador: " + jugador.getNickname());
-                Log.d(Constantes.TAG, "DataChange Rival: " + rival.getNickname());
-                Log.d(Constantes.TAG, "DataChange Partida: " + partida.getPartidaID());
+                if (partidaTMP != null) {
+                    partida.setGanador(partidaTMP.getGanador());
+                    partida.setTurno(partidaTMP.getTurno());
+                    partida.setJugador1ID(partidaTMP.getJugador1ID());
+                    partida.setJugador2ID(partidaTMP.getJugador2ID());
+                    partida.setNumeroSala(partidaTMP.getNumeroSala());
+                    partida.setPartidaID(partidaTMP.getPartidaID());
+                    partida.setTablero(partidaTMP.getTablero());
+                    // Los palitrokes se actualizan en la pantalla cuando hay algún
+                    // cambio en la BB.DD. y por lo tanto se lanza este Listener
+                    Log.d(Constantes.TAG, "DataChange Jugador: " + jugador.getNickname());
+                    Log.d(Constantes.TAG, "DataChange Rival: " + rival.getNickname());
+                    Log.d(Constantes.TAG, "DataChange Partida: " + partida.getPartidaID());
 
 
-                visualizarTablero(partida.getTablero());
-                // Sonido cuando el rival selecciona un palo ...
-                if (partida.getTurno() != jugador.getNumeroJugador()) {
-                    Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
-                }
-                // Si no hay ganador, mirar de quien es el turno
-                if (partida.getGanador() != 0) {
-                    // Aquí detectamos si hay ganador. La partida termina
+                    visualizarTablero(partida.getTablero());
+                    // Sonido cuando el rival selecciona un palo ...
+                    if (partida.getTurno() != jugador.getNumeroJugador()) {
+                        Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.TICK);
+                    }
+                    // Si no hay ganador, mirar de quien es el turno
+                    if (partida.getGanador() != 0) {
+                        // Aquí detectamos si hay ganador. La partida termina
+                        finJuego();
+                    }
+
+                    if (ultimoTurno != partida.getTurno()) {
+                        actualizarViewsCambioTurno();
+                        ultimoTurno = partida.getTurno();
+                        Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PLING);
+                    }
+                } else {
+                    // No hay sala, el otro jugador ha abandonado o ha habido un error
+                    Log.d(Constantes.TAG, "No hay sala");
+                    abandono = true;
+                    if (jugador.getNumeroJugador() == 1) {
+                        partida.setGanador(2);
+                    } else {
+                        partida.setGanador(1);
+                    }
                     finJuego();
+
                 }
 
-                if (ultimoTurno != partida.getTurno()) {
-                    actualizarViewsCambioTurno();
-                    ultimoTurno = partida.getTurno();
-                    Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PLING);
-                }
 
             }
 
@@ -491,7 +507,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
         // Si no hay ningún palo seleccionado esque el jugador pasa bastante de jugar y se ha acabado el tiempo sin hacer nada
         Log.d(Constantes.TAG, "Fin del turno " + partida.getTurno() + " Fin tiempo? " + finTiempo);
-        if (finTiempo) {
+        if (finTiempo && partida.getGanador() != 0) {
             if (partida.getTurno() == jugador.getNumeroJugador()) {
                 if (partida.getTablero().palosSeleccionadosTotal() == 0) {
                     // Si es el jugador el que no ha hecho nada, pierde
@@ -568,9 +584,6 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         cronometro1.cancel();
         cronometro2.cancel();
 
-     //   Intent volverIntent = new Intent(this, MainActivity.class);
-    //    volverIntent.putExtra("SALA_ANTERIOR", partida.getPartidaID());
-
         String resultado = "";
 
         if (finTiempo || abandono) {
@@ -590,29 +603,18 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PERDER);
         }
 
-        Toast.makeText(this, resultado, Toast.LENGTH_LONG).show();
+        Toast.makeText(getApplicationContext(), resultado, Toast.LENGTH_LONG).show();
 
         // Actualizamos Firebase y limpiamos los datos...
         limpiarSala();
         actualizarJugadores();
-
-
-        Log.d(Constantes.TAG, "Esperamos 1 segundo");
-        // Dejamos una pausa para que se actualice la sala
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         finish();
-        // Lanzamos el intent del MainActivity
-     //   startActivity(volverIntent);
 
     }
 
     private void limpiarSala() {
         // eliminamos la partida
+        pausa(2000);
         salaRef.removeValue();
 
     }
@@ -624,6 +626,8 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         jugador.setOnline(true);
         jugador.setActualizado(System.currentTimeMillis() + "");
         jugadorRef.setValue(jugador);
+        // Guardamos en el Shared Preferences los datos del jugador
+        SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
     }
 
     private int newId() {
@@ -638,14 +642,25 @@ public class JuegoOnlineActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         // Si bloqueamos es como abandonar la partida
-        abandono = true;
-        partida.setGanador(rival.getNumeroJugador());
-        Log.d(Constantes.TAG, "SET ON PAUSE");
-        salaRef.setValue(partida);
-        finJuego();
+        if (partida.getGanador() == 0 ){
+            abandono = true;
+            partida.setGanador(rival.getNumeroJugador());
+            Log.d(Constantes.TAG, "SET ON PAUSE");
+            salaRef.setValue(partida);
+            finJuego();
+        }
+
 
         super.onPause();
     }
 
+    private void pausa(int tiempo) {
+        // Dejamos una pausa para que se actualice la sala
+        try {
+            Thread.sleep(tiempo);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
 
 }

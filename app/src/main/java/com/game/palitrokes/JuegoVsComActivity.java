@@ -1,6 +1,5 @@
 package com.game.palitrokes;
 
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
@@ -9,6 +8,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -38,28 +38,22 @@ public class JuegoVsComActivity extends AppCompatActivity {
     private Jugador jugador;
     private ImageView avatarJ1, avatarJ2;
     private TextView nickJ1, nickJ2, winsJ1, winsJ2, tiempoJ1, tiempoJ2, level;
-    private Button okJ1, okJ2;
+    private ImageButton okJ1, okJ2;
     private int[] colores;
     private CountDownTimer cronometro1;
     private CountDownTimer cronometro2;
     CountDownTimer jugadaComTimer;
     private boolean finTiempo;
     private int palosQuitados;
-    private Sonidos sonidos;
+    private boolean abandono;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
-
         setContentView(R.layout.activity_juego);
         getSupportActionBar().hide();
-
-        // Sonidos
-        //  if (sonidos == null) sonidos = new Sonidos(getApplicationContext());
-
 
         // recuperamos las Views
         linearBase = findViewById(R.id.tableroLL);
@@ -100,7 +94,6 @@ public class JuegoVsComActivity extends AppCompatActivity {
         jugador.setNumeroJugador(1);
         actualizarVistaJugador();
 
-
         nickJ2.setText(R.string.nombreprota);
         winsJ2.setText(R.string.victorias8);
 
@@ -115,8 +108,8 @@ public class JuegoVsComActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 finTiempo = true;
-                cronometro1.cancel();
-                okJugada(null);
+                    cronometro1.cancel();
+                    okJugada(null);
             }
         };
 
@@ -130,8 +123,8 @@ public class JuegoVsComActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 finTiempo = true;
-                cronometro2.cancel();
-                okJugada(null);
+                    cronometro2.cancel();
+                    okJugada(null);
             }
         };
 
@@ -147,10 +140,6 @@ public class JuegoVsComActivity extends AppCompatActivity {
         partida.setTablero(nuevoTablero);
         partida.setTurno(1);
         partida.setJugador1ID(jugador.getJugadorId());
-
-        JugadaCom jugadaCom = new JugadaCom();
-        // Creamos un objeto "JugadaCom" para poder calcular las posiciones del tablero
-        jugadaCom = new JugadaCom();
 
         inicializarColores();
 
@@ -329,6 +318,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
                 Toast.makeText(this, R.string.selecciona, Toast.LENGTH_LONG).show();
                 if (finTiempo) {
                     Log.d(Constantes.TAG, "Ha terminado el tiempo sin seleccionar ningun palo");
+                    abandono = true;
                     partida.setGanador(2);
                     finTurno();
                 }
@@ -486,14 +476,12 @@ public class JuegoVsComActivity extends AppCompatActivity {
         // Quitar los cronómetros
         cronometro1.cancel();
         cronometro2.cancel();
-
-
-     //   Intent volverIntent = new Intent(this, MainActivity.class);
-      //  volverIntent.putExtra("SALA_ANTERIOR", partida.getPartidaID());
+        //   Intent volverIntent = new Intent(this, MainActivity.class);
+        //  volverIntent.putExtra("SALA_ANTERIOR", partida.getPartidaID());
 
         String resultado = "";
 
-        if (finTiempo) {
+        if (abandono) {
             resultado = getString(R.string.abandono);
         }
 
@@ -501,11 +489,9 @@ public class JuegoVsComActivity extends AppCompatActivity {
         if (partida.getGanador() == jugador.getNumeroJugador()) {
             resultado += (getString(R.string.win));
             Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.GANAR);
-
             siguienteNivel();
-
-
         } else {
+
             jugador.setDerrotas(1);
             resultado += (getString(R.string.resultado)) + partida.getLevel();
             Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PERDER);
@@ -520,9 +506,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
             finish();
             // Lanzamos el intent del MainActivity
-          //  startActivity(volverIntent);
-
-
+            //  startActivity(volverIntent);
         }
 
         Toast.makeText(this, resultado, Toast.LENGTH_LONG).show();
@@ -551,7 +535,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        finTiempo = true;
+        abandono = true;
         finJuego();
     }
 
@@ -559,17 +543,18 @@ public class JuegoVsComActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        finTiempo = true;
-        finJuego();
-
+        if (partida.getGanador() == 0) {
+            abandono = true;
+            finJuego();
+        }
     }
 
     @Override
     protected void onStop() {
         cronometro1.cancel();
         cronometro2.cancel();
-      //  cronometro1 = null;
-      //  cronometro2 = null;
+        //  cronometro1 = null;
+        //  cronometro2 = null;
         avatarJ2.setImageDrawable(null);
         avatarJ1.setImageDrawable(null);
         linearBase = null;
