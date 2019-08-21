@@ -514,11 +514,7 @@ public class JuegoVsComActivity extends AppCompatActivity {
 
         Log.d(Constantes.TAG, "Esperamos 1 segundo");
         // Dejamos una pausa para que se actualice la sala
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        pausa(1000);
 
 
     }
