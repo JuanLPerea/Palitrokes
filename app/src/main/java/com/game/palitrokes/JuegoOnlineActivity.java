@@ -114,7 +114,6 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 finTiempo = true;
-                //   cronometro1.cancel();
                 finTurno();
             }
         };
@@ -129,7 +128,6 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             @Override
             public void onFinish() {
                 finTiempo = true;
-                // cronometro2.cancel();
                 finTurno();
             }
         };
@@ -156,9 +154,9 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         // Recuperamos datos Intent
         Intent intent = getIntent();
         salaJuego = intent.getStringExtra(Constantes.PARTIDA);
-        rival.setJugadorId(intent.getStringExtra(Constantes.RIVALID));
-        jugador.setJugadorId(mAuth.getUid());
-        Log.d(Constantes.TAG, "Auth Jugador ID " + jugador.getJugadorId());
+        rival.setJugadorId(intent.getStringExtra(Constantes.RIVALIDONLINE));
+        jugador.setJugadorId(intent.getStringExtra(Constantes.JUGADORIDONLINE));
+        Log.d(Constantes.TAG, "Intent Jugador ID " + jugador.getJugadorId());
 
         // Recuperar datos del rival
         rivalRef = mDatabase.child("USUARIOS").child(rival.getJugadorId());
@@ -220,15 +218,23 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
     private void actualizarVistaJugador(Jugador jugadorView) {
         if (jugadorView != null) {
-            if (jugadorView.getNumeroJugador() == 1) {
-                UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), jugadorView.getJugadorId(), avatarJ1);
-                nickJ1.setText(jugadorView.getNickname());
-                winsJ1.setText((getString(R.string.victorias2))+ jugadorView.getVictorias());
-            } else {
-                UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), jugadorView.getJugadorId(), avatarJ2);
-                nickJ2.setText(jugadorView.getNickname());
-                winsJ2.setText((getString(R.string.victorias2)) + jugadorView.getVictorias() + "");
+
+            switch (jugadorView.getNumeroJugador()) {
+                case 1:
+                    UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), jugadorView.getJugadorId(), avatarJ1);
+                    nickJ1.setText(jugadorView.getNickname());
+                    winsJ1.setText((getString(R.string.victorias2))+ jugadorView.getVictorias());
+                    break;
+                case 2:
+                    UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), jugadorView.getJugadorId(), avatarJ2);
+                    nickJ2.setText(jugadorView.getNickname());
+                    winsJ2.setText((getString(R.string.victorias2)) + jugadorView.getVictorias() + "");
+                    break;
+                default:
+                    Log.d(Constantes.TAG, "Actualizar vista jugador es 0");
+                    break;
             }
+
         } else {
             Log.d(Constantes.TAG, "Actualizar vista jugador null");
         }
@@ -243,7 +249,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
         // gestionaremos el juego de acuerdo con esto.
         // Cada vez que hay un cambio en la BBDD se lanza este evento...
         //
-        cronometro1.start();
+      //  cronometro1.start();
        // partida = null;
         ultimoTurno = 0;
 
@@ -286,13 +292,6 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 } else {
                     // No hay sala, el otro jugador ha abandonado o ha habido un error
                     Log.d(Constantes.TAG, "No hay sala");
-                    abandono = true;
-                    if (jugador.getNumeroJugador() == 1) {
-                        partida.setGanador(2);
-                    } else {
-                        partida.setGanador(1);
-                    }
-                    finJuego();
 
                 }
 
@@ -507,7 +506,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
 
         // Si no hay ningún palo seleccionado esque el jugador pasa bastante de jugar y se ha acabado el tiempo sin hacer nada
         Log.d(Constantes.TAG, "Fin del turno " + partida.getTurno() + " Fin tiempo? " + finTiempo);
-        if (finTiempo && partida.getGanador() != 0) {
+        if (finTiempo) {
             if (partida.getTurno() == jugador.getNumeroJugador()) {
                 if (partida.getTablero().palosSeleccionadosTotal() == 0) {
                     // Si es el jugador el que no ha hecho nada, pierde
@@ -535,32 +534,22 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             Log.d(Constantes.TAG, "SET CAMBIO DE TURNO 2");
             salaRef.setValue(partida);
         }
-
-
     }
 
 
     @Override
     protected void onStop() {
         limpiarSala();
-        jugador.setOnline(true);
-        jugador.setActualizado(System.currentTimeMillis() + "");
-        jugadorRef.setValue(jugador);
-
         super.onStop();
     }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-
         Log.d(Constantes.TAG, keyCode + "");
-
         if (keyCode == KeyEvent.KEYCODE_HOME) {
             Log.d(Constantes.TAG, "Home button pressed!");
         }
-
         return super.onKeyDown(keyCode, event);
-
     }
 
     @Override
@@ -575,7 +564,6 @@ public class JuegoOnlineActivity extends AppCompatActivity {
     }
 
     private void finJuego() {
-
         // Quitar todos los listeners
         //(Importante para no volverse loco con callbacks que no se sabe de donde vienen)
         salaRef.removeEventListener(salaListener);

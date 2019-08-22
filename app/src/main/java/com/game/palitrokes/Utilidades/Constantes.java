@@ -4,7 +4,8 @@ public class Constantes {
 
     public static final String TAG = "MIAPP";
     public static final String PARTIDA = "PARTIDA";
-    public static final String RIVALID = "RIVALID";
+    public static final String RIVALIDONLINE = "RIVALIDONLINE";
+    public static final String JUGADORIDONLINE = "JUGADORIDONLINE";
     public static final int TIEMPOTURNO = 30000;
     public static final int TIEMPOACTUALIZACRONO = 1000;
 
@@ -14,7 +15,7 @@ public class Constantes {
     public static final int CODIGO_PETICION_PERMISOS = 150;
     public static final int CODIGO_PETICION_HACER_FOTO = 200;
 
-    public static final String ARCHIVO_PREFS = "ARCHIVOPREFS";
+    public static final String ARCHIVO_PREFS = "PREFSARCHIVO";
     public static final String NICKNAME_PREFS = "NICKNAME";
     public static final String JUGADORID_PREFS = "JUGADORID";
     public static final String VICTORIAS_PREFS = "VICTORIAS";
@@ -23,6 +24,5 @@ public class Constantes {
     public static final String ARCHIVO_IMAGEN_RIVAL = "ARCHIVOIMAGENRIVAL";
     public static final String FIRST_RUN = "FIRSTRUN" ;
     public static final String AMIGOS = "AMIGOS";
-    public static final String SALA_ANTERIOR = "SALA_ANTERIOR";
-    public static final String JUGADORID = "JUGADORID";
+
 }

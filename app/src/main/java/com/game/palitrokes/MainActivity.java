@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
@@ -429,25 +430,31 @@ public class MainActivity extends AppCompatActivity {
 
             // Si los 2 jugadores están preparados, lanzamos el juego
             if (partida.isJugador1Ready() && partida.isJugador2Ready()) {
-             /*   partida.setJugando(true);
-                partida.setGanador(0);
-                partidasRef.child(partida.getPartidaID()).setValue(partida);
-             */
-
                 // Quitar el listener de las partidas
                 partidasRef.removeEventListener(partidasListener);
+
+                // Establecer la partida como que ha lanzado el dialogo juego online, para
+                // diferenciar en el onStop y borrar la sala si llega porque ha cerrado la aplicación
+                partida.setJugando(true);
 
                 // Los 2 estamos listos. Lanzar Intent de juego
                 Intent jugar = new Intent(jugarOnline.getContext(), JuegoOnlineActivity.class);
                 jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                 jugar.putExtra(Constantes.PARTIDA, partida.getPartidaID());
 
-                if (jugador.getNumeroJugador() == 1) {
-                    jugar.putExtra(Constantes.RIVALID, partida.getJugador2ID());
-                    jugar.putExtra(Constantes.JUGADORID, partida.getJugador1ID());
-                } else {
-                    jugar.putExtra(Constantes.RIVALID, partida.getJugador1ID());
-                    jugar.putExtra(Constantes.JUGADORID, partida.getJugador2ID());
+
+                switch (jugador.getNumeroJugador()) {
+                    case 1:
+                        jugar.putExtra(Constantes.RIVALIDONLINE, partida.getJugador2ID());
+                        jugar.putExtra(Constantes.JUGADORIDONLINE, partida.getJugador1ID());
+                        break;
+                    case 2:
+                        jugar.putExtra(Constantes.RIVALIDONLINE, partida.getJugador1ID());
+                        jugar.putExtra(Constantes.JUGADORIDONLINE, partida.getJugador2ID());
+                        break;
+                    default:
+                        Log.d(Constantes.TAG, "Error en numero de jugador");
+                        break;
                 }
 
                 //animacionTitulo.cancel(true);
@@ -508,11 +515,8 @@ public class MainActivity extends AppCompatActivity {
                 partidasRef.child(partida.getPartidaID()).setValue(partida);
                 // En nuestro jugador indicamos que tenemos partida
                 jugador.setPartida(partida.getPartidaID());
-
             }
-
         }
-
     }
 
     private void dialogoJuegoOnline() {
@@ -553,15 +557,16 @@ public class MainActivity extends AppCompatActivity {
                     if (jugador.getNumeroJugador() == 1) {
                         partida.setJugador1ID("0");
                         partida.setJugador1Ready(false);
+                        jugador.setPartida(null);
                     } else {
                         partida.setJugador2ID("0");
                         partida.setJugador2Ready(false);
+                        jugador.setPartida(null);
                     }
+                    partida.setJugando(false);
                     partidasRef.child(partida.getPartidaID()).setValue(partida);
                 }
-
                 limpiarSala();
-
                 jugarOnline.dismiss();
             }
         });
@@ -572,14 +577,19 @@ public class MainActivity extends AppCompatActivity {
         readyBTN.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (jugador.getNumeroJugador() == 1) {
-                    partida.setJugador1Ready(true);
-                    partidasRef.child(partida.getPartidaID()).setValue(partida);
-                } else {
-                    partida.setJugador2Ready(true);
-                    partidasRef.child(partida.getPartidaID()).setValue(partida);
+                switch (jugador.getNumeroJugador()) {
+                    case 1:
+                        partida.setJugador1Ready(true);
+                        break;
+                    case 2:
+                        partida.setJugador2Ready(true);
+                        break;
+                    default:
+                        Log.d(Constantes.TAG, "Error, el jugador no tiene asignado número");
+                        break;
                 }
 
+                partidasRef.child(partida.getPartidaID()).setValue(partida);
             }
         });
 
@@ -642,22 +652,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-
-        if (UtilityNetwork.isNetworkAvailable(this) || UtilityNetwork.isWifiAvailable(this)) {
-            if (jugador != null && userRef != null) {
-                jugador.setOnline(false);
-                jugador.setActualizado(System.currentTimeMillis() + "");
-                userRef.setValue(jugador);
+        if (partida != null) {
+            if (!partida.isJugando()) {
+                partidasRef.child(partida.getPartidaID()).removeValue();
             }
-     /*       if (salaSeleccionada != null) {
-                limpiarSala(salaSeleccionada.getPartidaID());
-            }*/
         }
-        //   animacionTitulo.cancel(true);
+        jugarOnline.dismiss();
         mediaPlayer.stop();
-
         super.onStop();
-
     }
 
 
@@ -665,18 +667,6 @@ public class MainActivity extends AppCompatActivity {
     // Aquí lanzamos el juego contra el ordenador (Móvil en este caso)
     //
     public void jugar(View view) {
-
-
-        // Ponemos al false el que el jugador está online para que no le tengan en cuenta para jugar en este modo
-        if (jugador != null) {
-            if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
-                jugador.setOnline(false);
-                jugador.setActualizado(System.currentTimeMillis() + "");
-                userRef.setValue(jugador);
-            }
-        } else {
-            jugador = new Jugador();
-        }
 
         if (nickET.getText() != null) {
 
@@ -1042,10 +1032,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
-            if (jugador != null && jugador.getJugadorId() != null && userRef != null) {
-                jugador.setOnline(true);
-                jugador.setActualizado(System.currentTimeMillis() + "");
-                userRef.setValue(jugador);
+            if (jugador.getPartida() != null) {
+                partidasRef.child(partida.getPartidaID()).removeValue();
             }
         }
 
@@ -1056,6 +1044,7 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+
     public void infoButton(View view) {
         Log.d(Constantes.TAG, "Tocado info");
         //  animacionTitulo.cancel(true);
@@ -1064,26 +1053,10 @@ public class MainActivity extends AppCompatActivity {
         mediaPlayer.stop();
         //  finish();
         startActivity(infointent);
-
-
     }
 
 
     public void animacionPalitrokes() {
-/*  Quito esto porque come muchos recursos
-        // Añadir nubes en un Asynctask al layout del título
-        ImageView nube1 = findViewById(R.id.nube1);
-        ImageView nube2 = findViewById(R.id.nube2);
-        ImageView nube3 = findViewById(R.id.nube3);
-        nubeAdd(nube1);
-        nubeAdd(nube2);
-        nubeAdd(nube3);
-*/
-/*
-        // movidas para que ejecute todos los hilos simultaneamente
-        int processors = Runtime.getRuntime().availableProcessors();
-        executorService = Executors.newFixedThreadPool(processors);
-*/
         // Cambiar la imagen del personaje cada tiempo en un asynctask
         palitrokesIV = findViewById(R.id.palitrokesIV);
 
@@ -1130,7 +1103,7 @@ public class MainActivity extends AppCompatActivity {
             partidaActualizacion.setPartidaID(System.currentTimeMillis() + "");
             partidaActualizacion.setJugador1ID("SALA ACTUALIZACIONES");
             partidaActualizacion.setJugador2ID("SALA ACTUALIZACIONES");
-            partidasRef.child("SALA1566320669253").setValue(partidaActualizacion);
+            partidasRef.child("SALA_ACTUALIZACIONES").setValue(partidaActualizacion);
         }
 
 
