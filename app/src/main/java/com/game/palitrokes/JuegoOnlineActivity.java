@@ -224,6 +224,7 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                     break;
                 default:
                     Log.d(Constantes.TAG, "Actualizar vista jugador es 0");
+                    // Actualizar rival, da un error por lo que hacemos esto
                     if (jugador.getNumeroJugador() == 1) {
                         UtilsFirebase.descargarImagenFirebaseView(getApplicationContext(), jugadorView.getJugadorId(), avatarJ2);
                         nickJ2.setText(jugadorView.getNickname());
@@ -413,12 +414,16 @@ public class JuegoOnlineActivity extends AppCompatActivity {
             case 1:
                 if (jugador.getNumeroJugador() == 1) {
                     // si somos el jugador 1
+                    okJ1.setImageResource(R.drawable.yapeque);
+                    okJ1.setBackgroundResource(0);
                     okJ1.setVisibility(View.VISIBLE);            //Botón del jugador 1 visible, puede jugar
                     okJ2.setVisibility(View.INVISIBLE);          //Botón del jugador 2 invisible
                 } else {
                     // si somos el jugador 2
-                    okJ1.setVisibility(View.INVISIBLE);            //Botón del jugador 1 invisible (No hay botón en ningun lado porque el turno es del otro)
-                    okJ2.setVisibility(View.INVISIBLE);          //Botón del jugador 2 invisible (No hay botón en ningun lado porque el turno es del otro)
+                    okJ1.setVisibility(View.VISIBLE);            //Botón del jugador 1 invisible (No hay botón en ningun lado porque el turno es del otro)
+                    okJ1.setImageResource(R.drawable.pensando);      // Cambiamos la imagen del botón para que vea que está jugando el otro
+                    okJ1.setBackgroundResource(0);
+                    okJ2.setVisibility(View.INVISIBLE);          //Botón del jugador 2 invisible
                 }
                 // El tiempo estará visible en el jugador 1 que es el que tiene el crono
                 tiempoJ1.setVisibility(View.VISIBLE);        //Tiempo del jugador 1 visible
@@ -431,10 +436,14 @@ public class JuegoOnlineActivity extends AppCompatActivity {
                 // Es el turno del jugador 2
                 if (jugador.getNumeroJugador() == 1) {
                     // si somos el jugador 1
+                    okJ2.setImageResource(R.drawable.pensando);
+                    okJ2.setBackgroundResource(0);
                     okJ1.setVisibility(View.INVISIBLE);            //Botón del jugador 1 invisible (No hay botón en ningun lado porque el turno es del otro)
-                    okJ2.setVisibility(View.INVISIBLE);          //Botón del jugador 2 invisible (No hay botón en ningun lado porque el turno es del otro)
+                    okJ2.setVisibility(View.VISIBLE);          //Botón del jugador 2 invisible (No hay botón en ningun lado porque el turno es del otro)
                 } else {
                     // si somos el jugador 2
+                    okJ2.setImageResource(R.drawable.yapeque);
+                    okJ2.setBackgroundResource(0);
                     okJ1.setVisibility(View.INVISIBLE);            //Botón del jugador 1 invisible
                     okJ2.setVisibility(View.VISIBLE);          //Botón del jugador 2 activado, podemos jugar
                 }

@@ -68,9 +68,9 @@
                 <ImageButton
                     android:id="@+id/ok_J1_BTN"
                     android:layout_gravity="right|center_vertical"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/yapeque"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter"
                     android:text="@android:string/ok"
                     android:visibility="invisible" />
             </LinearLayout>
@@ -147,9 +147,9 @@
                 <ImageButton
                     android:id="@+id/ok_J2_BTN"
                     android:layout_gravity="right|center_vertical"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/yapeque"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="fitCenter"
                     android:text="@android:string/ok"
                     android:visibility="invisible" />
             </LinearLayout>
