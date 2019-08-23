@@ -95,8 +95,8 @@ public class MainActivity extends AppCompatActivity {
     private ValueEventListener partidasListener;
     private ValueEventListener recordsListener;
     private ExecutorService executorService;
-    private Uri photo_uri;//para almacenar la ruta de la imagen
-    private String ruta_foto;//nombre fichero creado
+    private Uri photo_uri;                          //para almacenar la ruta de la imagen
+    private String ruta_foto;                       //nombre fichero creado
     private boolean permisosOK;
     private boolean soloFavoritos;
     private MediaPlayer mediaPlayer;
@@ -254,9 +254,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                     jugador = new Jugador(currentUser.getUid(), nickName);
-                    jugador.setOnline(true);
-                    jugador.setActualizado(System.currentTimeMillis() + "");
-                    userRef.setValue(jugador);
 
                     // Subimos una imagen a Firebase Storage con el nombre del ID del jugador
                     // para usarla como avatar
@@ -266,11 +263,10 @@ public class MainActivity extends AppCompatActivity {
                     Utilidades.guardarImagenMemoriaInterna(getApplicationContext(), jugador.getJugadorId(), Utilidades.bitmapToArrayBytes(avatarNuevo));
                     avatarJugador.setImageBitmap(avatarNuevo);
                     SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+                    userRef.setValue(jugador);
 
                 } else {
                     jugador = SharedPrefs.getJugadorPrefs(getApplicationContext());
-                    jugador.setOnline(true);
-                    jugador.setActualizado(System.currentTimeMillis() + "");
                     userRef.setValue(jugador);
                 }
             }
@@ -433,6 +429,13 @@ public class MainActivity extends AppCompatActivity {
                 // Quitar el listener de las partidas
                 partidasRef.removeEventListener(partidasListener);
 
+                // Guardar datos en el Shared Preferences
+                SharedPrefs.saveJugadorPrefs(getApplicationContext(), jugador);
+
+                // Actualizar también Firebase
+                Log.d(Constantes.TAG, "Numero jugador antes intent: " + jugador.getNumeroJugador());
+                userRef.setValue(jugador);
+
                 // Establecer la partida como que ha lanzado el dialogo juego online, para
                 // diferenciar en el onStop y borrar la sala si llega porque ha cerrado la aplicación
                 partida.setJugando(true);
@@ -442,15 +445,12 @@ public class MainActivity extends AppCompatActivity {
                 jugar.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
                 jugar.putExtra(Constantes.PARTIDA, partida.getPartidaID());
 
-
                 switch (jugador.getNumeroJugador()) {
                     case 1:
                         jugar.putExtra(Constantes.RIVALIDONLINE, partida.getJugador2ID());
-                        jugar.putExtra(Constantes.JUGADORIDONLINE, partida.getJugador1ID());
                         break;
                     case 2:
                         jugar.putExtra(Constantes.RIVALIDONLINE, partida.getJugador1ID());
-                        jugar.putExtra(Constantes.JUGADORIDONLINE, partida.getJugador2ID());
                         break;
                     default:
                         Log.d(Constantes.TAG, "Error en numero de jugador");
@@ -638,9 +638,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Actualizamos la BB.DD.
-        jugador.setActualizado(System.currentTimeMillis() + "");
-        userRef.setValue(jugador);
 
 
     }
@@ -667,16 +664,13 @@ public class MainActivity extends AppCompatActivity {
     // Aquí lanzamos el juego contra el ordenador (Móvil en este caso)
     //
     public void jugar(View view) {
-
         if (nickET.getText() != null) {
-
             String nickName = nickET.getText().toString();
             if (Utilidades.eliminarPalabrotas(nickName)) {
                 Toast.makeText(getApplicationContext(), (getString(R.string.palabrota)), Toast.LENGTH_LONG).show();
                 nickET.setText(getString(R.string.jugador));
                 nickName = getString(R.string.jugador);
             }
-
             jugador.setNickname(nickName);
         }
 
@@ -987,15 +981,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
 
-        if (UtilityNetwork.isWifiAvailable(this) || UtilityNetwork.isNetworkAvailable(this)) {
-            if (jugador != null && jugador.getJugadorId() != null && userRef != null) {
-                jugador.setOnline(false);
-                jugador.setActualizado(System.currentTimeMillis() + "");
-                userRef.setValue(jugador);
-            }
-        }
         mediaPlayer.stop();
-
 
         super.onPause();
         //   animacionTitulo.cancel(true);

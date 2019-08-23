@@ -33,7 +33,7 @@
     <string name="ganador">"The winner is: "</string>
     <string name="selecciona">Pick at least one stick</string>
     <string name="unpalo">Leave only a stick and you win!!</string>
-    <string name="abandono">There has been abandonment </string>
+    <string name="abandono">"There has been abandonment "</string>
     <string name="resultado">"Woody wins. You earned level "</string>
     <string name="win">You Win. Congratulations!!</string>
     <string name="app_name">Woody</string>

@@ -33,7 +33,7 @@
     <string name="selecciona">Selecciona al menos 1 palo</string>
     <string name="ganador">El ganador es:</string>
     <string name="unpalo">Debes dejar al menos 1 palo y ganas!!!</string>
-    <string name="abandono">Ha habido abandono ...</string>
+    <string name="abandono">"Ha habido abandono ... "</string>
     <string name="win">Has Ganado ¡Enhorabuena!</string>
     <string name="resultado">"Gana Palitrokes. Has alcanzado el nivel "</string>
     <string name="perdido">Lo siento has perdido!!</string>

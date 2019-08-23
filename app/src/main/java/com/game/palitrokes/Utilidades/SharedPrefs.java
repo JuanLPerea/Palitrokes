@@ -15,7 +15,6 @@ import java.util.Set;
 
 public class SharedPrefs {
 
-
     public static void saveJugadorPrefs(Context context, Jugador jugador) {
 
         Set<String> amigos = new HashSet<String>();
@@ -30,6 +29,7 @@ public class SharedPrefs {
         editor.putInt(Constantes.VICTORIAS_PREFS, jugador.getVictorias());
         editor.putBoolean(Constantes.FIRST_RUN, jugador.isFirstRun());
         editor.putStringSet(Constantes.AMIGOS, amigos);
+        editor.putInt(Constantes.NUMEROJUGADOR, jugador.getNumeroJugador());
         editor.commit();
     }
 
@@ -41,6 +41,7 @@ public class SharedPrefs {
         jugador.setJugadorId(sharedPreferences.getString(Constantes.JUGADORID_PREFS, null));
         jugador.setVictorias(sharedPreferences.getInt(Constantes.VICTORIAS_PREFS, 0));
         jugador.setFirstRun(sharedPreferences.getBoolean(Constantes.FIRST_RUN, true));
+        jugador.setNumeroJugador(sharedPreferences.getInt(Constantes.NUMEROJUGADOR, 0));
 
         Set<String> amigos = sharedPreferences.getStringSet(Constantes.AMIGOS, null);
         List<String> amigosList = new ArrayList<>();
@@ -48,8 +49,6 @@ public class SharedPrefs {
             amigosList.addAll(amigos);
             jugador.setFavoritosID(amigosList);
         }
-
-
 
 
         return jugador;

@@ -492,7 +492,6 @@ public class JuegoVsComActivity extends AppCompatActivity {
             siguienteNivel();
         } else {
 
-            jugador.setDerrotas(1);
             resultado += (getString(R.string.resultado)) + partida.getLevel();
             Sonidos.getInstance(getApplicationContext()).play(Sonidos.Efectos.PERDER);
             // Guardar record si hay internet, podemos mirar si hemos entrado en los records del juego

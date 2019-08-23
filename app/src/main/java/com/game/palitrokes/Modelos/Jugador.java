@@ -9,9 +9,7 @@ public class Jugador {
     private String nickname;
     private String partida;
     private int victorias;
-    private int derrotas;
     private boolean online;
-    private String actualizado;
     private int numeroJugador;
     private boolean firstRun;
     private List<String> favoritosID;
@@ -21,9 +19,7 @@ public class Jugador {
         this.nickname = nickname;
         this.partida = "";
         this.victorias = 0;
-        this.derrotas = 0;
         this.online = false;
-        this.actualizado = System.currentTimeMillis() + "";
         this.numeroJugador = 0;
         this.firstRun = true;
         this.favoritosID = new ArrayList<>();
@@ -80,14 +76,6 @@ public class Jugador {
         this.victorias += victorias;
     }
 
-    public int getDerrotas() {
-        return derrotas;
-    }
-
-    public void setDerrotas(int derrotas) {
-        this.derrotas += derrotas;
-    }
-
     public boolean isOnline() {
         return online;
     }
@@ -104,11 +92,4 @@ public class Jugador {
         this.firstRun = firstRun;
     }
 
-    public String getActualizado() {
-        return actualizado;
-    }
-
-    public void setActualizado(String actualizado) {
-        this.actualizado = actualizado;
-    }
 }

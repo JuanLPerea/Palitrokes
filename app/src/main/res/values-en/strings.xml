@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Palitrokes</string>
-    <string name="abandono">There has been abandonment</string>
+    <string name="abandono">"There has been abandonment "</string>
     <string name="amigo_add">Added as friend</string>
     <string name="amigo_del">Removed as friend</string>
     <string name="amigos_online">"Online Friends: "</string>
